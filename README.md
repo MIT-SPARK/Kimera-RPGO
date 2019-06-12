@@ -3,7 +3,7 @@ RobustPGO
 
 ## Dependencies
 
-###[GTSAM](https://bitbucket.org/gtborg/gtsam)
+*[GTSAM](https://bitbucket.org/gtborg/gtsam)*
 (Note that a github version has also been released, but for the github version the flag `GTSAM_BUILD_WITH_MARCH_NATIVE` sometimes causes problems )
 
 Clone GTSAM:   

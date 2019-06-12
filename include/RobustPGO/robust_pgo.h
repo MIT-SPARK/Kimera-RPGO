@@ -23,7 +23,7 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/inference/Symbol.h>
 
 #include "graph_utils/graph_utils_functions.h" 
-#include "logger/logger.h"
+#include "RobustPGO/logger.h"
 
 class RobustPGO {
 public:
@@ -42,7 +42,8 @@ public:
   gtsam::Values calculateBestEstimate() { return values_; }
   gtsam::Values getLinearizationPoint() { return values_; }
   gtsam::NonlinearFactorGraph getFactorsUnsafe(){ return nfg_; }
-  bool LoadParameters();
+  bool LoadParameters(double odometry_threshold=1.6,
+                      double pwctency_threshold=1.6);
 
   void print() {
     nfg_.print("");

@@ -13,7 +13,8 @@ class formatted_log_t {
 public:
   formatted_log_t( log_level_t level, const wchar_t* msg ) : fmt(msg), level(level) {}
   ~formatted_log_t() {
-    wcout << level << L" " << fmt << endl;
+    if (level == 0) wcout << "\033[1;33m" << L" " << fmt << "\033[0m" << endl;
+    if (level == 1) wcout << "\033[32m" << L" " << fmt << "\033[0m" << endl;
   }        
   template <typename T> 
   formatted_log_t& operator %(T value) {

@@ -25,31 +25,19 @@ message("Boost Libraries: ${Boost_LIBRARIES}")
 ###########################################################################
 # Overall include directories
 include_directories(
-  include
+    include
 )
 
-# Maximum Clique Solver
-add_library(max_clique_finder
+add_library(RobustPGO
     src/max_clique_finder/findClique.cpp
     src/max_clique_finder/findCliqueHeu.cpp 
     src/max_clique_finder/utils.cpp 
     src/max_clique_finder/graphIO.cpp
-)
-
-# Graph utils library
-add_library(graph_utils
-        src/graph_utils/graph_utils_functions.cpp
-)
-target_link_libraries(graph_utils
-        gtsam
-        max_clique_finder
-)
-
-add_library(RobustPGO
-        src/RobustPGO/robust_pgo.cpp
+    src/graph_utils/graph_utils_functions.cpp
+    src/RobustPGO/robust_pgo.cpp
 )
 target_link_libraries(RobustPGO
-        graph_utils
+    gtsam
 )
 
 ###########################################################################
@@ -58,13 +46,6 @@ add_subdirectory(tests)
 
 ###########################################################################
 # Install
-# install(TARGETS graph_utils DESTINATION lib)
-# file(GLOB headers_graph_utils "include/graph_utils/*.h")
-# install(FILES ${headers_graph_utils} DESTINATION include/graph_utils/)
-
-# install(TARGETS max_clique_finder DESTINATION lib)
-# file(GLOB headers_max_clique_finder "include/max_clique_finder/*.h")
-# install(FILES ${headers_max_clique_finder} DESTINATION include/max_clique_finder/)
 
 install(TARGETS RobustPGO DESTINATION lib)
 file(GLOB headers_robust_PGO "include/RobustPGO/*.h")

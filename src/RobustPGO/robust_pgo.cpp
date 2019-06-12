@@ -11,12 +11,13 @@ RobustPGO::RobustPGO(int solvertype):
   solver_type_(solvertype),
   nfg_odom_(gtsam::NonlinearFactorGraph()),
   nfg_lc_(gtsam::NonlinearFactorGraph()) {
-  std::cout << "instantiated generic solver." << std::endl; 
+  log<INFO>(L"instantiated RobustPGO"); 
 }
 
-bool RobustPGO::LoadParameters() {
-  odom_threshold_ = 1.3; 
-  pw_threshold_ = 1.3;
+bool RobustPGO::LoadParameters(double odometry_threshold,
+                               double pwctency_threshold) {
+  odom_threshold_ = odometry_threshold; 
+  pw_threshold_ = pwctency_threshold;
 }
 
 
@@ -61,13 +62,13 @@ void RobustPGO::regularUpdate(gtsam::NonlinearFactorGraph nfg,
     if (solver_type_ == 1) {
       gtsam::LevenbergMarquardtParams params;
       params.setVerbosityLM("SUMMARY");
-      std::cout << "Running LM" << std::endl; 
+      log<INFO>(L"Running LM"); 
       params.diagonalDamping = true; 
       values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
     }else if (solver_type_ == 2) {
       gtsam::GaussNewtonParams params;
       params.setVerbosity("ERROR");
-      std::cout << "Running GN" << std::endl; 
+      log<INFO>(L"Running GN");
       values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, params).optimize();
     }else if (solver_type_ == 3) {
       // something
@@ -158,8 +159,8 @@ bool RobustPGO::isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor) {
 
   // check consistency (Tij_odom,Cov_ij_odom, Tij_lc, Cov_ij_lc)
   graph_utils::poseCompose(pij_odom, pji_lc, result);
-  result.pose.print("odom consistency check: ");
-  std::cout << std::endl; 
+  // result.pose.print("odom consistency check: ");
+  // std::cout << std::endl; 
   gtsam::Vector6 consistency_error = gtsam::Pose3::Logmap(result.pose);
   // check with threshold
   double threshold = odom_threshold_;
@@ -286,14 +287,13 @@ void RobustPGO::findInliers(gtsam::NonlinearFactorGraph &inliers) {
     }
   }
   lc_adjacency_matrix_ = new_adj_matrix;
-  std::cout << "adjacency matrix size: " 
-      << lc_adjacency_matrix_.rows() << "," << lc_adjacency_matrix_.cols() << std::endl;
+  log<INFO>(L"total loop closures registered: %1%") % lc_adjacency_matrix_.rows();
 
   std::vector<int> max_clique_data;
   int max_clique_size = graph_utils::findMaxClique(lc_adjacency_matrix_, max_clique_data);
-  std::cout << "max clique size: " << max_clique_size << std::endl; 
+  log<INFO>(L"number of inliers: %1%") % max_clique_size; 
   for (size_t i = 0; i < max_clique_size; i++) {
-    std::cout << max_clique_data[i] << " "; 
+    // std::cout << max_clique_data[i] << " "; 
     inliers.add(nfg_lc_[max_clique_data[i]]);
   }
 }
@@ -369,7 +369,7 @@ void RobustPGO::update(gtsam::NonlinearFactorGraph nfg,
     nfg_.add(nfg_good_lc);
     gtsam::LevenbergMarquardtParams params;
     params.setVerbosityLM("SUMMARY");
-    std::cout << "Running LM" << std::endl; 
+    log<INFO>(L"Running LM"); 
     params.diagonalDamping = true; 
     values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
     return; 

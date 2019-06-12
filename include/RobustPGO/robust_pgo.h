@@ -22,7 +22,7 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/nonlinear/NonlinearConjugateGradientOptimizer.h>
 #include <gtsam/inference/Symbol.h>
 
-#include "graph_utils/graph_utils_functions.h" 
+#include "RobustPGO/graph_utils/graph_utils_functions.h" 
 #include "RobustPGO/logger.h"
 
 class RobustPGO {

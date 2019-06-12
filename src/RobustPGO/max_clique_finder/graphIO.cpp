@@ -17,7 +17,7 @@
 /*   http://arxiv.org/abs/1411.7460 		 					   */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "max_clique_finder/graphIO.h"
+#include "RobustPGO/max_clique_finder/graphIO.h"
 
 namespace FMC {
 CGraphIO::~CGraphIO()

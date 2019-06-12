@@ -17,7 +17,7 @@
 /*   http://arxiv.org/abs/1411.7460 		 					   */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "max_clique_finder/findClique.h"
+#include "RobustPGO/max_clique_finder/findClique.h"
 #include <cstddef>
 #include <sys/time.h>
 #include <unistd.h>

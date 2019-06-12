@@ -22,6 +22,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 link_libraries(${Boost_LIBRARIES})
 message("Boost Libraries: ${Boost_LIBRARIES}")
 
+###########################################################################
 # Overall include directories
 include_directories(
   include
@@ -45,7 +46,7 @@ target_link_libraries(graph_utils
 )
 
 add_library(RobustPGO
-        src/graph_utils/RobustPGO.cpp
+        src/RobustPGO/robust_pgo.cpp
 )
 target_link_libraries(RobustPGO
         graph_utils
@@ -57,13 +58,14 @@ add_subdirectory(tests)
 
 ###########################################################################
 # Install
-install(TARGETS graph_utils DESTINATION lib)
-file(GLOB headers_graph_utils "include/graph_utils/*.h")
-install(FILES ${headers_graph_utils} DESTINATION include/graph_utils/)
+# install(TARGETS graph_utils DESTINATION lib)
+# file(GLOB headers_graph_utils "include/graph_utils/*.h")
+# install(FILES ${headers_graph_utils} DESTINATION include/graph_utils/)
 
-install(TARGETS max_clique_finder DESTINATION lib)
-file(GLOB headers_max_clique_finder "include/max_clique_finder/*.h")
-install(FILES ${headers_max_clique_finder} DESTINATION include/max_clique_finder/)
+# install(TARGETS max_clique_finder DESTINATION lib)
+# file(GLOB headers_max_clique_finder "include/max_clique_finder/*.h")
+# install(FILES ${headers_max_clique_finder} DESTINATION include/max_clique_finder/)
 
 install(TARGETS RobustPGO DESTINATION lib)
-file(GLOB headers_rob) #TODO
+file(GLOB headers_robust_PGO "include/RobustPGO/*.h")
+install(FILES ${headers_robust_PGO} DESTINATION include/RobustPGO/)

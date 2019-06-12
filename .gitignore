@@ -1,24 +1,11 @@
 /build/
-/data-sets/
-/.settings/
-/matlab/result-*
-/scripts/*/*.txt
-/*/*.csv
-
 
 % Ignore VS code settings
 .vscode
 
-% Ignore logged mesh ply
-*.ply
-
 % Ignore Mac stuff
 .DS_Store
 
-% Remove recovery files from matlab.
-*~
 % Ignore media files
 *.png
 *.mp4
-
-/scripts/*.yaml

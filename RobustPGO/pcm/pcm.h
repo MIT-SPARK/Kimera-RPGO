@@ -1,5 +1,5 @@
 /* 
-Backend solver class (Robust Pose Graph Optimizer)
+Pairwise Consistency Maximization + Odometry checks 
 author: Yun Chang, Luca Carlone
 */
 
@@ -25,19 +25,9 @@ author: Yun Chang, Luca Carlone
 #include "RobustPGO/graph_utils/graph_utils_functions.h" 
 #include "RobustPGO/logger.h"
 
-
-/*
-Basic Idea: 
-main interface: update() -> this is called whenever something is added to factor graph 
-RobustPGO contains an robustor class (which can be switched): this runs the outlier rejection 
-Whenever RobustPGO gets a new value or factor, this is passed on to the robustor, which will then 
-return the set of factors and values to be optimized. 
-Note that one of these robustor class can be essentially nothing -> no outlier rejection  
-*/
-
-class RobustPGO {
+class PCM {
 public:
-  RobustPGO(int solvertype=1); 
+  PCM(int solvertype=1); 
   // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton, 3 for SESync (WIP)
 
   void regularUpdate(gtsam::NonlinearFactorGraph nfg=gtsam::NonlinearFactorGraph(), 

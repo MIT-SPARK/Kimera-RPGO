@@ -17,7 +17,7 @@
 /*   http://arxiv.org/abs/1411.7460 		 					   */
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#include "RobustPGO/max_clique_finder/findClique.h"
+#include "findClique.h"
 
 namespace FMC {
 int pruned1;

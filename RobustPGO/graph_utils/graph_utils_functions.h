@@ -3,7 +3,7 @@
 #ifndef GRAPH_UTILS_FUNCTIONS_H
 #define GRAPH_UTILS_FUNCTIONS_H
 
-#include "RobustPGO/graph_utils/graph_types.h"
+#include "graph_types.h"
 #include "RobustPGO/max_clique_finder/findClique.h"
 #include <eigen3/Eigen/Geometry>
 #include <iostream>

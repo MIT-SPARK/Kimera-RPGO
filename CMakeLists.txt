@@ -23,33 +23,13 @@ link_libraries(${Boost_LIBRARIES})
 message("Boost Libraries: ${Boost_LIBRARIES}")
 
 ###########################################################################
-# Overall include directories
-include_directories(
-    include
-)
+include_directories(BEFORE
+		${PROJECT_SOURCE_DIR} 
+		${PROJECT_BINARY_DIR}
+)# So we can include generated config header files
 
-add_library(RobustPGO
-    src/RobustPGO/max_clique_finder/findClique.cpp
-    src/RobustPGO/max_clique_finder/findCliqueHeu.cpp 
-    src/RobustPGO/max_clique_finder/utils.cpp 
-    src/RobustPGO/max_clique_finder/graphIO.cpp
-    src/RobustPGO/graph_utils/graph_utils_functions.cpp
-    src/RobustPGO/robust_pgo.cpp
-)
-target_link_libraries(RobustPGO
-    gtsam
-)
+add_subdirectory(RobustPGO)
 
 ###########################################################################
 # Tests
 add_subdirectory(tests)
-
-###########################################################################
-# Install
-install(TARGETS RobustPGO DESTINATION lib)
-file(GLOB headers_robust_PGO "include/RobustPGO/*.h")
-install(FILES ${headers_robust_PGO} DESTINATION include/RobustPGO/)
-file(GLOB headers_robust_PGO "include/RobustPGO/graph_utils/*.h")
-install(FILES ${headers_robust_PGO} DESTINATION include/RobustPGO/graph_utils)
-file(GLOB headers_robust_PGO "include/RobustPGO/max_clique_finder/*.h")
-install(FILES ${headers_robust_PGO} DESTINATION include/RobustPGO/max_clique_finder)

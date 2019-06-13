@@ -1,6 +1,6 @@
 // Copyright (C) 2018 by Pierre-Yves Lajoie <lajoie.py@gmail.com>
 
-#include "RobustPGO/graph_utils/graph_utils_functions.h"
+#include "graph_utils_functions.h"
 
 #include <fstream>
 #include <iostream>

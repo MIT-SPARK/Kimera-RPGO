@@ -71,6 +71,7 @@ private:
   gtsam::NonlinearFactorGraph nfg_odom_;
   gtsam::NonlinearFactorGraph nfg_lc_;
   gtsam::Matrix lc_adjacency_matrix_;
+  gtsam::Matrix lc_distance_matrix_;
   graph_utils::Trajectory posesAndCovariances_odom_; 
 
   void initializePrior(gtsam::PriorFactor<gtsam::Pose3> prior_factor);
@@ -81,7 +82,8 @@ private:
   bool isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor);
 
   bool areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1, 
-                          gtsam::BetweenFactor<gtsam::Pose3> lc_2);
+                          gtsam::BetweenFactor<gtsam::Pose3> lc_2,
+                          double& mahalanobis_dist);
 
   void findInliers(gtsam::NonlinearFactorGraph &inliers);
 };

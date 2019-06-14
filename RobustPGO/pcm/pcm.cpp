@@ -1,27 +1,27 @@
 /* 
-Pairwise Consistency Maximization + Odometry checks 
+Generic solver class 
 author: Yun Chang, Luca Carlone
 */
 
-#include <pcm.h>
+#include <RobustPGO/robust_pgo.h>
 
-PCM::PCM(int solvertype): 
+RobustPGO::RobustPGO(int solvertype): 
   nfg_(gtsam::NonlinearFactorGraph()),
   values_(gtsam::Values()),
   solver_type_(solvertype),
   nfg_odom_(gtsam::NonlinearFactorGraph()),
   nfg_lc_(gtsam::NonlinearFactorGraph()) {
-  log<INFO>(L"instantiated PCM"); 
+  log<INFO>(L"instantiated RobustPGO"); 
 }
 
-bool PCM::LoadParameters(double odometry_threshold,
+bool RobustPGO::LoadParameters(double odometry_threshold,
                                double pwctency_threshold) {
   odom_threshold_ = odometry_threshold; 
   pw_threshold_ = pwctency_threshold;
 }
 
 
-void PCM::regularUpdate(gtsam::NonlinearFactorGraph nfg, 
+void RobustPGO::regularUpdate(gtsam::NonlinearFactorGraph nfg, 
                            gtsam::Values values, 
                            gtsam::FactorIndices factorsToRemove) {
   // remove factors
@@ -76,7 +76,7 @@ void PCM::regularUpdate(gtsam::NonlinearFactorGraph nfg,
   }
 }
 
-void PCM::initializePrior(gtsam::PriorFactor<gtsam::Pose3> prior_factor) {
+void RobustPGO::initializePrior(gtsam::PriorFactor<gtsam::Pose3> prior_factor) {
   gtsam::Pose3 initial_value = prior_factor.prior();
   gtsam::Matrix covar = Eigen::MatrixXd::Zero(6,6); // initialize as zero
   gtsam::Key initial_key = prior_factor.front(); // CHECK if correct 
@@ -95,7 +95,7 @@ void PCM::initializePrior(gtsam::PriorFactor<gtsam::Pose3> prior_factor) {
   posesAndCovariances_odom_.end_id = initial_key;
 }
 
-void PCM::updateOdom(gtsam::BetweenFactor<gtsam::Pose3> odom_factor, 
+void RobustPGO::updateOdom(gtsam::BetweenFactor<gtsam::Pose3> odom_factor, 
                                graph_utils::PoseWithCovariance &new_pose){
 
   // update posesAndCovariances_odom_ (compose last value with new odom value)
@@ -128,7 +128,7 @@ void PCM::updateOdom(gtsam::BetweenFactor<gtsam::Pose3> odom_factor,
   posesAndCovariances_odom_.trajectory_poses[new_key] = new_trajectorypose; 
 }
 
-bool PCM::isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor) {
+bool RobustPGO::isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor) {
   // assume loop is between pose i and j
   // extract the keys 
   gtsam::Key key_i = lc_factor.front();
@@ -183,8 +183,9 @@ bool PCM::isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor) {
   return false;
 }
 
-bool PCM::areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1, 
-                                     gtsam::BetweenFactor<gtsam::Pose3> lc_2) {
+bool RobustPGO::areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1, 
+                                   gtsam::BetweenFactor<gtsam::Pose3> lc_2, 
+                                   double& mahalanobis_dist) {
   // check if two loop closures are consistent 
   gtsam::Key key1a = lc_1.front();
   gtsam::Key key1b = lc_1.back();
@@ -248,7 +249,7 @@ bool PCM::areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1,
         * gtsam::inverse(result.covariance_matrix.block<3,3>(3,3)) 
         * consistency_error.tail(3));
   }
-
+  mahalanobis_dist = distance;
   log<INFO>(L"loop consistency distance: %1%") % distance; 
   if (distance < threshold) {
     return true;
@@ -257,7 +258,7 @@ bool PCM::areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1,
   return false;
 }
 
-void PCM::findInliers(gtsam::NonlinearFactorGraph &inliers) {
+void RobustPGO::findInliers(gtsam::NonlinearFactorGraph &inliers) {
   // * pairwise consistency check (will also compare other loops - if loop fails we still store it, but not include in the optimization)
   // -- add 1 row and 1 column to lc_adjacency_matrix_;
   // -- populate extra row and column by testing pairwise consistency of new lc against all previous ones
@@ -266,9 +267,11 @@ void PCM::findInliers(gtsam::NonlinearFactorGraph &inliers) {
   // NOTE: this will require a map from rowId (size_t, in adjacency matrix) to slot id (size_t, id of that lc in nfg_lc)
   size_t num_lc = nfg_lc_.size(); // number of loop closures so far
   Eigen::MatrixXd new_adj_matrix = Eigen::MatrixXd::Zero(num_lc, num_lc);
+  Eigen::MatrixXd new_dst_matrix = Eigen::MatrixXd::Zero(num_lc, num_lc);
   if (num_lc > 1) {
     // if = 1 then just initialized 
     new_adj_matrix.topLeftCorner(num_lc - 1, num_lc - 1) = lc_adjacency_matrix_; 
+    new_dst_matrix.topLeftCorner(num_lc - 1, num_lc - 1) = lc_distance_matrix_;
 
     // now iterate through the previous loop closures and fill in last row + col 
     // of consistency matrix 
@@ -279,7 +282,10 @@ void PCM::findInliers(gtsam::NonlinearFactorGraph &inliers) {
             *boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(nfg_lc_[num_lc-1]);
 
       // check consistency 
-      bool consistent = areLoopsConsistent(factor_i, factor_j);
+      double mah_distance; 
+      bool consistent = areLoopsConsistent(factor_i, factor_j, mah_distance);
+      new_dst_matrix(num_lc-1, i) = mah_distance;
+      new_dst_matrix(i, num_lc-1) = mah_distance;
       if (consistent) { 
         new_adj_matrix(num_lc-1, i) = 1; 
         new_adj_matrix(i, num_lc-1) = 1;
@@ -287,6 +293,7 @@ void PCM::findInliers(gtsam::NonlinearFactorGraph &inliers) {
     }
   }
   lc_adjacency_matrix_ = new_adj_matrix;
+  lc_distance_matrix_ = new_dst_matrix;
   log<INFO>(L"total loop closures registered: %1%") % lc_adjacency_matrix_.rows();
 
   std::vector<int> max_clique_data;
@@ -296,9 +303,11 @@ void PCM::findInliers(gtsam::NonlinearFactorGraph &inliers) {
     // std::cout << max_clique_data[i] << " "; 
     inliers.add(nfg_lc_[max_clique_data[i]]);
   }
+  log<INFO>(L"distance matrix: \n");
+  std::cout << lc_distance_matrix_ << std::endl;
 }
 
-void PCM::update(gtsam::NonlinearFactorGraph nfg, 
+void RobustPGO::update(gtsam::NonlinearFactorGraph nfg, 
                                  gtsam::Values values, 
                                  gtsam::FactorIndices factorsToRemove){
   // TODO: deal with factorsToRemove

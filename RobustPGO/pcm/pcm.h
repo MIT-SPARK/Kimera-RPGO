@@ -1,5 +1,5 @@
 /* 
-Pairwise Consistency Maximization + Odometry checks 
+Backend solver class (Robust Pose Graph Optimizer)
 author: Yun Chang, Luca Carlone
 */
 
@@ -25,9 +25,19 @@ author: Yun Chang, Luca Carlone
 #include "RobustPGO/graph_utils/graph_utils_functions.h" 
 #include "RobustPGO/logger.h"
 
-class PCM {
+
+/*
+Basic Idea: 
+main interface: update() -> this is called whenever something is added to factor graph 
+RobustPGO contains an robustor class (which can be switched): this runs the outlier rejection 
+Whenever RobustPGO gets a new value or factor, this is passed on to the robustor, which will then 
+return the set of factors and values to be optimized. 
+Note that one of these robustor class can be essentially nothing -> no outlier rejection  
+*/
+
+class RobustPGO {
 public:
-  PCM(int solvertype=1); 
+  RobustPGO(int solvertype=1); 
   // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton, 3 for SESync (WIP)
 
   void regularUpdate(gtsam::NonlinearFactorGraph nfg=gtsam::NonlinearFactorGraph(), 
@@ -61,6 +71,7 @@ private:
   gtsam::NonlinearFactorGraph nfg_odom_;
   gtsam::NonlinearFactorGraph nfg_lc_;
   gtsam::Matrix lc_adjacency_matrix_;
+  gtsam::Matrix lc_distance_matrix_;
   graph_utils::Trajectory posesAndCovariances_odom_; 
 
   void initializePrior(gtsam::PriorFactor<gtsam::Pose3> prior_factor);
@@ -71,7 +82,8 @@ private:
   bool isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor);
 
   bool areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1, 
-                          gtsam::BetweenFactor<gtsam::Pose3> lc_2);
+                          gtsam::BetweenFactor<gtsam::Pose3> lc_2,
+                          double& mahalanobis_dist);
 
   void findInliers(gtsam::NonlinearFactorGraph &inliers);
 };

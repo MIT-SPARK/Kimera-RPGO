@@ -184,7 +184,8 @@ bool RobustPGO::isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor) {
 }
 
 bool RobustPGO::areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1, 
-                                     gtsam::BetweenFactor<gtsam::Pose3> lc_2) {
+                                   gtsam::BetweenFactor<gtsam::Pose3> lc_2, 
+                                   double& mahalanobis_dist) {
   // check if two loop closures are consistent 
   gtsam::Key key1a = lc_1.front();
   gtsam::Key key1b = lc_1.back();
@@ -248,7 +249,7 @@ bool RobustPGO::areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1,
         * gtsam::inverse(result.covariance_matrix.block<3,3>(3,3)) 
         * consistency_error.tail(3));
   }
-
+  mahalanobis_dist = distance;
   log<INFO>(L"loop consistency distance: %1%") % distance; 
   if (distance < threshold) {
     return true;
@@ -266,9 +267,11 @@ void RobustPGO::findInliers(gtsam::NonlinearFactorGraph &inliers) {
   // NOTE: this will require a map from rowId (size_t, in adjacency matrix) to slot id (size_t, id of that lc in nfg_lc)
   size_t num_lc = nfg_lc_.size(); // number of loop closures so far
   Eigen::MatrixXd new_adj_matrix = Eigen::MatrixXd::Zero(num_lc, num_lc);
+  Eigen::MatrixXd new_dst_matrix = Eigen::MatrixXd::Zero(num_lc, num_lc);
   if (num_lc > 1) {
     // if = 1 then just initialized 
     new_adj_matrix.topLeftCorner(num_lc - 1, num_lc - 1) = lc_adjacency_matrix_; 
+    new_dst_matrix.topLeftCorner(num_lc - 1, num_lc - 1) = lc_distance_matrix_;
 
     // now iterate through the previous loop closures and fill in last row + col 
     // of consistency matrix 
@@ -279,7 +282,10 @@ void RobustPGO::findInliers(gtsam::NonlinearFactorGraph &inliers) {
             *boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(nfg_lc_[num_lc-1]);
 
       // check consistency 
-      bool consistent = areLoopsConsistent(factor_i, factor_j);
+      double mah_distance; 
+      bool consistent = areLoopsConsistent(factor_i, factor_j, mah_distance);
+      new_dst_matrix(num_lc-1, i) = mah_distance;
+      new_dst_matrix(i, num_lc-1) = mah_distance;
       if (consistent) { 
         new_adj_matrix(num_lc-1, i) = 1; 
         new_adj_matrix(i, num_lc-1) = 1;
@@ -287,6 +293,7 @@ void RobustPGO::findInliers(gtsam::NonlinearFactorGraph &inliers) {
     }
   }
   lc_adjacency_matrix_ = new_adj_matrix;
+  lc_distance_matrix_ = new_dst_matrix;
   log<INFO>(L"total loop closures registered: %1%") % lc_adjacency_matrix_.rows();
 
   std::vector<int> max_clique_data;
@@ -296,6 +303,8 @@ void RobustPGO::findInliers(gtsam::NonlinearFactorGraph &inliers) {
     // std::cout << max_clique_data[i] << " "; 
     inliers.add(nfg_lc_[max_clique_data[i]]);
   }
+  log<INFO>(L"distance matrix: \n");
+  std::cout << lc_distance_matrix_ << std::endl;
 }
 
 void RobustPGO::update(gtsam::NonlinearFactorGraph nfg, 

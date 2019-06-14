@@ -1,0 +1,44 @@
+/* 
+Generic solver class 
+author: Yun Chang, Luca Carlone
+*/
+
+#include <RobustPGO/RobustPGO.h>
+
+RobustPGO::RobustPGO(OutlierRemoval* OR,
+                     int solvertype, 
+                     std::vector<char> special_symbols) :
+                     GenericSolver(solvertype, special_symbols), 
+                     outlier_removal_(OR) {
+  log<INFO>(L"instantiated GenericSolver"); 
+  }
+
+void RobustPGO::update(gtsam::NonlinearFactorGraph nfg, 
+                       gtsam::Values values, 
+                       gtsam::FactorIndices factorsToRemove) {
+  // remove factors
+  for (size_t index : factorsToRemove) {
+    nfg_[index].reset();
+  }
+
+  bool do_optimize = outlier_removal_->process(nfg, values, nfg_, values_);
+  
+  log<INFO>(L">>>>>>>>>>>> Run Optimizer <<<<<<<<<<<<");
+  // optimize
+  if (do_optimize) {
+    if (solver_type_ == 1) {
+      gtsam::LevenbergMarquardtParams params;
+      params.setVerbosityLM("SUMMARY");
+      log<INFO>(L"Running LM"); 
+      params.diagonalDamping = true; 
+      values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
+    }else if (solver_type_ == 2) {
+      gtsam::GaussNewtonParams params;
+      params.setVerbosity("ERROR");
+      log<INFO>(L"Running GN");
+      values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, params).optimize();
+    }else if (solver_type_ == 3) {
+      // something
+    }
+  }
+}

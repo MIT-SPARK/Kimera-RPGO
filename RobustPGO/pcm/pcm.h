@@ -3,6 +3,9 @@ Backend solver class (Robust Pose Graph Optimizer)
 author: Yun Chang, Luca Carlone
 */
 
+#ifndef PCM_H
+#define PCM_H
+
 // enables correct operations of GTSAM (correct Jacobians)
 #define SLOW_BUT_CORRECT_BETWEENFACTOR 
 
@@ -10,10 +13,6 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Rot3.h>
 #include <gtsam/linear/NoiseModel.h>
-#include <gtsam/nonlinear/ISAM2.h>
-#include <gtsam/nonlinear/GaussNewtonOptimizer.h>
-#include <gtsam/nonlinear/DoglegOptimizer.h>
-#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam/slam/PriorFactor.h>
@@ -24,49 +23,22 @@ author: Yun Chang, Luca Carlone
 
 #include "RobustPGO/graph_utils/graph_utils_functions.h" 
 #include "RobustPGO/logger.h"
+#include "RobustPGO/OutlierRemoval.h"
 
-
-/*
-Basic Idea: 
-main interface: update() -> this is called whenever something is added to factor graph 
-RobustPGO contains an robustor class (which can be switched): this runs the outlier rejection 
-Whenever RobustPGO gets a new value or factor, this is passed on to the robustor, which will then 
-return the set of factors and values to be optimized. 
-Note that one of these robustor class can be essentially nothing -> no outlier rejection  
-*/
-
-class RobustPGO {
+class PCM : public OutlierRemoval{
 public:
-  RobustPGO(int solvertype=1); 
-  // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton, 3 for SESync (WIP)
+  PCM(double odom_threshold, double pc_threshold); 
+  // initialize with odometry detect threshold and pairwise consistency threshold
 
-  void regularUpdate(gtsam::NonlinearFactorGraph nfg=gtsam::NonlinearFactorGraph(), 
-              gtsam::Values values=gtsam::Values(),
-              gtsam::FactorIndices factorsToRemove=gtsam::FactorIndices());
-
-  void update(gtsam::NonlinearFactorGraph nfg=gtsam::NonlinearFactorGraph(), 
-                    gtsam::Values values=gtsam::Values(),
-                    gtsam::FactorIndices factorsToRemove=gtsam::FactorIndices());
-
-  gtsam::Values calculateEstimate() { return values_; }
-  gtsam::Values calculateBestEstimate() { return values_; }
-  gtsam::Values getLinearizationPoint() { return values_; }
-  gtsam::NonlinearFactorGraph getFactorsUnsafe(){ return nfg_; }
-  bool LoadParameters(double odometry_threshold=1.6,
-                      double pwctency_threshold=1.6);
-
-  void print() {
-    nfg_.print("");
-    values_.print("");
-  }
+  bool process(gtsam::NonlinearFactorGraph new_factors, 
+               gtsam::Values new_values,
+               gtsam::NonlinearFactorGraph& output_nfg, 
+               gtsam::Values& output_values);
 
 private:
-  gtsam::Values values_;
-  gtsam::NonlinearFactorGraph nfg_;
-  int solver_type_;
 
   double odom_threshold_;
-  double pw_threshold_;
+  double pc_threshold_;
 
   gtsam::NonlinearFactorGraph nfg_odom_;
   gtsam::NonlinearFactorGraph nfg_lc_;
@@ -79,7 +51,8 @@ private:
   void updateOdom(gtsam::BetweenFactor<gtsam::Pose3> odom_factor, 
                   graph_utils::PoseWithCovariance &new_pose);
 
-  bool isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor);
+  bool isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor,
+                        double& mahalanobis_dist);
 
   bool areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1, 
                           gtsam::BetweenFactor<gtsam::Pose3> lc_2,
@@ -87,3 +60,5 @@ private:
 
   void findInliers(gtsam::NonlinearFactorGraph &inliers);
 };
+
+#endif

@@ -3,80 +3,13 @@ Generic solver class
 author: Yun Chang, Luca Carlone
 */
 
-#include <RobustPGO/robust_pgo.h>
+#include "pcm.h"
 
-RobustPGO::RobustPGO(int solvertype): 
-  nfg_(gtsam::NonlinearFactorGraph()),
-  values_(gtsam::Values()),
-  solver_type_(solvertype),
-  nfg_odom_(gtsam::NonlinearFactorGraph()),
-  nfg_lc_(gtsam::NonlinearFactorGraph()) {
-  log<INFO>(L"instantiated RobustPGO"); 
-}
+PCM::PCM(double odom_threshold, double pc_threshold):
+    odom_threshold_(odom_threshold), 
+    pc_threshold_(pc_threshold) {}
 
-bool RobustPGO::LoadParameters(double odometry_threshold,
-                               double pwctency_threshold) {
-  odom_threshold_ = odometry_threshold; 
-  pw_threshold_ = pwctency_threshold;
-}
-
-
-void RobustPGO::regularUpdate(gtsam::NonlinearFactorGraph nfg, 
-                           gtsam::Values values, 
-                           gtsam::FactorIndices factorsToRemove) {
-  // remove factors
-  for (size_t index : factorsToRemove) {
-    nfg_[index].reset();
-  }
-
-  // add new values and factors
-  nfg_.add(nfg);
-  values_.insert(values);
-  bool do_optimize = true; 
-
-  // print number of loop closures
-  // std::cout << "number of loop closures so far: " << nfg_.size() - values_.size() << std::endl; 
-
-  if (values.size() > 1) {log<WARNING>(L"Unexpected behavior: number of update poses greater than one.");}
-
-  if (nfg.size() > 1) {log<WARNING>(L"Unexpected behavior: number of update factors greater than one.");}
-
-  if (nfg.size() == 0 && values.size() > 0) {log<WARNING>(L"Unexpected behavior: added values but no factors.");}
-
-  // Do not optimize for just odometry additions 
-  // odometry values would not have prefix 'l' unlike artifact values
-  if (nfg.size() == 1 && values.size() == 1) {
-    const gtsam::Symbol symb(values.keys()[0]); 
-    if (symb.chr() != 'l') {do_optimize = false;}
-  }
-
-  // nothing added so no optimization 
-  if (nfg.size() == 0 && values.size() == 0) {do_optimize = false;}
-
-  if (factorsToRemove.size() > 0) 
-    do_optimize = true;
-
-  if (do_optimize) {
-    log<INFO>(L">>>>>>>>>>>> Run Optimizer <<<<<<<<<<<<");
-    // optimize
-    if (solver_type_ == 1) {
-      gtsam::LevenbergMarquardtParams params;
-      params.setVerbosityLM("SUMMARY");
-      log<INFO>(L"Running LM"); 
-      params.diagonalDamping = true; 
-      values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
-    }else if (solver_type_ == 2) {
-      gtsam::GaussNewtonParams params;
-      params.setVerbosity("ERROR");
-      log<INFO>(L"Running GN");
-      values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, params).optimize();
-    }else if (solver_type_ == 3) {
-      // something
-    }
-  }
-}
-
-void RobustPGO::initializePrior(gtsam::PriorFactor<gtsam::Pose3> prior_factor) {
+void PCM::initializePrior(gtsam::PriorFactor<gtsam::Pose3> prior_factor) {
   gtsam::Pose3 initial_value = prior_factor.prior();
   gtsam::Matrix covar = Eigen::MatrixXd::Zero(6,6); // initialize as zero
   gtsam::Key initial_key = prior_factor.front(); // CHECK if correct 
@@ -95,7 +28,7 @@ void RobustPGO::initializePrior(gtsam::PriorFactor<gtsam::Pose3> prior_factor) {
   posesAndCovariances_odom_.end_id = initial_key;
 }
 
-void RobustPGO::updateOdom(gtsam::BetweenFactor<gtsam::Pose3> odom_factor, 
+void PCM::updateOdom(gtsam::BetweenFactor<gtsam::Pose3> odom_factor, 
                                graph_utils::PoseWithCovariance &new_pose){
 
   // update posesAndCovariances_odom_ (compose last value with new odom value)
@@ -128,7 +61,8 @@ void RobustPGO::updateOdom(gtsam::BetweenFactor<gtsam::Pose3> odom_factor,
   posesAndCovariances_odom_.trajectory_poses[new_key] = new_trajectorypose; 
 }
 
-bool RobustPGO::isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor) {
+bool PCM::isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor,
+                           double& mahalanobis_dist) {
   // assume loop is between pose i and j
   // extract the keys 
   gtsam::Key key_i = lc_factor.front();
@@ -165,27 +99,28 @@ bool RobustPGO::isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor) {
   // check with threshold
   double threshold = odom_threshold_;
   // comput sqaure mahalanobis distance (the computation is wrong in robust mapper repo)
-  double distance; 
+
   if (rotation_info) {
-    distance = std::sqrt(consistency_error.transpose() 
+    mahalanobis_dist = std::sqrt(consistency_error.transpose() 
         * gtsam::inverse(result.covariance_matrix) * consistency_error);
   } else {
-    distance = std::sqrt(consistency_error.tail(3).transpose() 
+    mahalanobis_dist = std::sqrt(consistency_error.tail(3).transpose() 
         * gtsam::inverse(result.covariance_matrix.block<3,3>(3,3)) 
         * consistency_error.tail(3));
   }
+
   // TODO: print the mahalanobis dist of the loops in matrix
-  log<INFO>(L"odometry consistency distance: %1%") % distance; 
-  if (distance < threshold) {
+  log<INFO>(L"odometry consistency distance: %1%") % mahalanobis_dist; 
+  if (mahalanobis_dist < threshold) {
     return true;
   }
   
   return false;
 }
 
-bool RobustPGO::areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1, 
-                                   gtsam::BetweenFactor<gtsam::Pose3> lc_2, 
-                                   double& mahalanobis_dist) {
+bool PCM::areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1, 
+                             gtsam::BetweenFactor<gtsam::Pose3> lc_2, 
+                             double& mahalanobis_dist) {
   // check if two loop closures are consistent 
   gtsam::Key key1a = lc_1.front();
   gtsam::Key key1b = lc_1.back();
@@ -237,28 +172,26 @@ bool RobustPGO::areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1,
   // Might need to inverse p1_lc CHECK 
 
   gtsam::Vector6 consistency_error = gtsam::Pose3::Logmap(result.pose);
-  // check with threshold
-  double threshold = pw_threshold_; // hard coded for now 
+
   // comput sqaure mahalanobis distance 
-  double distance; 
   if (rotation_info) {
-    distance = std::sqrt(consistency_error.transpose() 
+    mahalanobis_dist = std::sqrt(consistency_error.transpose() 
         * gtsam::inverse(result.covariance_matrix) * consistency_error);
   } else {
-    distance = std::sqrt(consistency_error.tail(3).transpose() 
+    mahalanobis_dist = std::sqrt(consistency_error.tail(3).transpose() 
         * gtsam::inverse(result.covariance_matrix.block<3,3>(3,3)) 
         * consistency_error.tail(3));
   }
-  mahalanobis_dist = distance;
-  log<INFO>(L"loop consistency distance: %1%") % distance; 
-  if (distance < threshold) {
+
+  log<INFO>(L"loop consistency distance: %1%") % mahalanobis_dist; 
+  if (mahalanobis_dist < pc_threshold_) {
     return true;
   }
 
   return false;
 }
 
-void RobustPGO::findInliers(gtsam::NonlinearFactorGraph &inliers) {
+void PCM::findInliers(gtsam::NonlinearFactorGraph &inliers) {
   // * pairwise consistency check (will also compare other loops - if loop fails we still store it, but not include in the optimization)
   // -- add 1 row and 1 column to lc_adjacency_matrix_;
   // -- populate extra row and column by testing pairwise consistency of new lc against all previous ones
@@ -303,35 +236,33 @@ void RobustPGO::findInliers(gtsam::NonlinearFactorGraph &inliers) {
     // std::cout << max_clique_data[i] << " "; 
     inliers.add(nfg_lc_[max_clique_data[i]]);
   }
-  log<INFO>(L"distance matrix: \n");
+  log<INFO>(L"distance matrix:");
   std::cout << lc_distance_matrix_ << std::endl;
 }
 
-void RobustPGO::update(gtsam::NonlinearFactorGraph nfg, 
-                                 gtsam::Values values, 
-                                 gtsam::FactorIndices factorsToRemove){
-  // TODO: deal with factorsToRemove
-  // check if odometry (compare factor keys) TODO: do we want to give odometry a specific prefix?
-  // TODO: right now cant do between chordal factor 
+bool PCM::process(gtsam::NonlinearFactorGraph new_factors, 
+                  gtsam::Values new_values,
+                  gtsam::NonlinearFactorGraph& output_nfg, 
+                  gtsam::Values& output_values) {
   bool odometry = false; 
   bool loop_closure = false; 
   // test if odometry of loop closure (or neither in which case just do regular update)
-  if (nfg.size() == 1 && values.size() == 1) {
-    const gtsam::Symbol symb(values.keys()[0]); 
+  if (new_factors.size() == 1 && new_values.size() == 1) {
+    const gtsam::Symbol symb(new_values.keys()[0]); 
     if (symb.chr() != 'l') {
       boost::shared_ptr<gtsam::BetweenFactor<gtsam::Pose3> > pose3Between =
-            boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(nfg[0]);
+            boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0]);
       if (pose3Between) {
         odometry = true;
       } else if (posesAndCovariances_odom_.trajectory_poses.size() == 0) {
         // probably a prior factor and initializing CHECK
         gtsam::PriorFactor<gtsam::Pose3> prior_factor =
-            *boost::dynamic_pointer_cast<gtsam::PriorFactor<gtsam::Pose3> >(nfg[0]);
+            *boost::dynamic_pointer_cast<gtsam::PriorFactor<gtsam::Pose3> >(new_factors[0]);
         initializePrior(prior_factor);
         log<INFO>(L"Initialized prior and trajectory");
       }
     }
-  } else if (nfg.size() == 1 && values.size() == 0){
+  } else if (new_factors.size() == 1 && new_values.size() == 0){
     loop_closure = true; 
   }
 
@@ -340,32 +271,33 @@ void RobustPGO::update(gtsam::NonlinearFactorGraph nfg,
     graph_utils::PoseWithCovariance new_pose;
     // extract between factor 
     gtsam::BetweenFactor<gtsam::Pose3> nfg_factor =
-            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(nfg[0]);
+            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0]);
 
     updateOdom(nfg_factor, new_pose);
     // TODO: compare the new pose from out pose_compose with values pose 
     // should be the same 
 
     // - store factor in nfg_odom_
-    nfg_odom_.add(nfg);
+    nfg_odom_.add(new_factors);
 
     // - store latest pose in values_ (note: values_ is the optimized estimate, while trajectory is the odom estimate)
-    values_.insert(values.keys()[0], new_pose.pose);
+    output_values.insert(new_values.keys()[0], new_pose.pose);
 
-    return;
+    return false; // no need to optimize just for odometry 
 
   } else if (loop_closure) { // in this case we should run consistency check to see if loop closure is good
     // * odometric consistency check (will only compare against odometry - if loop fails this, we can just drop it)
     // extract between factor 
     gtsam::BetweenFactor<gtsam::Pose3> nfg_factor =
-            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(nfg[0]);
+            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0]);
 
-    if (isOdomConsistent(nfg_factor)) {
-      nfg_lc_.add(nfg); // add factor to nfg_lc_
+    double odom_mah_dist; 
+    if (isOdomConsistent(nfg_factor, odom_mah_dist)) {
+      nfg_lc_.add(new_factors); // add factor to nfg_lc_
 
     } else {
       log<WARNING>(L"Discarded loop closure (inconsistent with odometry)");
-      return; // discontinue since loop closure not consistent with odometry 
+      return false; // discontinue since loop closure not consistent with odometry 
     }
     
     // Find inliers with Pairwise consistent measurement set maximization
@@ -373,18 +305,20 @@ void RobustPGO::update(gtsam::NonlinearFactorGraph nfg,
     findInliers(nfg_good_lc);
     
     // * optimize and update values (for now just LM add others later)
-    nfg_ = gtsam::NonlinearFactorGraph(); // reset 
-    nfg_.add(nfg_odom_);
-    nfg_.add(nfg_good_lc);
-    gtsam::LevenbergMarquardtParams params;
-    params.setVerbosityLM("SUMMARY");
-    log<INFO>(L"Running LM"); 
-    params.diagonalDamping = true; 
-    values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
-    return; 
+    output_nfg = gtsam::NonlinearFactorGraph(); // reset 
+    output_nfg.add(nfg_odom_);
+    output_nfg.add(nfg_good_lc);
+    return true; 
 
   } else {
-    // NOTE this case 
-    regularUpdate(nfg, values, factorsToRemove);
+    // Basically the cases not yet considered by pcm
+    output_nfg.add(new_factors);
+    output_values.insert(new_values);
+
+    // nothing added  so no optimization
+    if (new_factors.size() == 0 && new_values.size() == 0) {
+      return false; // nothing to optimize 
+    }
+
   }
 }

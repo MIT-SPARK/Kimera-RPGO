@@ -1,3 +1,11 @@
+/* 
+Symple logger class for prints and warnings 
+author: Yun Chang
+*/
+
+#ifndef LOGGER_H
+#define LOGGER_H
+
 #include <sstream>
 #include <boost/format.hpp>
 #include <iostream>
@@ -32,3 +40,5 @@ template <log_level_t level>
 log_impl::formatted_log_t log(const wchar_t* msg) {
   return log_impl::formatted_log_t( level, msg );
 }
+
+#endif 

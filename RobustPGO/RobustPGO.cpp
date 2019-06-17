@@ -10,7 +10,6 @@ RobustPGO::RobustPGO(OutlierRemoval* OR,
                      std::vector<char> special_symbols) :
                      GenericSolver(solvertype, special_symbols), 
                      outlier_removal_(OR) {
-  log<INFO>(L"instantiated GenericSolver"); 
   }
 
 void RobustPGO::update(gtsam::NonlinearFactorGraph nfg, 
@@ -22,7 +21,6 @@ void RobustPGO::update(gtsam::NonlinearFactorGraph nfg,
   }
 
   bool do_optimize = outlier_removal_->process(nfg, values, nfg_, values_);
-  
   log<INFO>(L">>>>>>>>>>>> Run Optimizer <<<<<<<<<<<<");
   // optimize
   if (do_optimize) {

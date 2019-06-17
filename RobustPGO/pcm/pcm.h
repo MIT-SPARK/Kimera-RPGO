@@ -27,7 +27,7 @@ author: Yun Chang, Luca Carlone
 
 class PCM : public OutlierRemoval{
 public:
-  PCM(double odom_threshold, double pc_threshold); 
+  PCM(double odom_threshold, double pc_threshold, std::vector<char> special_symbols=std::vector<char>()); 
   // initialize with odometry detect threshold and pairwise consistency threshold
 
   bool process(gtsam::NonlinearFactorGraph new_factors, 
@@ -45,6 +45,10 @@ private:
   gtsam::Matrix lc_adjacency_matrix_;
   gtsam::Matrix lc_distance_matrix_;
   graph_utils::Trajectory posesAndCovariances_odom_; 
+
+  std::vector<char> special_symbols_;
+
+  bool specialSymbol(char symb);
 
   void initializePrior(gtsam::PriorFactor<gtsam::Pose3> prior_factor);
 

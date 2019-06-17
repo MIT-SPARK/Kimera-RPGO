@@ -5,9 +5,17 @@ author: Yun Chang, Luca Carlone
 
 #include "pcm.h"
 
-PCM::PCM(double odom_threshold, double pc_threshold):
+PCM::PCM(double odom_threshold, double pc_threshold, std::vector<char> special_symbols):
     odom_threshold_(odom_threshold), 
-    pc_threshold_(pc_threshold) {}
+    pc_threshold_(pc_threshold),
+    special_symbols_(special_symbols) {}
+
+bool PCM::specialSymbol(char symb) {
+  for (size_t i = 0; i < special_symbols_.size(); i++) {
+    if (special_symbols_[i] == symb) return true;
+  }
+  return false; 
+}
 
 void PCM::initializePrior(gtsam::PriorFactor<gtsam::Pose3> prior_factor) {
   gtsam::Pose3 initial_value = prior_factor.prior();
@@ -249,7 +257,7 @@ bool PCM::process(gtsam::NonlinearFactorGraph new_factors,
   // test if odometry of loop closure (or neither in which case just do regular update)
   if (new_factors.size() == 1 && new_values.size() == 1) {
     const gtsam::Symbol symb(new_values.keys()[0]); 
-    if (symb.chr() != 'l') {
+    if (!specialSymbol(symb.chr())) {
       boost::shared_ptr<gtsam::BetweenFactor<gtsam::Pose3> > pose3Between =
             boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0]);
       if (pose3Between) {
@@ -263,7 +271,8 @@ bool PCM::process(gtsam::NonlinearFactorGraph new_factors,
       }
     }
   } else if (new_factors.size() == 1 && new_values.size() == 0){
-    loop_closure = true; 
+    if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0]))
+      loop_closure = true; 
   }
 
   if (odometry) {

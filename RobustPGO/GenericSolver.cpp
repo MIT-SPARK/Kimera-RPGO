@@ -12,7 +12,7 @@ GenericSolver::GenericSolver(int solvertype,
   values_(gtsam::Values()),
   solver_type_(solvertype),
   special_symbols_(special_symbols) {
-  log<INFO>(L"instantiated GenericSolver"); 
+  log<INFO>(L"Instantiated Pose Graph Optimizer"); 
 }
 
 bool GenericSolver::specialSymbol(char symb) {

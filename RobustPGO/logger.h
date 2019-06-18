@@ -19,10 +19,10 @@ enum log_level_t {
 namespace log_impl {
 class formatted_log_t {
 public:
-  formatted_log_t( log_level_t level, const wchar_t* msg ) : fmt(msg), level(level) {}
+  formatted_log_t( log_level_t level, const char* msg ) : fmt(msg), level(level) {}
   ~formatted_log_t() {
-    if (level == 0) wcout << "\033[1;33m" << L" " << fmt << "\033[0m" << endl;
-    if (level == 1) wcout << "\033[32m" << L" " << fmt << "\033[0m" << endl;
+    if (level == 0) cout << "\033[1;33m" << fmt << "\033[0m" << endl;
+    if (level == 1) cout << "\033[32m" << fmt << "\033[0m" << endl;
   }        
   template <typename T> 
   formatted_log_t& operator %(T value) {
@@ -31,13 +31,13 @@ public:
   }    
 protected:
   log_level_t level;
-  boost::wformat fmt;
+  boost::format fmt;
 };
 }//namespace log_impl
 
 // Helper function. Class formatted_log_t will not be used directly.
 template <log_level_t level>
-log_impl::formatted_log_t log(const wchar_t* msg) {
+log_impl::formatted_log_t log(const char* msg) {
   return log_impl::formatted_log_t( level, msg );
 }
 

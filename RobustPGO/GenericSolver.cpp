@@ -12,7 +12,7 @@ GenericSolver::GenericSolver(int solvertype,
   values_(gtsam::Values()),
   solver_type_(solvertype),
   special_symbols_(special_symbols) {
-  log<INFO>(L"Instantiated Pose Graph Optimizer"); 
+  log<INFO>("Instantiated Pose Graph Optimizer"); 
 }
 
 bool GenericSolver::specialSymbol(char symb) {
@@ -49,18 +49,17 @@ void GenericSolver::update(gtsam::NonlinearFactorGraph nfg,
     do_optimize = true;
 
   if (do_optimize) {
-    log<INFO>(L">>>>>>>>>>>> Run Optimizer <<<<<<<<<<<<");
     // optimize
     if (solver_type_ == 1) {
       gtsam::LevenbergMarquardtParams params;
       params.setVerbosityLM("SUMMARY");
-      log<INFO>(L"Running LM"); 
+      log<INFO>("Running LM"); 
       params.diagonalDamping = true; 
       values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
     }else if (solver_type_ == 2) {
       gtsam::GaussNewtonParams params;
       params.setVerbosity("ERROR");
-      log<INFO>(L"Running GN");
+      log<INFO>("Running GN");
       values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, params).optimize();
     }else if (solver_type_ == 3) {
       // TODO: something (SE-SYNC?)

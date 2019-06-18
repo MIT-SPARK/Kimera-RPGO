@@ -118,7 +118,7 @@ bool PCM::isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor,
   }
 
   // TODO: print the mahalanobis dist of the loops in matrix
-  log<INFO>(L"odometry consistency distance: %1%") % mahalanobis_dist; 
+  log<INFO>("odometry consistency distance: %1%") % mahalanobis_dist; 
   if (mahalanobis_dist < threshold) {
     return true;
   }
@@ -191,7 +191,7 @@ bool PCM::areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1,
         * consistency_error.tail(3));
   }
 
-  log<INFO>(L"loop consistency distance: %1%") % mahalanobis_dist; 
+  log<INFO>("loop consistency distance: %1%") % mahalanobis_dist; 
   if (mahalanobis_dist < pc_threshold_) {
     return true;
   }
@@ -235,16 +235,16 @@ void PCM::findInliers(gtsam::NonlinearFactorGraph &inliers) {
   }
   lc_adjacency_matrix_ = new_adj_matrix;
   lc_distance_matrix_ = new_dst_matrix;
-  log<INFO>(L"total loop closures registered: %1%") % lc_adjacency_matrix_.rows();
+  log<INFO>("total loop closures registered: %1%") % lc_adjacency_matrix_.rows();
 
   std::vector<int> max_clique_data;
   int max_clique_size = graph_utils::findMaxClique(lc_adjacency_matrix_, max_clique_data);
-  log<INFO>(L"number of inliers: %1%") % max_clique_size; 
+  log<INFO>("number of inliers: %1%") % max_clique_size; 
   for (size_t i = 0; i < max_clique_size; i++) {
     // std::cout << max_clique_data[i] << " "; 
     inliers.add(nfg_lc_[max_clique_data[i]]);
   }
-  log<INFO>(L"distance matrix:");
+  log<INFO>("distance matrix:");
   std::cout << lc_distance_matrix_ << std::endl;
 }
 
@@ -268,7 +268,7 @@ bool PCM::process(gtsam::NonlinearFactorGraph new_factors,
         gtsam::PriorFactor<gtsam::Pose3> prior_factor =
             *boost::dynamic_pointer_cast<gtsam::PriorFactor<gtsam::Pose3> >(new_factors[0]);
         initializePrior(prior_factor);
-        log<INFO>(L"Initialized prior and trajectory");
+        log<INFO>("Initialized prior and trajectory");
       }
     } else {
       special_loop_closure = true; // since contains special prefix 
@@ -320,7 +320,7 @@ bool PCM::process(gtsam::NonlinearFactorGraph new_factors,
       nfg_lc_.add(new_factors); // add factor to nfg_lc_
 
     } else {
-      log<WARNING>(L"Discarded loop closure (inconsistent with odometry)");
+      log<WARNING>("Discarded loop closure (inconsistent with odometry)");
       return false; // discontinue since loop closure not consistent with odometry 
     }
     

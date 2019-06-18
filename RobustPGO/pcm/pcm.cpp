@@ -325,19 +325,20 @@ bool PCM::process(gtsam::NonlinearFactorGraph new_factors,
     }
     
     // Find inliers with Pairwise consistent measurement set maximization
-    gtsam::NonlinearFactorGraph nfg_good_lc; 
-    findInliers(nfg_good_lc);
+    findInliers(nfg_good_lc_); // update nfg_good_lc_
     
     // * optimize and update values (for now just LM add others later)
     output_nfg = gtsam::NonlinearFactorGraph(); // reset 
     output_nfg.add(nfg_odom_);
     output_nfg.add(nfg_special_);
-    output_nfg.add(nfg_good_lc);
+    output_nfg.add(nfg_good_lc_);
     return true; 
 
   } else if (special_loop_closure) {
     nfg_special_.add(new_factors);
-    output_nfg.add(new_factors);
+    output_nfg.add(nfg_special_);
+    output_nfg.add(nfg_good_lc_);
+    output_nfg.add(nfg_odom_);
     output_values.insert(new_values);
     return true;
 

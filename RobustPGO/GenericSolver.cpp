@@ -4,7 +4,7 @@ No outlier removal in this class
 author: Yun Chang, Luca Carlone
 */
 
-#include <RobustPGO/GenericSolver.h>
+#include "RobustPGO/GenericSolver.h"
 
 GenericSolver::GenericSolver(int solvertype, 
                              std::vector<char> special_symbols): 

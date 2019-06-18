@@ -44,7 +44,7 @@ void PCM::updateOdom(gtsam::BetweenFactor<gtsam::Pose3> odom_factor,
   // first get measurement and covariance and key from factor
   gtsam::Pose3 delta = odom_factor.measured(); 
   gtsam::Matrix covar =
-      gtsam::inverse(boost::dynamic_pointer_cast<gtsam::noiseModel::Diagonal>
+      gtsam::inverse(boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
       (odom_factor.get_noiseModel())->R()); // return covariance matrix
   gtsam::Key new_key = odom_factor.back();
 
@@ -87,7 +87,7 @@ bool PCM::isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor,
 
   // get pij_lc = (Tij_lc, Covij_lc) from factor
   pji_lc.pose = lc_factor.measured().inverse(); 
-  gtsam::Matrix R_lc = boost::dynamic_pointer_cast<gtsam::noiseModel::Diagonal>
+  gtsam::Matrix R_lc = boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
       (lc_factor.get_noiseModel())->R();
   
   // Check if includes rotation info 
@@ -139,7 +139,7 @@ bool PCM::areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1,
 
   graph_utils::PoseWithCovariance p1_lc_inv, p2_lc; 
   p1_lc_inv.pose = lc_1.measured().inverse();
-  gtsam::Matrix R1_lc = boost::dynamic_pointer_cast<gtsam::noiseModel::Diagonal>
+  gtsam::Matrix R1_lc = boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
       (lc_1.get_noiseModel())->R();
 
   if (R1_lc.block<3,3>(0,0) == Eigen::MatrixXd::Zero(3,3)) {
@@ -150,7 +150,7 @@ bool PCM::areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1,
   p1_lc_inv.covariance_matrix = gtsam::inverse(R1_lc); 
 
   p2_lc.pose = lc_2.measured();
-  gtsam::Matrix R2_lc = boost::dynamic_pointer_cast<gtsam::noiseModel::Diagonal>
+  gtsam::Matrix R2_lc = boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
       (lc_2.get_noiseModel())->R();
 
   if (R2_lc.block<3,3>(0,0) == Eigen::MatrixXd::Zero(3,3)) {
@@ -255,24 +255,28 @@ bool PCM::process(gtsam::NonlinearFactorGraph new_factors,
   bool odometry = false; 
   bool loop_closure = false; 
   bool special_loop_closure = false;
-  // test if odometry of loop closure (or neither in which case just do regular update)
-  if (new_factors.size() == 1 && new_values.size() == 1) {
-    const gtsam::Symbol symb(new_values.keys()[0]); 
-    if (!specialSymbol(symb.chr())) { // if does not contain special prefixes 
-      boost::shared_ptr<gtsam::BetweenFactor<gtsam::Pose3> > pose3Between =
-            boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0]);
-      if (pose3Between) {
+
+  if (posesAndCovariances_odom_.trajectory_poses.size() == 0) {
+    // likely a prior factor for initialization 
+    gtsam::PriorFactor<gtsam::Pose3> prior_factor =
+        *boost::dynamic_pointer_cast<gtsam::PriorFactor<gtsam::Pose3> >(new_factors[0]);
+    initializePrior(prior_factor);
+    log<INFO>("Initialized prior and trajectory");
+
+  } else if (new_factors.size() == 1 && new_values.size() == 1) {
+    if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0])) {
+      // if it is a between factor 
+      gtsam::BetweenFactor<gtsam::Pose3> nfg_factor =
+            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0]);
+      if (nfg_factor.front() == nfg_factor.back() - 1) {
         odometry = true;
-      } else if (posesAndCovariances_odom_.trajectory_poses.size() == 0) {
-        // probably a prior factor and initializing CHECK
-        gtsam::PriorFactor<gtsam::Pose3> prior_factor =
-            *boost::dynamic_pointer_cast<gtsam::PriorFactor<gtsam::Pose3> >(new_factors[0]);
-        initializePrior(prior_factor);
-        log<INFO>("Initialized prior and trajectory");
       }
-    } else {
-      special_loop_closure = true; // since contains special prefix 
+    } 
+    gtsam::Symbol symb(new_values.keys()[0]);
+    if (specialSymbol(symb.chr())) {
+      special_loop_closure = true;
     }
+
   } else if (new_factors.size() == 1 && new_values.size() == 0){
     // check if it is a between factor
     if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0])) {

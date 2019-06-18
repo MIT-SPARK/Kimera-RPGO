@@ -33,5 +33,10 @@ link_directories(
 add_subdirectory(RobustPGO)
 
 ###########################################################################
+# Define executables
+add_executable(RpgoReadG2o examples/RpgoReadG2o.cpp)
+target_link_libraries(RpgoReadG2o RobustPGO)
+
+###########################################################################
 # Tests
 add_subdirectory(tests)

@@ -3,7 +3,7 @@ Generic solver class
 author: Yun Chang, Luca Carlone
 */
 
-#include <RobustPGO/RobustPGO.h>
+#include "RobustPGO/RobustPGO.h"
 
 RobustPGO::RobustPGO(OutlierRemoval* OR,
                      int solvertype, 

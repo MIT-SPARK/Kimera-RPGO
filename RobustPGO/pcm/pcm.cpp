@@ -254,10 +254,11 @@ bool PCM::process(gtsam::NonlinearFactorGraph new_factors,
                   gtsam::Values& output_values) {
   bool odometry = false; 
   bool loop_closure = false; 
+  bool special_loop_closure = false;
   // test if odometry of loop closure (or neither in which case just do regular update)
   if (new_factors.size() == 1 && new_values.size() == 1) {
     const gtsam::Symbol symb(new_values.keys()[0]); 
-    if (!specialSymbol(symb.chr())) {
+    if (!specialSymbol(symb.chr())) { // if does not contain special prefixes 
       boost::shared_ptr<gtsam::BetweenFactor<gtsam::Pose3> > pose3Between =
             boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0]);
       if (pose3Between) {
@@ -269,10 +270,24 @@ bool PCM::process(gtsam::NonlinearFactorGraph new_factors,
         initializePrior(prior_factor);
         log<INFO>(L"Initialized prior and trajectory");
       }
+    } else {
+      special_loop_closure = true; // since contains special prefix 
     }
   } else if (new_factors.size() == 1 && new_values.size() == 0){
-    if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0]))
-      loop_closure = true; 
+    // check if it is a between factor
+    if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0])) {
+      gtsam::BetweenFactor<gtsam::Pose3> nfg_factor =
+            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0]);
+      gtsam::Symbol symb_front(nfg_factor.front());
+      gtsam::Symbol symb_back(nfg_factor.back());
+      if (specialSymbol(symb_front.chr()) || specialSymbol(symb_back.chr())) {
+        special_loop_closure = true; // if one of the keys is special 
+      } else {
+        loop_closure = true;
+      }
+    } else {
+      special_loop_closure = true; // non-between factor (etc. range factor)
+    }
   }
 
   if (odometry) {
@@ -316,8 +331,15 @@ bool PCM::process(gtsam::NonlinearFactorGraph new_factors,
     // * optimize and update values (for now just LM add others later)
     output_nfg = gtsam::NonlinearFactorGraph(); // reset 
     output_nfg.add(nfg_odom_);
+    output_nfg.add(nfg_special_);
     output_nfg.add(nfg_good_lc);
     return true; 
+
+  } else if (special_loop_closure) {
+    nfg_special_.add(new_factors);
+    output_nfg.add(new_factors);
+    output_values.insert(new_values);
+    return true;
 
   } else {
     // Basically the cases not yet considered by pcm
@@ -328,6 +350,7 @@ bool PCM::process(gtsam::NonlinearFactorGraph new_factors,
     if (new_factors.size() == 0 && new_values.size() == 0) {
       return false; // nothing to optimize 
     }
+    return true;
 
   }
 }

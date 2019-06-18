@@ -3,7 +3,6 @@
 #ifndef GRAPH_UTILS_TYPES_H
 #define GRAPH_UTILS_TYPES_H
 
-#include <gtsam/base/Value.h>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Rot3.h>
 #include <gtsam/slam/BetweenFactor.h>

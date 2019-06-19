@@ -64,5 +64,7 @@ void GenericSolver::update(gtsam::NonlinearFactorGraph nfg,
     }else if (solver_type_ == 3) {
       // TODO: something (SE-SYNC?)
     }
+
+    gtsam::writeG2o(nfg_, values_, "log/GS_graph.g2o");
   }
 }

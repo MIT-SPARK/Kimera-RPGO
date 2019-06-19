@@ -5,7 +5,8 @@ author: Yun Chang, Luca Carlone
 
 #include "pcm.h"
 
-PCM::PCM(double odom_threshold, double pc_threshold, std::vector<char> special_symbols):
+PCM::PCM(double odom_threshold, double pc_threshold, 
+    std::vector<char> special_symbols):
     odom_threshold_(odom_threshold), 
     pc_threshold_(pc_threshold),
     special_symbols_(special_symbols) {}
@@ -101,7 +102,7 @@ bool PCM::isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor,
 
   // check consistency (Tij_odom,Cov_ij_odom, Tij_lc, Cov_ij_lc)
   graph_utils::poseCompose(pij_odom, pji_lc, result);
-  // result.pose.print("odom consistency check: ");
+  result.pose.print("odom consistency check: ");
   // std::cout << std::endl; 
   gtsam::Vector6 consistency_error = gtsam::Pose3::Logmap(result.pose);
   // check with threshold
@@ -244,8 +245,10 @@ void PCM::findInliers(gtsam::NonlinearFactorGraph &inliers) {
     // std::cout << max_clique_data[i] << " "; 
     inliers.add(nfg_lc_[max_clique_data[i]]);
   }
-  log<INFO>("distance matrix:");
-  std::cout << lc_distance_matrix_ << std::endl;
+  std::ofstream file("log/pcm_dist_matrix.txt");
+  if (file.is_open()) {
+    file << lc_distance_matrix_;
+  } 
 }
 
 bool PCM::process(gtsam::NonlinearFactorGraph new_factors, 

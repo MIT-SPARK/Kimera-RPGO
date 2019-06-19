@@ -9,6 +9,8 @@ author: Yun Chang, Luca Carlone
 // enables correct operations of GTSAM (correct Jacobians)
 #define SLOW_BUT_CORRECT_BETWEENFACTOR 
 
+#include <fstream>
+
 #include <gtsam/base/Vector.h>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Rot3.h>
@@ -27,7 +29,8 @@ author: Yun Chang, Luca Carlone
 
 class PCM : public OutlierRemoval{
 public:
-  PCM(double odom_threshold, double pc_threshold, std::vector<char> special_symbols=std::vector<char>()); 
+  PCM(double odom_threshold, double pc_threshold, 
+      std::vector<char> special_symbols=std::vector<char>()); 
   // initialize with odometry detect threshold and pairwise consistency threshold
 
   bool process(gtsam::NonlinearFactorGraph new_factors, 

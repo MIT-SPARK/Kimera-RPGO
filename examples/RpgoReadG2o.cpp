@@ -13,9 +13,9 @@ int main(int argc, char *argv[]) {
   gtsam::NonlinearFactorGraph nfg = *gv.first;
   gtsam::Values values = *gv.second;
 
-  OutlierRemoval *pcm = new PCM(1.0, 1.0);
+  OutlierRemoval *pcm = new PCM(1.0, 1.0); // with debug set to true
   std::unique_ptr<RobustPGO> pgo;
-  pgo.reset(new RobustPGO(pcm));
+  pgo.reset(new RobustPGO(pcm)); // with debug set to true
 
   // first fix the first with a prior factor 
   gtsam::Key current_key = nfg[0]->front();

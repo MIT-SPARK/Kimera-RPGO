@@ -55,13 +55,13 @@ PoseWithCovariance<T> PoseWithCovariance<T>::between(
       (other.covariance_matrix - pose.covariance_matrix) * 
       tau1.transpose().inverse();
 
-  bool PSD = true;
+  bool pos_semi_def = true;
   Eigen::LLT<Eigen::MatrixXd> lltCovar1(out.covariance_matrix); // compute the Cholesky decomp
   if(lltCovar1.info() == Eigen::NumericalIssue){  
-    PSD = false;
+    pos_semi_def = false;
   } 
 
-  if (!PSD) { 
+  if (!pos_semi_def) { 
     tau1 = other.pose.inverse().AdjointMap();
     out.covariance_matrix = tau1.inverse() * 
     (pose.covariance_matrix - other.covariance_matrix) * 

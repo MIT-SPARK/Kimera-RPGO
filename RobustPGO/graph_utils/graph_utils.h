@@ -20,10 +20,23 @@ namespace graph_utils {
  */
 template <class T>
 struct PoseWithCovariance {
-    T pose; // ex. gtsam::Pose3
-    gtsam::Matrix covariance_matrix;
+  T pose; // ex. gtsam::Pose3
+  gtsam::Matrix covariance_matrix;
 
-    PoseWithCovariance compose(const PoseWithCovariance other) const;
+  // method to combine two poses (along with their covariances)
+  PoseWithCovariance compose(const PoseWithCovariance other) const {
+  PoseWithCovariance<T> out; 
+  gtsam::Matrix Ha, Hb;
+  out.pose = pose.pose.compose(other.pose, Ha, Hb);
+
+  gtsam::Matrix tau1 = pose.pose.AdjointMap();
+
+  out.covariance_matrix = pose.covariance_matrix +
+      tau1 * other.covariance_matrix * tau1.transpose();
+
+  return out;
+  }
+  
     PoseWithCovariance inverse() const;
     PoseWithCovariance between(const PoseWithCovariance other) const;
 };
@@ -66,6 +79,30 @@ struct Trajectory {
 };
 
 int findMaxClique(const Eigen::MatrixXd adjMatrix, std::vector<int>& max_clique);
+
+template<class T>
+static const size_t getRotationDim() {
+  // get rotation dimension of some gtsam object
+  BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<T>));
+  T sample_object; 
+  return sample_object.rotation().dimension;
+}
+
+template<class T>
+static const size_t getTranslationDim() {
+  // get translation dimension of some gtsam object
+  BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<T>));
+  T sample_object; 
+  return sample_object.translation().dimension;
+}
+
+template<class T>
+static const size_t getDim(){
+  // get overall dimension of some gtsam object
+  BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<T>));
+  T sample_object;
+  return sample_object.dimension;
+}
 
 }
 #endif

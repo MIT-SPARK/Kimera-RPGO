@@ -5,26 +5,37 @@ author: Yun Chang, Luca Carlone
 
 #include "pcm.h"
 
-PCM::PCM(double odom_threshold, double pc_threshold, 
+template<class T>
+PCM<T>::PCM(double odom_threshold, double pc_threshold, 
     std::vector<char> special_symbols):
     odom_threshold_(odom_threshold), 
     pc_threshold_(pc_threshold),
-    special_symbols_(special_symbols) {}
+    special_symbols_(special_symbols) {
+  // check if templated value valid
+  BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<T>));
+  T sample_value; // create sample value to get attributes
+  dim_ = sample_value.getDimension();
+  r_dim_ = sample_value.rotation().getDimension(); // dimension of rotation part
+  t_dim_ = sample_value.translation().getDimension(); // dim of trans part
+}
 
-bool PCM::specialSymbol(char symb) {
+template<class T>
+bool PCM<T>::specialSymbol(char symb) {
   for (size_t i = 0; i < special_symbols_.size(); i++) {
     if (special_symbols_[i] == symb) return true;
   }
   return false; 
 }
 
-void PCM::initializePrior(gtsam::PriorFactor<gtsam::Pose3> prior_factor) {
-  gtsam::Pose3 initial_value = prior_factor.prior();
-  gtsam::Matrix covar = Eigen::MatrixXd::Zero(6,6); // initialize as zero
-  gtsam::Key initial_key = prior_factor.front(); // CHECK if correct 
+template<class T>
+void PCM<T>::initializePrior(gtsam::PriorFactor<T> prior_factor) {
+  T initial_value = prior_factor.prior();
+  gtsam::Matrix covar = 
+      Eigen::MatrixXd::Zero(dim_, dim_); // initialize as zero
+  gtsam::Key initial_key = prior_factor.front();
 
   // construct initial pose with covar 
-  graph_utils::PoseWithCovariance initial_pose; 
+  graph_utils::PoseWithCovariance<T> initial_pose; 
   initial_pose.pose = initial_value;
   initial_pose.covariance_matrix = covar; 
   graph_utils::TrajectoryPose init_trajpose; 
@@ -37,26 +48,27 @@ void PCM::initializePrior(gtsam::PriorFactor<gtsam::Pose3> prior_factor) {
   posesAndCovariances_odom_.end_id = initial_key;
 }
 
-void PCM::updateOdom(gtsam::BetweenFactor<gtsam::Pose3> odom_factor, 
-                               graph_utils::PoseWithCovariance &new_pose){
+template<class T>
+void PCM<T>::updateOdom(gtsam::BetweenFactor<T> odom_factor, 
+                               graph_utils::PoseWithCovariance<T> &new_pose){
 
   // update posesAndCovariances_odom_ (compose last value with new odom value)
   
   // first get measurement and covariance and key from factor
-  gtsam::Pose3 delta = odom_factor.measured(); 
+  T delta = odom_factor.measured(); 
   gtsam::Matrix covar =
       gtsam::inverse(boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
       (odom_factor.get_noiseModel())->R()); // return covariance matrix
   gtsam::Key new_key = odom_factor.back();
 
   // construct pose with covariance for odometry measurement 
-  graph_utils::PoseWithCovariance odom_delta; 
+  graph_utils::PoseWithCovariance<T> odom_delta; 
   odom_delta.pose = delta; 
   odom_delta.covariance_matrix = covar; 
 
   // Now get the latest pose in trajectory and compose 
   gtsam::Key latest_key = posesAndCovariances_odom_.end_id; 
-  graph_utils::PoseWithCovariance last_pose = 
+  graph_utils::PoseWithCovariance<T> last_pose = 
       posesAndCovariances_odom_.trajectory_poses.at(latest_key).pose; 
   // compose latest pose to odometry for new pose
   graph_utils::poseCompose(last_pose, odom_delta, new_pose);
@@ -70,17 +82,18 @@ void PCM::updateOdom(gtsam::BetweenFactor<gtsam::Pose3> odom_factor,
   posesAndCovariances_odom_.trajectory_poses[new_key] = new_trajectorypose; 
 }
 
-bool PCM::isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor,
+template<class T>
+bool PCM<T>::isOdomConsistent(gtsam::BetweenFactor<T> lc_factor,
                            double& mahalanobis_dist) {
   // assume loop is between pose i and j
   // extract the keys 
   gtsam::Key key_i = lc_factor.front();
   gtsam::Key key_j = lc_factor.back();
   
-  graph_utils::PoseWithCovariance pij_odom, pji_lc, result;
+  graph_utils::PoseWithCovariance<T> pij_odom, pji_lc, result;
 
   // access (T_i,Cov_i) and (T_j, Cov_j) from trajectory_
-  graph_utils::PoseWithCovariance pi_odom, pj_odom; 
+  graph_utils::PoseWithCovariance<T> pi_odom, pj_odom; 
   pi_odom = posesAndCovariances_odom_.trajectory_poses[key_i].pose;
   pj_odom = posesAndCovariances_odom_.trajectory_poses[key_j].pose;
 
@@ -93,9 +106,11 @@ bool PCM::isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor,
   
   // Check if includes rotation info 
   bool rotation_info = true; 
-  if (R_lc.block<3,3>(0,0) == Eigen::MatrixXd::Zero(3,3)) {
+  if (R_lc.block<r_dim_,r_dim_>(0,0) == 
+      Eigen::MatrixXd::Zero(r_dim_,r_dim_)) {
     rotation_info = false; 
-    R_lc.block<3,3>(0,0) = Eigen::MatrixXd::Identity(3,3) * 0.0001;
+    R_lc.block<r_dim_,r_dim_>(0,0) = 
+        Eigen::MatrixXd::Identity(r_dim_,r_dim_) * 0.0001;
   }
 
   pji_lc.covariance_matrix = gtsam::inverse(R_lc); // return covariance matrix
@@ -104,7 +119,7 @@ bool PCM::isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor,
   graph_utils::poseCompose(pij_odom, pji_lc, result);
   result.pose.print("odom consistency check: ");
   // std::cout << std::endl; 
-  gtsam::Vector6 consistency_error = gtsam::Pose3::Logmap(result.pose);
+  gtsam::Vector consistency_error = T::Logmap(result.pose);
   // check with threshold
   double threshold = odom_threshold_;
   // comput sqaure mahalanobis distance (the computation is wrong in robust mapper repo)
@@ -113,9 +128,9 @@ bool PCM::isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor,
     mahalanobis_dist = std::sqrt(consistency_error.transpose() 
         * gtsam::inverse(result.covariance_matrix) * consistency_error);
   } else {
-    mahalanobis_dist = std::sqrt(consistency_error.tail(3).transpose() 
-        * gtsam::inverse(result.covariance_matrix.block<3,3>(3,3)) 
-        * consistency_error.tail(3));
+    mahalanobis_dist = std::sqrt(consistency_error.tail(t_dim_).transpose() 
+        * gtsam::inverse(result.covariance_matrix.block<t_dim_,t_dim_>(r_dim_,r_dim_)) 
+        * consistency_error.tail(t_dim_));
   }
 
   // TODO: print the mahalanobis dist of the loops in matrix
@@ -127,8 +142,9 @@ bool PCM::isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor,
   return false;
 }
 
-bool PCM::areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1, 
-                             gtsam::BetweenFactor<gtsam::Pose3> lc_2, 
+template<class T>
+bool PCM<T>::areLoopsConsistent(gtsam::BetweenFactor<T> lc_1, 
+                             gtsam::BetweenFactor<T> lc_2, 
                              double& mahalanobis_dist) {
   // check if two loop closures are consistent 
   gtsam::Key key1a = lc_1.front();
@@ -138,14 +154,14 @@ bool PCM::areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1,
 
   bool rotation_info = true; 
 
-  graph_utils::PoseWithCovariance p1_lc_inv, p2_lc; 
+  graph_utils::PoseWithCovariance<T> p1_lc_inv, p2_lc; 
   p1_lc_inv.pose = lc_1.measured().inverse();
   gtsam::Matrix R1_lc = boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
       (lc_1.get_noiseModel())->R();
 
-  if (R1_lc.block<3,3>(0,0) == Eigen::MatrixXd::Zero(3,3)) {
+  if (R1_lc.block<r_dim_,r_dim_>(0,0) == Eigen::MatrixXd::Zero(r_dim_,r_dim_)) {
     rotation_info = false; 
-    R1_lc.block<3,3>(0,0) = Eigen::MatrixXd::Identity(3,3) * 0.0001;
+    R1_lc.block<r_dim_,r_dim_>(0,0) = Eigen::MatrixXd::Identity(r_dim_,r_dim_) * 0.0001;
   }
 
   p1_lc_inv.covariance_matrix = gtsam::inverse(R1_lc); 
@@ -154,42 +170,41 @@ bool PCM::areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1,
   gtsam::Matrix R2_lc = boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
       (lc_2.get_noiseModel())->R();
 
-  if (R2_lc.block<3,3>(0,0) == Eigen::MatrixXd::Zero(3,3)) {
+  if (R2_lc.block<r_dim_,r_dim_>(0,0) == Eigen::MatrixXd::Zero(r_dim_,r_dim_)) {
     rotation_info = false; 
-    R2_lc.block<3,3>(0,0) = Eigen::MatrixXd::Identity(3,3) * 0.0001;
+    R2_lc.block<r_dim_,r_dim_>(0,0) = Eigen::MatrixXd::Identity(r_dim_,r_dim_) * 0.0001;
   }
 
   p2_lc.covariance_matrix = gtsam::inverse(R2_lc); 
 
   // find odometry from 1a to 2a 
-  graph_utils::PoseWithCovariance p1a_odom, p2a_odom, p1a2a_odom; 
+  graph_utils::PoseWithCovariance<T> p1a_odom, p2a_odom, p1a2a_odom; 
   p1a_odom = posesAndCovariances_odom_.trajectory_poses[key1a].pose;
   p2a_odom = posesAndCovariances_odom_.trajectory_poses[key2a].pose;
-  graph_utils::poseBetween(p1a_odom, p2a_odom, p1a2a_odom);
+  p1a2a_odom = p1a_odom.between(p2a_odom);
 
   // find odometry from 2b to 1b 
-  graph_utils::PoseWithCovariance p1b_odom, p2b_odom, p2b1b_odom; 
+  graph_utils::PoseWithCovariance<T> p1b_odom, p2b_odom, p2b1b_odom; 
   p1b_odom = posesAndCovariances_odom_.trajectory_poses[key1b].pose;
   p2b_odom = posesAndCovariances_odom_.trajectory_poses[key2b].pose;
-  graph_utils::poseBetween(p2b_odom, p1b_odom, p2b1b_odom);
+  p2b1b_odom = p2b_odom.between(p1b_odom);
 
   // check that lc_1 pose is consistent with pose from 1a to 1b 
-  graph_utils::PoseWithCovariance p1a2b, p1a1b, result; 
-  graph_utils::poseCompose(p1a2a_odom, p2_lc, p1a2b);
-  graph_utils::poseCompose(p1a2b, p2b1b_odom, p1a1b);
-  graph_utils::poseCompose(p1a1b, p1_lc_inv, result);
-  // Might need to inverse p1_lc CHECK 
+  graph_utils::PoseWithCovariance<T> p1a2b, p1a1b, result; 
+  p1a2b = p1a2a_odom.compose(p2_lc);
+  p1a1b = p1a2b.compose(p2b1b_odom);
+  result = p1a1b.compose(p1_lc_inv);
 
-  gtsam::Vector6 consistency_error = gtsam::Pose3::Logmap(result.pose);
+  gtsam::Vector consistency_error = T::Logmap(result.pose);
 
   // comput sqaure mahalanobis distance 
   if (rotation_info) {
     mahalanobis_dist = std::sqrt(consistency_error.transpose() 
         * gtsam::inverse(result.covariance_matrix) * consistency_error);
   } else {
-    mahalanobis_dist = std::sqrt(consistency_error.tail(3).transpose() 
-        * gtsam::inverse(result.covariance_matrix.block<3,3>(3,3)) 
-        * consistency_error.tail(3));
+    mahalanobis_dist = std::sqrt(consistency_error.tail(t_dim_).transpose() 
+        * gtsam::inverse(result.covariance_matrix.block<t_dim_,t_dim_>(r_dim_,r_dim_)) 
+        * consistency_error.tail(t_dim_));
   }
 
   log<INFO>("loop consistency distance: %1%") % mahalanobis_dist; 
@@ -200,7 +215,8 @@ bool PCM::areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1,
   return false;
 }
 
-void PCM::findInliers(gtsam::NonlinearFactorGraph &inliers) {
+template<class T>
+void PCM<T>::findInliers(gtsam::NonlinearFactorGraph &inliers) {
   // * pairwise consistency check (will also compare other loops - if loop fails we still store it, but not include in the optimization)
   // -- add 1 row and 1 column to lc_adjacency_matrix_;
   // -- populate extra row and column by testing pairwise consistency of new lc against all previous ones
@@ -218,10 +234,10 @@ void PCM::findInliers(gtsam::NonlinearFactorGraph &inliers) {
     // now iterate through the previous loop closures and fill in last row + col 
     // of consistency matrix 
     for (size_t i = 0; i < num_lc - 1; i++) {
-      gtsam::BetweenFactor<gtsam::Pose3> factor_i =
-            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(nfg_lc_[i]);
-      gtsam::BetweenFactor<gtsam::Pose3> factor_j =
-            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(nfg_lc_[num_lc-1]);
+      gtsam::BetweenFactor<T> factor_i =
+            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(nfg_lc_[i]);
+      gtsam::BetweenFactor<T> factor_j =
+            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(nfg_lc_[num_lc-1]);
 
       // check consistency 
       double mah_distance; 
@@ -251,7 +267,8 @@ void PCM::findInliers(gtsam::NonlinearFactorGraph &inliers) {
   } 
 }
 
-bool PCM::process(gtsam::NonlinearFactorGraph new_factors, 
+template<class T>
+bool PCM<T>::process(gtsam::NonlinearFactorGraph new_factors, 
                   gtsam::Values new_values,
                   gtsam::NonlinearFactorGraph& output_nfg, 
                   gtsam::Values& output_values) {
@@ -261,16 +278,16 @@ bool PCM::process(gtsam::NonlinearFactorGraph new_factors,
 
   if (posesAndCovariances_odom_.trajectory_poses.size() == 0) {
     // likely a prior factor for initialization 
-    gtsam::PriorFactor<gtsam::Pose3> prior_factor =
-        *boost::dynamic_pointer_cast<gtsam::PriorFactor<gtsam::Pose3> >(new_factors[0]);
+    gtsam::PriorFactor<T> prior_factor =
+        *boost::dynamic_pointer_cast<gtsam::PriorFactor<T> >(new_factors[0]);
     initializePrior(prior_factor);
     log<INFO>("Initialized prior and trajectory");
 
   } else if (new_factors.size() == 1 && new_values.size() == 1) {
-    if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0])) {
+    if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0])) {
       // if it is a between factor 
-      gtsam::BetweenFactor<gtsam::Pose3> nfg_factor =
-            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0]);
+      gtsam::BetweenFactor<T> nfg_factor =
+            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0]);
       if (nfg_factor.front() == nfg_factor.back() - 1) {
         odometry = true;
       }
@@ -282,9 +299,9 @@ bool PCM::process(gtsam::NonlinearFactorGraph new_factors,
 
   } else if (new_factors.size() == 1 && new_values.size() == 0){
     // check if it is a between factor
-    if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0])) {
-      gtsam::BetweenFactor<gtsam::Pose3> nfg_factor =
-            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0]);
+    if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0])) {
+      gtsam::BetweenFactor<T> nfg_factor =
+            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0]);
       gtsam::Symbol symb_front(nfg_factor.front());
       gtsam::Symbol symb_back(nfg_factor.back());
       if (specialSymbol(symb_front.chr()) || specialSymbol(symb_back.chr())) {
@@ -299,10 +316,10 @@ bool PCM::process(gtsam::NonlinearFactorGraph new_factors,
 
   if (odometry) {
     // update posesAndCovariances_odom_;
-    graph_utils::PoseWithCovariance new_pose;
+    graph_utils::PoseWithCovariance<T> new_pose;
     // extract between factor 
-    gtsam::BetweenFactor<gtsam::Pose3> nfg_factor =
-            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0]);
+    gtsam::BetweenFactor<T> nfg_factor =
+            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0]);
 
     updateOdom(nfg_factor, new_pose);
     // TODO: compare the new pose from out pose_compose with values pose 
@@ -319,8 +336,8 @@ bool PCM::process(gtsam::NonlinearFactorGraph new_factors,
   } else if (loop_closure) { // in this case we should run consistency check to see if loop closure is good
     // * odometric consistency check (will only compare against odometry - if loop fails this, we can just drop it)
     // extract between factor 
-    gtsam::BetweenFactor<gtsam::Pose3> nfg_factor =
-            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<gtsam::Pose3> >(new_factors[0]);
+    gtsam::BetweenFactor<T> nfg_factor =
+            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0]);
 
     double odom_mah_dist; 
     if (isOdomConsistent(nfg_factor, odom_mah_dist)) {

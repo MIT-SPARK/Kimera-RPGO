@@ -12,6 +12,7 @@ author: Yun Chang, Luca Carlone
 #include <fstream>
 
 #include <gtsam/base/Vector.h>
+#include <gtsam/base/Lie.h>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Rot3.h>
 #include <gtsam/linear/NoiseModel.h>
@@ -27,6 +28,7 @@ author: Yun Chang, Luca Carlone
 #include "RobustPGO/logger.h"
 #include "RobustPGO/OutlierRemoval.h"
 
+template<class T>
 class PCM : public OutlierRemoval{
 public:
   PCM(double odom_threshold, double pc_threshold, 
@@ -43,6 +45,10 @@ private:
   double odom_threshold_;
   double pc_threshold_;
 
+  int dim_; // dimension of value
+  int r_dim_; // dimension of rotation part
+  int t_dim_; // dimension of translation part
+
   gtsam::NonlinearFactorGraph nfg_odom_;
   gtsam::NonlinearFactorGraph nfg_special_;
   gtsam::NonlinearFactorGraph nfg_lc_;
@@ -55,16 +61,16 @@ private:
 
   bool specialSymbol(char symb);
 
-  void initializePrior(gtsam::PriorFactor<gtsam::Pose3> prior_factor);
+  void initializePrior(gtsam::PriorFactor<T> prior_factor);
 
-  void updateOdom(gtsam::BetweenFactor<gtsam::Pose3> odom_factor, 
+  void updateOdom(gtsam::BetweenFactor<T> odom_factor, 
                   graph_utils::PoseWithCovariance &new_pose);
 
-  bool isOdomConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_factor,
+  bool isOdomConsistent(gtsam::BetweenFactor<T> lc_factor,
                         double& mahalanobis_dist);
 
-  bool areLoopsConsistent(gtsam::BetweenFactor<gtsam::Pose3> lc_1, 
-                          gtsam::BetweenFactor<gtsam::Pose3> lc_2,
+  bool areLoopsConsistent(gtsam::BetweenFactor<T> lc_1, 
+                          gtsam::BetweenFactor<T> lc_2,
                           double& mahalanobis_dist);
 
   void findInliers(gtsam::NonlinearFactorGraph &inliers);

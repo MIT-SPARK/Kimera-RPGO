@@ -66,3 +66,11 @@ void GenericSolver::update(gtsam::NonlinearFactorGraph nfg,
     }
   }
 }
+
+void GenericSolver::removeFactorsNoUpdate(
+    gtsam::FactorIndices factorsToRemove) {
+  // remove factors
+  for (size_t index : factorsToRemove) {
+    nfg_[index].reset();
+  }
+}

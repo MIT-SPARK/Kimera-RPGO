@@ -33,3 +33,26 @@ cd build
 cmake ..
 sudo make install
 ```
+
+## Usage 
+This repository can be used as an optimization backend. A sample setup looks something like: 
+```cpp
+// Set up 
+OutlierRemoval *pcm = new PCM<Pose3>(odom_threshold_, pw_threshold_, special_symbs);
+optimizer_.reset(new RobustPGO(pcm, SOLVER, special_symbs));
+//...
+//...
+
+// Run 
+optimizer_->update(new_factor, new_values);
+
+```
+This can also be used as a standalone experimental tool. A read g2o function can be found in examples. 
+go to the build folder `cd build` and create a log folder `mkdir log`. 
+The results (consistency matrix and g2o files) from running the following script in the build folder will be saved to the `log` folder
+```
+# for 2D: 
+./RpgoReadG2o 2d <g2o-file> <odom-check-threshold> <pcm-threshold>
+
+# for 3D 
+./RpgoReadG2o 3d <g2o-file> <odom-check-threshold> <pcm-threshold>

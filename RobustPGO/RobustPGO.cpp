@@ -3,7 +3,7 @@ Generic solver class
 author: Yun Chang, Luca Carlone
 */
 
-#include <RobustPGO/RobustPGO.h>
+#include "RobustPGO/RobustPGO.h"
 
 RobustPGO::RobustPGO(OutlierRemoval* OR,
                      int solvertype, 
@@ -37,5 +37,6 @@ void RobustPGO::update(gtsam::NonlinearFactorGraph nfg,
     }else if (solver_type_ == 3) {
       // something
     }
+    gtsam::writeG2o(nfg_, values_, "log/RPGO_graph.g2o");    
   }
 }

@@ -3,7 +3,7 @@ add_library(RobustPGO
     max_clique_finder/findCliqueHeu.cpp 
     max_clique_finder/utils.cpp 
     max_clique_finder/graphIO.cpp
-    graph_utils/graph_utils.cpp
+    graph_utils/graph_utils.h
     pcm/pcm.h
     GenericSolver.cpp
     RobustPGO.cpp

@@ -7,6 +7,8 @@
 #include <gtsam/geometry/Rot3.h>
 #include <gtsam/slam/BetweenFactor.h>
 
+#include "RobustPGO/max_clique_finder/findClique.h"
+
 #include <map>
 #include <vector>
 
@@ -17,28 +19,82 @@ namespace graph_utils {
 
 /** \struct PoseWithCovariance
  *  \brief Structure to store a pose and its covariance data
+ *  \currently supports gtsam::Pose2 and gtsam::Pose3
  */
 template <class T>
 struct PoseWithCovariance {
+  /* variables ------------------------------------------------ */
+  /* ---------------------------------------------------------- */
   T pose; // ex. gtsam::Pose3
   gtsam::Matrix covariance_matrix;
 
-  // method to combine two poses (along with their covariances)
+  /* method to combine two poses (along with their covariances) */
+  /* ---------------------------------------------------------- */
   PoseWithCovariance compose(const PoseWithCovariance other) const {
-  PoseWithCovariance<T> out; 
-  gtsam::Matrix Ha, Hb;
-  out.pose = pose.pose.compose(other.pose, Ha, Hb);
+    PoseWithCovariance<T> out; 
+    gtsam::Matrix Ha, Hb;
+    out.pose = pose.compose(other.pose, Ha, Hb);
 
-  gtsam::Matrix tau1 = pose.pose.AdjointMap();
+    gtsam::Matrix tau1 = pose.AdjointMap();
 
-  out.covariance_matrix = pose.covariance_matrix +
-      tau1 * other.covariance_matrix * tau1.transpose();
+    out.covariance_matrix = covariance_matrix +
+        tau1 * other.covariance_matrix * tau1.transpose();
 
-  return out;
+    return out;
   }
   
-    PoseWithCovariance inverse() const;
-    PoseWithCovariance between(const PoseWithCovariance other) const;
+  /* method to invert a pose along with its covariance -------- */
+  /* ---------------------------------------------------------- */
+  PoseWithCovariance inverse() const {
+    gtsam::Matrix Ha;
+    PoseWithCovariance<T> out;
+    out.pose = pose.inverse(Ha);
+    out.covariance_matrix = Ha * covariance_matrix * Ha.transpose();
+
+    return out;
+  }
+
+  /* method to find the transform between two poses ------------ */
+  /* ----------------------------------------------------------- */
+  PoseWithCovariance between(const PoseWithCovariance other) const {
+
+    PoseWithCovariance<T> out; 
+    gtsam::Matrix Ha, Hb;
+    out.pose = pose.between(other.pose, Ha, Hb); // returns between in a frame 
+
+    if (pose.equals(other.pose)) {
+      out.covariance_matrix = 
+        Eigen::MatrixXd::Zero(pose.dimension, pose.dimension);
+      return out;
+    }
+
+    gtsam::Matrix tau1 = pose.AdjointMap();
+
+    out.covariance_matrix = tau1.inverse() * 
+        (other.covariance_matrix - covariance_matrix) * 
+        tau1.transpose().inverse();
+
+    bool pos_semi_def = true;
+    // compute the Cholesky decomp
+    Eigen::LLT<Eigen::MatrixXd> lltCovar1(out.covariance_matrix);
+    if(lltCovar1.info() == Eigen::NumericalIssue){  
+      pos_semi_def = false;
+    } 
+
+    if (!pos_semi_def) { 
+      tau1 = other.pose.inverse().AdjointMap();
+      out.covariance_matrix = tau1.inverse() * 
+      (covariance_matrix - other.covariance_matrix) * 
+      tau1.transpose().inverse();
+
+      // Check if positive semidef 
+      Eigen::LLT<Eigen::MatrixXd> lltCovar2(out.covariance_matrix);
+      if(lltCovar2.info() == Eigen::NumericalIssue){ 
+        log<WARNING>("Warning: Covariance matrix between two poses not PSD"); 
+      } 
+    }
+    return out;
+  }
 };
 
 /** \struct Transform
@@ -78,7 +134,14 @@ struct Trajectory {
     std::map<gtsam::Key, graph_utils::TrajectoryPose<T>> trajectory_poses;
 };
 
-int findMaxClique(const Eigen::MatrixXd adjMatrix, std::vector<int>& max_clique);
+int findMaxClique(const Eigen::MatrixXd adjMatrix, std::vector<int>& max_clique) {
+  // Compute maximum clique
+  FMC::CGraphIO gio;
+  gio.ReadEigenAdjacencyMatrix(adjMatrix, 0.0);
+  int max_clique_size = 0;
+  max_clique_size = FMC::maxClique(gio, max_clique_size, max_clique);
+  return max_clique_size;
+}
 
 template<class T>
 static const size_t getRotationDim() {

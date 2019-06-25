@@ -40,7 +40,8 @@ public:
               gtsam::Values values=gtsam::Values(),
               gtsam::FactorIndices factorsToRemove=gtsam::FactorIndices());
 
-  void removeFactorsNoUpdate(gtsam::FactorIndices factorsToRemove);
+  void removeFactorsNoUpdate(
+      gtsam::FactorIndices factorsToRemove = gtsam::FactorIndices());
 
   gtsam::Values calculateEstimate() { return values_; }
   gtsam::Values calculateBestEstimate() { return values_; }

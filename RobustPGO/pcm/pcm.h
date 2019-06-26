@@ -120,8 +120,7 @@ public:
         gtsam::Symbol symb_front(nfg_factor.front());// double check if uwb 
         gtsam::Symbol symb_back(nfg_factor.back());
         if (symb_front.chr() == 'u' || symb_back.chr() == 'u') {
-          special_loop_closure = true; 
-          uwb_add = true; 
+          special_loop_closure = true; // want this to optimize for uwb
         }
       }
     }

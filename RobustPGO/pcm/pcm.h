@@ -19,6 +19,7 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam/slam/PriorFactor.h>
 #include <gtsam/slam/BetweenFactor.h>
+#include <gtsam/sam/RangeFactor.h>
 #include <gtsam/slam/InitializePose3.h>
 #include <gtsam/nonlinear/NonlinearConjugateGradientOptimizer.h>
 #include <gtsam/inference/Symbol.h>
@@ -64,6 +65,10 @@ public:
     bool loop_closure = false; 
     bool special_loop_closure = false;
 
+    // special for LAMP
+    bool landmark_add = false; 
+    bool uwb_add = false; 
+
     if (posesAndCovariances_odom_.trajectory_poses.size() == 0) {
       // likely a prior factor for initialization 
       gtsam::PriorFactor<T> prior_factor =
@@ -83,9 +88,14 @@ public:
       gtsam::Symbol symb(new_values.keys()[0]);
       if (specialSymbol(symb.chr())) {
         special_loop_closure = true;
+        if (symb.chr() == 'l') {
+          landmark_add = true; 
+        } else if (symb.chr() == 'u') {
+          uwb_add = true; 
+        }
       }
 
-    } else if (new_factors.size() == 1 && new_values.size() == 0){
+    } else if (new_factors.size() == 1 && new_values.size() == 0) {
       // check if it is a between factor
       if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0])) {
         gtsam::BetweenFactor<T> nfg_factor =
@@ -94,11 +104,25 @@ public:
         gtsam::Symbol symb_back(nfg_factor.back());
         if (specialSymbol(symb_front.chr()) || specialSymbol(symb_back.chr())) {
           special_loop_closure = true; // if one of the keys is special 
+
         } else {
           loop_closure = true;
         }
-      } else {
-        special_loop_closure = true; // non-between factor (etc. range factor)
+      } else { // non-between factor (etc. range factor)
+        special_loop_closure = true;
+      }
+
+    } else if (new_factors.size() == 3) {
+      // check if range factor 
+      if (boost::dynamic_pointer_cast<gtsam::RangeFactor<T> >(new_factors[0])) {
+        gtsam::RangeFactor<T> nfg_factor =
+              *boost::dynamic_pointer_cast<gtsam::RangeFactor<T> >(new_factors[0]);
+        gtsam::Symbol symb_front(nfg_factor.front());// double check if uwb 
+        gtsam::Symbol symb_back(nfg_factor.back());
+        if (symb_front.chr() == 'u' || symb_back.chr() == 'u') {
+          special_loop_closure = true; 
+          uwb_add = true; 
+        }
       }
     }
 
@@ -144,19 +168,22 @@ public:
       
       // * optimize and update values (for now just LM add others later)
       output_nfg = gtsam::NonlinearFactorGraph(); // reset
-      output_nfg.add(nfg_odom_); // Shouldn't we then clear nfg_odom?
+      output_nfg.add(nfg_odom_);
       output_nfg.add(nfg_special_);
       output_nfg.add(nfg_good_lc_);
       return true; 
 
     } else if (special_loop_closure) {
       nfg_special_.add(new_factors);
+      output_values.insert(new_values);
+      if (landmark_add || uwb_add) {
+        return false; 
+      }
       // reset graph
       output_nfg = gtsam::NonlinearFactorGraph(); // reset
       output_nfg.add(nfg_special_);
       output_nfg.add(nfg_good_lc_);
-      output_nfg.add(nfg_odom_); // Shouldn't we then clear nfg_odom?
-      output_values.insert(new_values);
+      output_nfg.add(nfg_odom_);
       return true;
 
     } else {

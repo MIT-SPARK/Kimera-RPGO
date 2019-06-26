@@ -1,4 +1,5 @@
-/* 
+/*
+Pairwise Consistency Maximization (PCM)
 Backend solver class (Robust Pose Graph Optimizer)
 author: Yun Chang, Luca Carlone
 */
@@ -150,6 +151,8 @@ public:
 
     } else if (special_loop_closure) {
       nfg_special_.add(new_factors);
+      // reset graph
+      output_nfg = gtsam::NonlinearFactorGraph(); // reset
       output_nfg.add(nfg_special_);
       output_nfg.add(nfg_good_lc_);
       output_nfg.add(nfg_odom_); // Shouldn't we then clear nfg_odom?

@@ -1,4 +1,5 @@
-/* 
+/*
+Pairwise Consistency Maximization (PCM)
 Backend solver class (Robust Pose Graph Optimizer)
 author: Yun Chang, Luca Carlone
 */
@@ -115,8 +116,11 @@ public:
       // - store factor in nfg_odom_
       nfg_odom_.add(new_factors);
 
-      // - store latest pose in values_ (note: values_ is the optimized estimate, while trajectory is the odom estimate)
-      output_values.insert(new_values.keys()[0], new_pose.pose);
+      // - store latest pose in values_ (note: values_ is the optimized
+      // estimate, while trajectory is the odom estimate)
+      // output_values.insert(new_values.keys()[0], new_pose.pose); Not sure why
+      // this is being done
+      output_values.insert(new_values);
 
       return false; // no need to optimize just for odometry 
 
@@ -139,17 +143,19 @@ public:
       findInliers(nfg_good_lc_); // update nfg_good_lc_
       
       // * optimize and update values (for now just LM add others later)
-      output_nfg = gtsam::NonlinearFactorGraph(); // reset 
-      output_nfg.add(nfg_odom_);
+      output_nfg = gtsam::NonlinearFactorGraph(); // reset
+      output_nfg.add(nfg_odom_); // Shouldn't we then clear nfg_odom?
       output_nfg.add(nfg_special_);
       output_nfg.add(nfg_good_lc_);
       return true; 
 
     } else if (special_loop_closure) {
       nfg_special_.add(new_factors);
+      // reset graph
+      output_nfg = gtsam::NonlinearFactorGraph(); // reset
       output_nfg.add(nfg_special_);
       output_nfg.add(nfg_good_lc_);
-      output_nfg.add(nfg_odom_);
+      output_nfg.add(nfg_odom_); // Shouldn't we then clear nfg_odom?
       output_values.insert(new_values);
       return true;
 

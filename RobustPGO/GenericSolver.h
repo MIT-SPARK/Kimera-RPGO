@@ -39,6 +39,9 @@ public:
               gtsam::Values values=gtsam::Values(),
               gtsam::FactorIndices factorsToRemove=gtsam::FactorIndices());
 
+  void removeFactorsNoUpdate(
+      gtsam::FactorIndices factorsToRemove = gtsam::FactorIndices());
+
   gtsam::Values calculateEstimate() { return values_; }
   gtsam::Values calculateBestEstimate() { return values_; }
   gtsam::Values getLinearizationPoint() { return values_; }

@@ -68,3 +68,11 @@ void GenericSolver::update(gtsam::NonlinearFactorGraph nfg,
     gtsam::writeG2o(nfg_, values_, "log/GS_graph.g2o");
   }
 }
+
+void GenericSolver::removeFactorsNoUpdate(
+    gtsam::FactorIndices factorsToRemove) {
+  // remove factors
+  for (size_t index : factorsToRemove) {
+    nfg_[index].reset();
+  }
+}

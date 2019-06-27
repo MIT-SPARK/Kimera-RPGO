@@ -112,18 +112,19 @@ public:
         special_loop_closure = true;
       }
 
-    } else if (new_factors.size() == 3) {
+    } else if (new_factors.size() > 1)
       // check if range factor 
       if (boost::dynamic_pointer_cast<gtsam::RangeFactor<T> >(new_factors[0])) {
-        gtsam::RangeFactor<T> nfg_factor =
-              *boost::dynamic_pointer_cast<gtsam::RangeFactor<T> >(new_factors[0]);
-        gtsam::Symbol symb_front(nfg_factor.front());// double check if uwb 
-        gtsam::Symbol symb_back(nfg_factor.back());
-        if (symb_front.chr() == 'u' || symb_back.chr() == 'u') {
-          special_loop_closure = true; // want this to optimize for uwb
+        special_loop_closure = true; // want this to optimize for uwb
+      } else if (boost::dynamic_pointer_cast<gtsam::PriorFactor<T> >(new_factors[0])) {
+        gtsam::PriorFactor<T> p_factor =
+              *boost::dynamic_pointer_cast<gtsam::PriorFactor<T> >(new_factors[0]);
+        gtsam::Symbol symb_prior(p_factor.key());
+        if (specialSymbol(symb_prior.chr())) {
+          // special symbols with priors 
+          special_loop_closure = true;
         }
       }
-    }
 
     if (odometry) {
       // update posesAndCovariances_odom_;

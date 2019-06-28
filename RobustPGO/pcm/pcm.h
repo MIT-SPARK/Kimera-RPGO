@@ -116,7 +116,11 @@ public:
       nfg_odom_.add(new_factors);
 
       // - store latest pose in values_ (note: values_ is the optimized estimate, while trajectory is the odom estimate)
-      output_values.insert(new_values.keys()[0], new_pose.pose);
+      output_values.insert(new_values);
+      output_nfg = gtsam::NonlinearFactorGraph(); // reset 
+      output_nfg.add(nfg_special_); // still need to update the class overall factorgraph 
+      output_nfg.add(nfg_good_lc_);
+      output_nfg.add(nfg_odom_);
 
       return false; // no need to optimize just for odometry 
 
@@ -136,6 +140,7 @@ public:
       }
       
       // Find inliers with Pairwise consistent measurement set maximization
+      nfg_good_lc_ = gtsam::NonlinearFactorGraph(); // reset
       findInliers(nfg_good_lc_); // update nfg_good_lc_
       
       // * optimize and update values (for now just LM add others later)
@@ -147,6 +152,7 @@ public:
 
     } else if (special_loop_closure) {
       nfg_special_.add(new_factors);
+      output_nfg = gtsam::NonlinearFactorGraph(); // reset 
       output_nfg.add(nfg_special_);
       output_nfg.add(nfg_good_lc_);
       output_nfg.add(nfg_odom_);
@@ -405,7 +411,7 @@ private:
 
     std::vector<int> max_clique_data;
     int max_clique_size = graph_utils::findMaxClique(lc_adjacency_matrix_, max_clique_data);
-    log<INFO>("number of inliers: %1%") % max_clique_size; 
+    log<INFO>("number of inliers: %1%") % max_clique_size;
     for (size_t i = 0; i < max_clique_size; i++) {
       // std::cout << max_clique_data[i] << " "; 
       inliers.add(nfg_lc_[max_clique_data[i]]);

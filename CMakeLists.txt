@@ -18,6 +18,7 @@ include(GtsamTesting)
 # Find Boost
 find_package(Boost 1.58 COMPONENTS filesystem program_options timer REQUIRED)
 
+find_package(Eigen3 REQUIRED)
 ###########################################################################
 # Find Eigen 
 find_package(Eigen3 REQUIRED)
@@ -29,6 +30,7 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
   ${PROJECT_SOURCE_DIR} 
   ${PROJECT_BINARY_DIR}
+  ${EIGEN3_INCLUDE_DIRS}
 )
 
 link_directories(

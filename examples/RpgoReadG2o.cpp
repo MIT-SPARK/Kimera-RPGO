@@ -64,6 +64,8 @@ void Simulate(gtsam::GraphAndValues gv,
       pgo->update(new_factors, gtsam::Values());
   	}
   }
+  // in case no loop closure, need to force optimize with only odom 
+  pgo->force_optimize(); 
 }
 int main(int argc, char *argv[]) {
 	gtsam::GraphAndValues graphNValues; 

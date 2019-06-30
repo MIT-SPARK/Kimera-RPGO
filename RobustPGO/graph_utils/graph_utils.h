@@ -82,7 +82,7 @@ struct PoseWithCovariance {
     } 
 
     if (!pos_semi_def) { 
-      tau1 = other.pose.inverse().AdjointMap();
+      tau1 = other.pose.AdjointMap();
       out.covariance_matrix = tau1.inverse() * 
       (covariance_matrix - other.covariance_matrix) * 
       tau1.transpose().inverse();

@@ -20,12 +20,12 @@ void Simulate(gtsam::GraphAndValues gv,
 			double odom_thresh, double pmc_thresh) {
 
 	gtsam::NonlinearFactorGraph nfg = *gv.first;
-
   gtsam::Values values = *gv.second;
-
+  
   OutlierRemoval *pcm = new PCM<T>(odom_thresh, pmc_thresh);
   std::unique_ptr<RobustPGO> pgo;
   pgo.reset(new RobustPGO(pcm));
+  log<INFO>("Initiated robust pose graph optimizer");
 
   // first fix the first with a prior factor 
   gtsam::Key current_key = nfg[0]->front();
@@ -72,11 +72,13 @@ int main(int argc, char *argv[]) {
 	std::string dim = argv[1];
 	if (dim == "2d") {
 		graphNValues = gtsam::load2D(argv[2]);
+    log<INFO>("Loaded 3d g2o file");
 		Simulate<gtsam::Pose2>(graphNValues,
 				atof(argv[3]), atof(argv[4]));
 
 	} else if (dim == "3d") {
 		graphNValues = gtsam::load3D(argv[2]);
+    log<INFO>("Loaded 3d g2o file");
 		Simulate<gtsam::Pose3>(graphNValues,
 				atof(argv[3]), atof(argv[4]));
 	} else {

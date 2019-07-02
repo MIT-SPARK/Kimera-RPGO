@@ -8,6 +8,7 @@
 #include <gtsam/slam/BetweenFactor.h>
 
 #include "RobustPGO/max_clique_finder/findClique.h"
+#include "RobustPGO/logger.h"
 
 #include <map>
 #include <vector>

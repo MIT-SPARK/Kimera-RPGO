@@ -112,7 +112,7 @@ public:
         special_loop_closure = true;
       }
 
-    } else if (new_factors.size() > 1)
+    } else if (new_factors.size() > 1) {
       // check if range factor 
       if (boost::dynamic_pointer_cast<gtsam::RangeFactor<T> >(new_factors[0])) {
         special_loop_closure = true; // want this to optimize for uwb
@@ -125,6 +125,7 @@ public:
           special_loop_closure = true;
         }
       }
+    }
 
     if (odometry) {
       // update posesAndCovariances_odom_;

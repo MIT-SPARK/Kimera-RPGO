@@ -38,7 +38,7 @@ public:
               gtsam::Values values=gtsam::Values(),
               gtsam::FactorIndices factorsToRemove=gtsam::FactorIndices());
 
-  void force_optimize(); 
+  void force_optimize();
 
 private:
   OutlierRemoval* outlier_removal_; // outlier removal method; 

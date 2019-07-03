@@ -15,23 +15,31 @@ RobustPGO::RobustPGO(OutlierRemoval* OR,
 void RobustPGO::optimize() {
   if (solver_type_ == 1) {
     gtsam::LevenbergMarquardtParams params;
-    params.setVerbosityLM("SUMMARY");
-    log<INFO>("Running LM"); 
+    if (debug_){
+      params.setVerbosityLM("SUMMARY");
+      log<INFO>("Running LM"); 
+    }
     params.diagonalDamping = true; 
     values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
   }else if (solver_type_ == 2) {
     gtsam::GaussNewtonParams params;
-    params.setVerbosity("ERROR");
-    log<INFO>("Running GN");
+    if (debug_) {
+      params.setVerbosity("ERROR");
+      log<INFO>("Running GN");
+    }
     values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, params).optimize();
   }else if (solver_type_ == 3) {
     // something
   }
-  gtsam::writeG2o(nfg_, values_, "log/RPGO_graph.g2o");  
+  
+  // save result
+  if (save_g2o_) {
+    gtsam::writeG2o(nfg_, values_, g2o_file_path_);
+  }
 }
 
 void RobustPGO::force_optimize() {
-  log<WARNING>("Forcing optimization, typically should only use update method. ");
+  if (debug_) log<WARNING>("Forcing optimization, typically should only use update method. ");
   optimize();
 }
 

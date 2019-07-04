@@ -68,7 +68,7 @@ public:
       gtsam::PriorFactor<T> prior_factor =
           *boost::dynamic_pointer_cast<gtsam::PriorFactor<T> >(new_factors[0]);
       initializePrior(prior_factor);
-      log<INFO>("Initialized prior and trajectory");
+      if (debug_) log<INFO>("Initialized prior and trajectory");
 
     } else if (new_factors.size() == 1 && new_values.size() == 1) {
       if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0])) {
@@ -135,7 +135,7 @@ public:
         nfg_lc_.add(new_factors); // add factor to nfg_lc_
 
       } else {
-        log<WARNING>("Discarded loop closure (inconsistent with odometry)");
+        if (debug_) log<WARNING>("Discarded loop closure (inconsistent with odometry)");
         return false; // discontinue since loop closure not consistent with odometry 
       }
       
@@ -273,7 +273,7 @@ private:
 
     // check consistency (Tij_odom,Cov_ij_odom, Tij_lc, Cov_ij_lc)
     result = pij_odom.compose(pji_lc);
-    result.pose.print("odom consistency check: ");
+    if (debug_) result.pose.print("odom consistency check: ");
     // std::cout << std::endl; 
     gtsam::Vector consistency_error = T::Logmap(result.pose);
     // check with threshold
@@ -288,8 +288,7 @@ private:
           * consistency_error.tail(t_dim));
     }
 
-    // TODO: print the mahalanobis dist of the loops in matrix
-    log<INFO>("odometry consistency distance: %1%") % mahalanobis_dist; 
+    if (debug_) log<INFO>("odometry consistency distance: %1%") % mahalanobis_dist; 
     if (mahalanobis_dist < threshold) {
       return true;
     }
@@ -363,7 +362,7 @@ private:
           * consistency_error.tail(t_dim));
     }
 
-    log<INFO>("loop consistency distance: %1%") % mahalanobis_dist; 
+    if (debug_) log<INFO>("loop consistency distance: %1%") % mahalanobis_dist; 
     if (mahalanobis_dist < pc_threshold_) {
       return true;
     }
@@ -407,11 +406,11 @@ private:
     }
     lc_adjacency_matrix_ = new_adj_matrix;
     lc_distance_matrix_ = new_dst_matrix;
-    log<INFO>("total loop closures registered: %1%") % lc_adjacency_matrix_.rows();
+    if (debug_) log<INFO>("total loop closures registered: %1%") % lc_adjacency_matrix_.rows();
 
     std::vector<int> max_clique_data;
     int max_clique_size = graph_utils::findMaxClique(lc_adjacency_matrix_, max_clique_data);
-    log<INFO>("number of inliers: %1%") % max_clique_size;
+    if (debug_) log<INFO>("number of inliers: %1%") % max_clique_size;
     for (size_t i = 0; i < max_clique_size; i++) {
       // std::cout << max_clique_data[i] << " "; 
       inliers.add(nfg_lc_[max_clique_data[i]]);

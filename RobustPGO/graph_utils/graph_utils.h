@@ -36,10 +36,8 @@ struct PoseWithCovariance {
     gtsam::Matrix Ha, Hb;
     out.pose = pose.compose(other.pose, Ha, Hb);
 
-    gtsam::Matrix tau1 = pose.AdjointMap();
-
-    out.covariance_matrix = covariance_matrix +
-        tau1 * other.covariance_matrix * tau1.transpose();
+    out.covariance_matrix = Ha * covariance_matrix * Ha.transpose() +
+        Hb * other.covariance_matrix * Hb.transpose();
 
     return out;
   }
@@ -62,38 +60,8 @@ struct PoseWithCovariance {
     PoseWithCovariance<T> out; 
     gtsam::Matrix Ha, Hb;
     out.pose = pose.between(other.pose, Ha, Hb); // returns between in a frame 
-
-    if (pose.equals(other.pose)) {
-      out.covariance_matrix = 
-        Eigen::MatrixXd::Zero(pose.dimension, pose.dimension);
-      return out;
-    }
-
-    gtsam::Matrix tau1 = pose.AdjointMap();
-
-    out.covariance_matrix = tau1.inverse() * 
-        (other.covariance_matrix - covariance_matrix) * 
-        tau1.transpose().inverse();
-
-    bool pos_semi_def = true;
-    // compute the Cholesky decomp
-    Eigen::LLT<Eigen::MatrixXd> lltCovar1(out.covariance_matrix);
-    if(lltCovar1.info() == Eigen::NumericalIssue){  
-      pos_semi_def = false;
-    } 
-
-    if (!pos_semi_def) { 
-      tau1 = other.pose.AdjointMap();
-      out.covariance_matrix = tau1.inverse() * 
-      (covariance_matrix - other.covariance_matrix) * 
-      tau1.transpose().inverse();
-
-      // Check if positive semidef 
-      Eigen::LLT<Eigen::MatrixXd> lltCovar2(out.covariance_matrix);
-      if(lltCovar2.info() == Eigen::NumericalIssue){ 
-        log<WARNING>("Warning: Covariance matrix between two poses not PSD"); 
-      } 
-    }
+    out.covariance_matrix = Ha * covariance_matrix * Ha.transpose() + 
+        Hb * covariance_matrix * Hb.transpose();
     return out;
   }
 };

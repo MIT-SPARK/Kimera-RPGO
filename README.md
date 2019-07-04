@@ -52,7 +52,10 @@ go to the build folder `cd build` and create a log folder `mkdir log`.
 The results (consistency matrix and g2o files) from running the following script in the build folder will be saved to the `log` folder
 ```
 # for 2D: 
-./RpgoReadG2o 2d <g2o-file> <odom-check-threshold> <pcm-threshold>
+./RpgoReadG2o 2d <g2o-file> <odom-check-threshold> <pcm-threshold> <optional:folder-to-save-g2o> <optional:v to toggle verbosity>
 
 # for 3D 
-./RpgoReadG2o 3d <g2o-file> <odom-check-threshold> <pcm-threshold>
+./RpgoReadG2o 3d <g2o-file> <odom-check-threshold> <pcm-threshold> <optional:folder-to-save-g2o> <optional:v to toggle verbosity>
+```
+
+Example, do `./RpgoReadG2o 3d /home/user/Desktop/in.g2o 1.0 1.0 /home/user/Desktop/out.g2o v`

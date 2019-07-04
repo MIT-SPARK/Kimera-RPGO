@@ -14,6 +14,11 @@ public:
 				               gtsam::Values new_values,
 				               gtsam::NonlinearFactorGraph& nfg, 
 				               gtsam::Values& values){};
+
+	void setQuiet() { debug_ = false; }
+
+protected:
+	bool debug_ = true;
 };
 
 #endif

@@ -58,8 +58,10 @@ struct PoseWithCovariance {
     PoseWithCovariance<T> out; 
     gtsam::Matrix Ha, Hb;
     out.pose = pose.between(other.pose, Ha, Hb); // returns between in a frame 
-    out.covariance_matrix = Ha * covariance_matrix * Ha.transpose() + 
-        Hb * covariance_matrix * Hb.transpose();
+
+    out.covariance_matrix = other.covariance_matrix - 
+        Ha * covariance_matrix * Ha.transpose();
+        
     return out;
   }
 };

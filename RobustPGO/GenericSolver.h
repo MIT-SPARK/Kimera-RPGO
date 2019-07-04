@@ -51,12 +51,23 @@ public:
     values_.print("");
   }
 
+  void setQuiet() { debug_ = false; }
+
+  void saveG2oResult(std::string folder_path) {
+    save_g2o_ = true; 
+    g2o_file_path_ = folder_path + "/result.g2o";
+  }
+
 protected:
   bool specialSymbol(char symb);
   gtsam::Values values_;
   gtsam::NonlinearFactorGraph nfg_;
   int solver_type_;
   std::vector<char> special_symbols_; 
+  bool debug_;
+
+  bool save_g2o_; 
+  std::string g2o_file_path_;
 };
 
 #endif

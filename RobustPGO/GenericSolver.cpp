@@ -11,9 +11,9 @@ GenericSolver::GenericSolver(int solvertype,
   nfg_(gtsam::NonlinearFactorGraph()),
   values_(gtsam::Values()),
   solver_type_(solvertype),
-  special_symbols_(special_symbols) {
-  log<INFO>("Instantiated Pose Graph Optimizer"); 
-}
+  special_symbols_(special_symbols),
+  debug_(true), 
+  save_g2o_(false) {}
 
 bool GenericSolver::specialSymbol(char symb) {
   for (size_t i = 0; i < special_symbols_.size(); i++) {
@@ -52,20 +52,26 @@ void GenericSolver::update(gtsam::NonlinearFactorGraph nfg,
     // optimize
     if (solver_type_ == 1) {
       gtsam::LevenbergMarquardtParams params;
-      params.setVerbosityLM("SUMMARY");
-      log<INFO>("Running LM"); 
+      if (debug_) {
+        params.setVerbosityLM("SUMMARY");
+        log<INFO>("Running LM"); 
+      }
       params.diagonalDamping = true; 
       values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
     }else if (solver_type_ == 2) {
       gtsam::GaussNewtonParams params;
-      params.setVerbosity("ERROR");
-      log<INFO>("Running GN");
+      if (debug_){
+        params.setVerbosity("ERROR");
+        log<INFO>("Running GN");
+      }
       values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, params).optimize();
     }else if (solver_type_ == 3) {
       // TODO: something (SE-SYNC?)
     }
-
-    gtsam::writeG2o(nfg_, values_, "log/GS_graph.g2o");
+    // save result 
+    if (save_g2o_) {
+      gtsam::writeG2o(nfg_, values_, g2o_file_path_);
+    }
   }
 }
 

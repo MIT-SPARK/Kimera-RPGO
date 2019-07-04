@@ -87,15 +87,18 @@ public:
       if (debug_) log<INFO>("Initialized trajectory");
     } 
 
-    if (new_factors.size() == 1 && new_values.size() == 1) {
-      if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0])) {
-        // if it is a between factor 
-        gtsam::BetweenFactor<T> nfg_factor =
-              *boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0]);
-        if (nfg_factor.front() == nfg_factor.back() - 1) {
-          odometry = true;
-        }
-      } 
+    if (new_values.size() == 1) {
+      if (new_factors.size() == 1) {
+        if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0])) {
+          // if it is a between factor 
+          gtsam::BetweenFactor<T> nfg_factor =
+                *boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0]);
+          if (nfg_factor.front() == nfg_factor.back() - 1) {
+            odometry = true;
+          }
+        } 
+      }
+      
       gtsam::Symbol symb(new_values.keys()[0]);
       if (specialSymbol(symb.chr())) {
         special_loop_closure = true;
@@ -190,14 +193,15 @@ public:
     } else if (special_loop_closure) {
       nfg_special_.add(new_factors);
       output_values.insert(new_values);
-      if (landmark_add || uwb_add) {
-        return false; 
-      }
       // reset graph
       output_nfg = gtsam::NonlinearFactorGraph(); // reset
       output_nfg.add(nfg_special_);
       output_nfg.add(nfg_good_lc_);
       output_nfg.add(nfg_odom_);
+
+      if (landmark_add || uwb_add) {
+        return false; 
+      }
       return true;
 
     } else {

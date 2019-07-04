@@ -117,7 +117,8 @@ TEST(DoOptimize, LoopClosure)
   factors.add(gtsam::BetweenFactor<gtsam::Pose3>(2, 0, gtsam::Pose3(), noise));
   bool do_optimize = pcm->process(factors, gtsam::Values(), nfg, est);
 
-  
+  EXPECT(gtsam::assert_equal(nfg.size(), size_t(3)));
+  EXPECT(gtsam::assert_equal(est.size(), size_t(3)));
   EXPECT(do_optimize == true);
 }
 

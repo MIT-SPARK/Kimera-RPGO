@@ -64,13 +64,24 @@ public:
     bool special_loop_closure = false;
 
     if (posesAndCovariances_odom_.trajectory_poses.size() == 0) {
-      // likely a prior factor for initialization 
-      gtsam::PriorFactor<T> prior_factor =
-          *boost::dynamic_pointer_cast<gtsam::PriorFactor<T> >(new_factors[0]);
-      initializePrior(prior_factor);
-      if (debug_) log<INFO>("Initialized prior and trajectory");
+      // initialize 
+      if (new_values.size() == 1 && new_factors.size() == 0) {
+        if (debug_) log<INFO>("Initializing without prior");
+        initialize(new_values.keys()[0]);
 
-    } else if (new_factors.size() == 1 && new_values.size() == 1) {
+      } else if (boost::dynamic_pointer_cast<gtsam::PriorFactor<T> >(new_factors[0])) {
+        if (debug_) log<INFO>("Initializing with prior");
+        gtsam::PriorFactor<T> prior_factor =
+            *boost::dynamic_pointer_cast<gtsam::PriorFactor<T> >(new_factors[0]);
+        initializeWithPrior(prior_factor);
+
+      } else {
+        log<WARNING> ("Unhandled initialization case.");
+      }
+      if (debug_) log<INFO>("Initialized trajectory");
+    } 
+
+    if (new_factors.size() == 1 && new_values.size() == 1) {
       if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0])) {
         // if it is a between factor 
         gtsam::BetweenFactor<T> nfg_factor =
@@ -161,11 +172,12 @@ public:
 
     } else {
       // Basically the cases not yet considered by pcm
+      // also priors
       output_nfg.add(new_factors);
       output_values.insert(new_values);
 
       // nothing added  so no optimization
-      if (new_factors.size() == 0 && new_values.size() == 0) {
+      if (new_factors.size() == 0) {
         return false; // nothing to optimize 
       }
       return true;
@@ -182,7 +194,7 @@ private:
     return false; 
   }
 
-  void initializePrior(gtsam::PriorFactor<T> prior_factor) {
+  void initializeWithPrior(gtsam::PriorFactor<T> prior_factor) {
     T initial_value = prior_factor.prior();
     const int dim = graph_utils::getDim<T>();
     gtsam::Matrix covar = 
@@ -193,9 +205,24 @@ private:
     graph_utils::PoseWithCovariance<T> initial_pose; 
     initial_pose.pose = initial_value;
     initial_pose.covariance_matrix = covar; 
-    graph_utils::TrajectoryPose<T> init_trajpose; 
-    init_trajpose.pose = initial_pose; 
-    init_trajpose.id = initial_key;
+
+    // populate posesAndCovariances_odom_
+    posesAndCovariances_odom_.trajectory_poses[initial_key].pose = initial_pose;
+    posesAndCovariances_odom_.start_id = initial_key;
+    posesAndCovariances_odom_.end_id = initial_key;
+
+    nfg_odom_.add(prior_factor); // add to initial odometry
+  }
+
+  void initialize(gtsam::Key initial_key) {
+    const int dim = graph_utils::getDim<T>();
+    gtsam::Matrix covar = 
+        Eigen::MatrixXd::Zero(dim, dim); // initialize as zero
+
+    // construct initial pose with covar 
+    graph_utils::PoseWithCovariance<T> initial_pose; 
+    initial_pose.pose = T();
+    initial_pose.covariance_matrix = covar; 
 
     // populate posesAndCovariances_odom_
     posesAndCovariances_odom_.trajectory_poses[initial_key].pose = initial_pose;

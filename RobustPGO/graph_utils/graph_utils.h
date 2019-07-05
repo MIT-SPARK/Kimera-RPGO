@@ -5,9 +5,9 @@
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Rot3.h>
-#include <gtsam/slam/BetweenFactor.h>
 
 #include "RobustPGO/max_clique_finder/findClique.h"
+#include "RobustPGO/logger.h"
 
 #include <map>
 #include <vector>
@@ -34,7 +34,6 @@ struct PoseWithCovariance {
     PoseWithCovariance<T> out; 
     gtsam::Matrix Ha, Hb;
     out.pose = pose.compose(other.pose, Ha, Hb);
-
     out.covariance_matrix = Ha * covariance_matrix * Ha.transpose() +
         Hb * other.covariance_matrix * Hb.transpose();
 
@@ -59,8 +58,29 @@ struct PoseWithCovariance {
     PoseWithCovariance<T> out; 
     gtsam::Matrix Ha, Hb;
     out.pose = pose.between(other.pose, Ha, Hb); // returns between in a frame 
-    out.covariance_matrix = Ha * covariance_matrix * Ha.transpose() + 
-        Hb * covariance_matrix * Hb.transpose();
+
+    out.covariance_matrix = other.covariance_matrix - 
+        Ha * covariance_matrix * Ha.transpose();
+
+    bool pos_semi_def = true;
+    // compute the Cholesky decomp
+    Eigen::LLT<Eigen::MatrixXd> lltCovar1(out.covariance_matrix);
+    if(lltCovar1.info() == Eigen::NumericalIssue){  
+      pos_semi_def = false;
+    } 
+
+    if (!pos_semi_def) { 
+      other.pose.between(pose, Ha, Hb); // returns between in a frame 
+      out.covariance_matrix = covariance_matrix - 
+          Ha * other.covariance_matrix * Ha.transpose();
+
+      // Check if positive semidef 
+      Eigen::LLT<Eigen::MatrixXd> lltCovar2(out.covariance_matrix);
+      if(lltCovar2.info() == Eigen::NumericalIssue){ 
+        log<WARNING>("Warning: Covariance matrix between two poses not PSD"); 
+      } 
+    }
+        
     return out;
   }
 };

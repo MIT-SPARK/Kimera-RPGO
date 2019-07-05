@@ -61,6 +61,25 @@ struct PoseWithCovariance {
 
     out.covariance_matrix = other.covariance_matrix - 
         Ha * covariance_matrix * Ha.transpose();
+
+    bool pos_semi_def = true;
+    // compute the Cholesky decomp
+    Eigen::LLT<Eigen::MatrixXd> lltCovar1(out.covariance_matrix);
+    if(lltCovar1.info() == Eigen::NumericalIssue){  
+      pos_semi_def = false;
+    } 
+
+    if (!pos_semi_def) { 
+      other.pose.between(pose, Ha, Hb); // returns between in a frame 
+      out.covariance_matrix = covariance_matrix - 
+          Ha * other.covariance_matrix * Ha.transpose();
+
+      // Check if positive semidef 
+      Eigen::LLT<Eigen::MatrixXd> lltCovar2(out.covariance_matrix);
+      if(lltCovar2.info() == Eigen::NumericalIssue){ 
+        log<WARNING>("Warning: Covariance matrix between two poses not PSD"); 
+      } 
+    }
         
     return out;
   }

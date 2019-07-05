@@ -5,6 +5,9 @@
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Rot3.h>
+#include <gtsam/inference/Symbol.h>
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
+#include <gtsam/slam/BetweenFactor.h>
 
 #include "RobustPGO/max_clique_finder/findClique.h"
 #include "RobustPGO/logger.h"
@@ -155,5 +158,44 @@ static const size_t getDim(){
   return sample_object.dimension;
 }
 
+template<class T>
+void orderGraph(gtsam::NonlinearFactorGraph& nfg, gtsam::Key first_key=gtsam::Key(0)) {
+
+  gtsam::NonlinearFactorGraph nfg_ordered; 
+
+  // order a nonlinear factor graph as odometry first 
+  gtsam::Key current_key = first_key;
+  bool extracted_odom = false; 
+  while (!extracted_odom) {
+    bool end_of_odom = true; 
+    for (size_t i = 0; i < nfg.size(); i++) { 
+      // search through 
+      if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(nfg[i])) {
+        // if it is a between factor 
+        gtsam::BetweenFactor<T> factor =
+              *boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(nfg[i]);
+        if (factor.front() == current_key && factor.back() == current_key + 1) {
+          end_of_odom = false;
+          nfg_ordered.add(factor);
+          current_key = current_key + 1;
+          nfg[i].reset();
+          break;
+        }
+      }
+    }
+
+    if (end_of_odom) extracted_odom = true; 
+  }
+  // add the other non-odom loop closures
+  for (size_t i = 0; i < nfg.size(); i++) { 
+    if (nfg[i] != NULL) {
+      nfg_ordered.add(nfg[i]);
+    }
+  }
+
+  nfg = nfg_ordered;
 }
+
+}
+
 #endif

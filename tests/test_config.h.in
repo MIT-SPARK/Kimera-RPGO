@@ -1,0 +1,4 @@
+#pragma once
+
+// Path to the library
+#define DATASET_PATH "@TEST_DATA_PATH@"

@@ -41,9 +41,6 @@ public:
 
   void force_optimize();
 
-  template<class T>
-  void load_graph(gtsam::GraphAndValues gv);
-
 private:
   OutlierRemoval* outlier_removal_; // outlier removal method; 
 

@@ -51,8 +51,8 @@ TEST(PoseWithCovariance, Trajectory)
     graph_utils::PoseWithCovariance<gtsam::Pose3> odom;
     gtsam::Pose3 tf(gtsam::Rot3(1,0,0,0), gtsam::Point3(1,1,0));
     odom.pose = tf;
-    odom.covariance_matrix = 0.0001 * Eigen::MatrixXd::Identity(6,6);
-
+    odom.covariance_matrix = 0.1 * Eigen::MatrixXd::Identity(6,6);
+    odom.covariance_matrix.block(0,0,3,3) = Eigen::MatrixXd::Zero(3,3);
     current_pose = current_pose.compose(odom); // update pose 
     test_traj.trajectory_poses[i].pose = current_pose;
   }
@@ -73,14 +73,15 @@ TEST(PoseWithCovariance, Trajectory)
     graph_utils::PoseWithCovariance<gtsam::Pose3> odom;
     gtsam::Pose3 tf(gtsam::Rot3(1,0,0,0), gtsam::Point3(1,1,0));
     odom.pose = tf;
-    odom.covariance_matrix = 0.0001 * Eigen::MatrixXd::Identity(6,6);
+    odom.covariance_matrix = 0.1 * Eigen::MatrixXd::Identity(6,6);
+    odom.covariance_matrix.block(0,0,3,3) = Eigen::MatrixXd::Zero(3,3);
     // between_rebuild.pose.print();
     between_rebuild = between_rebuild.compose(odom); // update pose (stich)
   }
 
   // monte carlo 
   Eigen::MatrixXd cov = Eigen::MatrixXd::Zero(6,6);
-  for (size_t i = 0; i < 1000; i++) {
+  for (size_t i = 0; i < 5000; i++) {
     gtsam::Pose3 between_mc = gtsam::Pose3();
     
     for (gtsam::Key i = 2; i < 99; i++) {
@@ -88,8 +89,8 @@ TEST(PoseWithCovariance, Trajectory)
       graph_utils::PoseWithCovariance<gtsam::Pose3> odom;
       gtsam::Pose3 tf(gtsam::Rot3(1,0,0,0), gtsam::Point3(1,1,0));
       odom.pose = tf;
-      odom.covariance_matrix = 0.0001 * Eigen::MatrixXd::Identity(6,6);
-
+      odom.covariance_matrix = 0.1 * Eigen::MatrixXd::Identity(6,6);
+      odom.covariance_matrix.block(0,0,3,3) = Eigen::MatrixXd::Zero(3,3);
       normal_rv noiseOdom(odom.covariance_matrix);
       gtsam::Pose3 odom_mc = odom.pose.expmap(noiseOdom());
       between_mc = between_mc.compose(odom_mc);
@@ -99,12 +100,12 @@ TEST(PoseWithCovariance, Trajectory)
     cov = cov + eps * eps.transpose();
   }
 
-  cov = cov/1000.0; 
+  cov = cov/5000.0; 
   
   EXPECT(gtsam::assert_equal(between_pose.pose, between_rebuild.pose));
   EXPECT(gtsam::assert_equal(between_pose.covariance_matrix, between_rebuild.covariance_matrix));
   // error grows as covariance grows (as trajectory gets long)
-  EXPECT(gtsam::assert_equal(between_rebuild.covariance_matrix, cov, 5));
+  EXPECT(gtsam::assert_equal(between_rebuild.covariance_matrix, cov, 1));
 
 }
 

@@ -80,9 +80,9 @@ struct PoseWithCovariance {
 
       // Check if positive semidef 
       Eigen::LLT<Eigen::MatrixXd> lltCovar2(out.covariance_matrix);
-      if(lltCovar2.info() == Eigen::NumericalIssue){ 
-        log<WARNING>("Warning: Covariance matrix between two poses not PSD"); 
-      } 
+      // if(lltCovar2.info() == Eigen::NumericalIssue){ 
+      //   log<WARNING>("Warning: Covariance matrix between two poses not PSD"); 
+      // } 
     }
         
     return out;

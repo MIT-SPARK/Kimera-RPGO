@@ -22,6 +22,7 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/slam/InitializePose3.h>
 #include <gtsam/nonlinear/NonlinearConjugateGradientOptimizer.h>
 #include <gtsam/inference/Symbol.h>
+#include <gtsam/slam/BetweenFactor.h>
 
 #include "RobustPGO/GenericSolver.h"
 #include "RobustPGO/logger.h"

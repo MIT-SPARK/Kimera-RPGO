@@ -130,7 +130,7 @@ TEST(DoOptimize, artifacts)
   // first observation: do_optimize = false 
   // repeated observatio: do_optimize = true
   std::vector<char> special_symbs{'l', 'u'}; // for artifacts
-  OutlierRemoval *pcm = new PCM<gtsam::Pose3>(1.0, 1.0, special_symbs);
+  OutlierRemoval *pcm = new PCM<gtsam::Pose3>(10.0, 10.0, special_symbs);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise = 
@@ -176,8 +176,8 @@ TEST(DoOptimize, artifacts)
   factors.add(gtsam::BetweenFactor<gtsam::Pose3>(1, artifact_key, meas2, noise));
   do_optimize = pcm->process(factors, vals, nfg, est);
 
-  EXPECT(gtsam::assert_equal(nfg.size(), size_t(3)));
-  EXPECT(gtsam::assert_equal(est.size(), size_t(3)));
+  EXPECT(gtsam::assert_equal(size_t(3),nfg.size()));
+  EXPECT(gtsam::assert_equal(size_t(3),est.size()));
   EXPECT(do_optimize == true);
 }
 
@@ -200,7 +200,11 @@ TEST(DoOptimize, UWB)
   // initialize first (w/o prior)
   gtsam::Values init_vals;
   init_vals.insert(0, gtsam::Pose3());
-  pcm->process(gtsam::NonlinearFactorGraph(), init_vals, nfg, est);
+  bool do_optimize = pcm->process(gtsam::NonlinearFactorGraph(), init_vals, nfg, est);
+
+  EXPECT(gtsam::assert_equal(size_t(0),nfg.size()));
+  EXPECT(gtsam::assert_equal(size_t(1),est.size()));
+  EXPECT(do_optimize == false);
 
   // add first uwb observation 
   gtsam::Values vals; 
@@ -223,11 +227,11 @@ TEST(DoOptimize, UWB)
   vals.insert(uwb_key, meas1);
   factors.add(gtsam::RangeFactor<gtsam::Pose3, gtsam::Pose3>(0, uwb_key, meas1, rnoise));
 
-  bool do_optimize = pcm->process(factors, vals, nfg, est);
+  do_optimize = pcm->process(factors, vals, nfg, est);
 
-  EXPECT(gtsam::assert_equal(nfg.size(), size_t(2)));
-  EXPECT(gtsam::assert_equal(est.size(), size_t(2)));
-  EXPECT(do_optimize == false);
+  EXPECT(gtsam::assert_equal(size_t(2),nfg.size()));
+  EXPECT(gtsam::assert_equal(size_t(2),est.size()));
+  EXPECT(do_optimize == true);
 
   // add odometry 
   vals = gtsam::Values(); // reset

@@ -5,9 +5,6 @@
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Rot3.h>
-#include <gtsam/inference/Symbol.h>
-#include <gtsam/nonlinear/NonlinearFactorGraph.h>
-#include <gtsam/slam/BetweenFactor.h>
 
 #include "RobustPGO/max_clique_finder/findClique.h"
 #include "RobustPGO/logger.h"

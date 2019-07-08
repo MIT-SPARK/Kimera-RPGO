@@ -6,9 +6,6 @@ author: Yun Chang, Luca Carlone
 #ifndef ROBUSTPGO_H
 #define ROBUSTPGO_H
 
-// enables correct operations of GTSAM (correct Jacobians)
-#define SLOW_BUT_CORRECT_BETWEENFACTOR 
-
 #include <gtsam/base/Vector.h>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Rot3.h>
@@ -22,7 +19,6 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/slam/InitializePose3.h>
 #include <gtsam/nonlinear/NonlinearConjugateGradientOptimizer.h>
 #include <gtsam/inference/Symbol.h>
-#include <gtsam/slam/BetweenFactor.h>
 
 #include "RobustPGO/GenericSolver.h"
 #include "RobustPGO/logger.h"

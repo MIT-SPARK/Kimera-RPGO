@@ -37,6 +37,14 @@ public:
 
   void force_optimize();
 
+  template<class T>
+  void loadGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values,
+      gtsam::PriorFactor<T> prior);
+
+  template<class T>
+  void addGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values, 
+      gtsam::Key key0);
+
 private:
   OutlierRemoval* outlier_removal_; // outlier removal method; 
 

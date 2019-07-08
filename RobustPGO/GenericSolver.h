@@ -58,9 +58,13 @@ public:
     g2o_file_path_ = folder_path + "/result.g2o";
   }
 
-  void loadGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values);
+  template<class T>
+  void loadGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values,
+      gtsam::PriorFactor<T> prior);
 
-  void addGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values);
+  template<class T>
+  void addGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values, 
+      gtsam::Key key0);
 
 protected:
   bool specialSymbol(char symb);

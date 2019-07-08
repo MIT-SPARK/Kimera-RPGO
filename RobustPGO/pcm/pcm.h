@@ -376,7 +376,7 @@ private:
           * consistency_error.tail(t_dim));
     }
 
-    if (debug_) log<INFO>("odometry consistency distance: %1%") % mahalanobis_dist; 
+    // if (debug_) log<INFO>("odometry consistency distance: %1%") % mahalanobis_dist; 
     if (mahalanobis_dist < threshold) {
       return true;
     }
@@ -454,7 +454,7 @@ private:
           * consistency_error.tail(t_dim));
     }
 
-    if (debug_) log<INFO>("loop consistency distance: %1%") % mahalanobis_dist; 
+    // if (debug_) log<INFO>("loop consistency distance: %1%") % mahalanobis_dist; 
     if (mahalanobis_dist < pc_threshold_) {
       return true;
     }

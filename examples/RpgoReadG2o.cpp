@@ -34,43 +34,20 @@ void Simulate(gtsam::GraphAndValues gv,
   if (!debug) pgo->setQuiet(); // turn off print messages
   if (debug) log<INFO>("Initiated robust pose graph optimizer");
 
+  Eigen::VectorXd noise = Eigen::VectorXd::Zero(graph_utils::getDim<T>());
+  static const gtsam::SharedNoiseModel& init_noise = 
+      gtsam::noiseModel::Diagonal::Sigmas(noise);
+
   gtsam::Key current_key = nfg[0]->front();
-	gtsam::Values init_values;
-	init_values.insert(current_key, values.at<T>(current_key));
-	pgo->update(gtsam::NonlinearFactorGraph(), init_values); // triggers initialization
 
-	// For now assume that there are only odometry and loop closures 
-  size_t num_factors = nfg.size(); 
-  for (size_t i = 0; i < num_factors; i++) { 
-  	gtsam::Key front = nfg[i]->front();
-  	gtsam::Key back = nfg[i]->back();
-  	if (front == current_key && front == back - 1) { 
-  		// odometry factor 
-      gtsam::Values new_values; 
-      new_values.insert(back, values.at<T>(back));
-      gtsam::NonlinearFactorGraph new_factors; 
-      new_factors.add(nfg[i]);
+  gtsam::Values init_values; // add first value with prior factor 
+  gtsam::NonlinearFactorGraph init_factors; 
+  init_values.insert(current_key, values.at<T>(current_key));
+  gtsam::PriorFactor<T> prior_factor(current_key, 
+      values.at<T>(current_key), init_noise);
 
-      if (debug) {
-        std::cout << "odometry: " << front << ">" << back << std::endl; 
-        nfg[i]->print();
-      }
+  pgo->loadGraph(nfg, values, prior_factor);
 
-      pgo->update(new_factors, new_values);
-      current_key++; 
-    } else { 
-  		// loop closure factor 
-      gtsam::NonlinearFactorGraph new_factors; 
-      new_factors.add(nfg[i]);
-
-      if (debug) {
-        std::cout << "loop closure: " << front << ">" << back << std::endl;
-        nfg[i]->print(); 
-      }
-
-      pgo->update(new_factors, gtsam::Values());
-  	}
-  }
   // in case no loop closure, need to force optimize with only odom 
   pgo->force_optimize(); 
 }

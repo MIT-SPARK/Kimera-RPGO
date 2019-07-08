@@ -62,7 +62,6 @@ struct PoseWithCovariance {
 
     out.covariance_matrix = other.covariance_matrix - 
         Ha * covariance_matrix * Ha.transpose();
-
     bool pos_semi_def = true;
     // compute the Cholesky decomp
     Eigen::LLT<Eigen::MatrixXd> lltCovar1(out.covariance_matrix);
@@ -81,7 +80,6 @@ struct PoseWithCovariance {
       //   log<WARNING>("Warning: Covariance matrix between two poses not PSD"); 
       // } 
     }
-        
     return out;
   }
 };

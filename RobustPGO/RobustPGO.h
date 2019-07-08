@@ -6,9 +6,6 @@ author: Yun Chang, Luca Carlone
 #ifndef ROBUSTPGO_H
 #define ROBUSTPGO_H
 
-// enables correct operations of GTSAM (correct Jacobians)
-#define SLOW_BUT_CORRECT_BETWEENFACTOR 
-
 #include <gtsam/base/Vector.h>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Rot3.h>

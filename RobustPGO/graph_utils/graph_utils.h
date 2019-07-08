@@ -33,6 +33,7 @@ struct PoseWithCovariance {
   PoseWithCovariance compose(const PoseWithCovariance other) const {
     PoseWithCovariance<T> out; 
     gtsam::Matrix Ha, Hb;
+    
     out.pose = pose.compose(other.pose, Ha, Hb);
     out.covariance_matrix = Ha * covariance_matrix * Ha.transpose() +
         Hb * other.covariance_matrix * Hb.transpose();
@@ -61,7 +62,6 @@ struct PoseWithCovariance {
 
     out.covariance_matrix = other.covariance_matrix - 
         Ha * covariance_matrix * Ha.transpose();
-      
     bool pos_semi_def = true;
     // compute the Cholesky decomp
     Eigen::LLT<Eigen::MatrixXd> lltCovar1(out.covariance_matrix);
@@ -76,9 +76,9 @@ struct PoseWithCovariance {
 
       // Check if positive semidef 
       Eigen::LLT<Eigen::MatrixXd> lltCovar2(out.covariance_matrix);
-      if(lltCovar2.info() == Eigen::NumericalIssue){ 
-        log<WARNING>("Warning: Covariance matrix between two poses not PSD"); 
-      } 
+      // if(lltCovar2.info() == Eigen::NumericalIssue){ 
+      //   log<WARNING>("Warning: Covariance matrix between two poses not PSD"); 
+      // } 
     }
     return out;
   }
@@ -155,4 +155,5 @@ static const size_t getDim(){
 }
 
 }
+
 #endif

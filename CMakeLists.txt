@@ -45,3 +45,5 @@ target_link_libraries(RpgoReadG2o RobustPGO)
 ###########################################################################
 # Tests
 add_subdirectory(tests)
+set(TEST_DATA_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
+configure_file(tests/test_config.h.in test_config.h)

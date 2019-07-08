@@ -119,6 +119,7 @@ TEST(DoOptimize, LoopClosure)
 
   EXPECT(gtsam::assert_equal(nfg.size(), size_t(3)));
   EXPECT(gtsam::assert_equal(est.size(), size_t(3)));
+
   EXPECT(do_optimize == true);
 }
 

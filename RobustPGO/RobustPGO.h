@@ -38,7 +38,7 @@ public:
   void force_optimize();
 
   template<class T>
-  void RobustPGO::loadGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values,
+  void loadGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values,
       gtsam::PriorFactor<T> prior) {
     gtsam::NonlinearFactorGraph prior_factor;
     prior_factor.add(prior);
@@ -47,7 +47,7 @@ public:
   }
 
   template<class T>
-  void RobustPGO::addGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values, gtsam::Key key0) {
+  void addGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values, gtsam::Key key0) {
     // load graph assumes that the previous graph has been cleared
     gtsam::Key current_key = key0; // initial key
     // note that as of now only deal with between factors)

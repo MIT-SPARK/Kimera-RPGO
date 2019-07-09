@@ -45,15 +45,31 @@ public:
   void loadGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values,
       gtsam::PriorFactor<T> prior) {
     gtsam::NonlinearFactorGraph prior_factor;
+    gtsam::Values prior_values; 
     prior_factor.add(prior);
-    gtsam::Values priot_values; 
-    priot_values.insert(prior.key(), prior.prior());
-    update(prior_factor, priot_values); // triggers initialization
-    addGraph<T>(factors, values, prior.key());
+    prior_values.insert(prior.key(), prior.prior());
+    update(prior_factor, prior_values); // triggers initialization
+
+    connectGraph<T>(factors, values, prior.key());
   }
 
   template<class T>
-  void addGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values, gtsam::Key key0) {
+  void addGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values,
+      gtsam::BetweenFactor<T> connector) {
+
+    gtsam::Key key0 = connector.back();
+
+    gtsam::NonlinearFactorGraph connect_factor;
+    gtsam::Values connect_values; 
+    connect_factor.add(connector);
+    connect_values.insert(key0, values.at<T>(key0));
+    update(connect_factor, connect_values); // add "bridge"
+
+    connectGraph<T>(factors, values, key0);
+  }
+
+  template<class T>
+  void connectGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values, gtsam::Key key0) {
 
     // load graph assumes that the previous graph has been cleared
     gtsam::Key current_key = key0; // initial key

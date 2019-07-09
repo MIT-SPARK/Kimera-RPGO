@@ -34,10 +34,19 @@ void Simulate(gtsam::GraphAndValues gv,
   if (!debug) pgo->setQuiet(); // turn off print messages
   if (debug) log<INFO>("Initiated robust pose graph optimizer");
 
+  Eigen::VectorXd noise = Eigen::VectorXd::Zero(graph_utils::getDim<T>());
+  static const gtsam::SharedNoiseModel& init_noise = 
+      gtsam::noiseModel::Diagonal::Sigmas(noise);
+      
   gtsam::Key current_key = nfg[0]->front();
-	gtsam::Values init_values;
-	init_values.insert(current_key, values.at<T>(current_key));
-	pgo->update(gtsam::NonlinearFactorGraph(), init_values); // triggers initialization
+
+  gtsam::Values init_values; // add first value with prior factor 
+  gtsam::NonlinearFactorGraph init_factors; 
+  init_values.insert(current_key, values.at<T>(current_key));
+  gtsam::PriorFactor<T> prior_factor(current_key, 
+      values.at<T>(current_key), init_noise);
+  init_factors.add(prior_factor);
+  pgo->update(init_factors, init_values); // triggers initialization
 
 	// For now assume that there are only odometry and loop closures 
   size_t num_factors = nfg.size(); 

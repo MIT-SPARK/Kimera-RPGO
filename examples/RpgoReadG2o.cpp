@@ -17,11 +17,11 @@ author: Yun Chang
    [or]   ./RpgoReadG2o 3d <some-3d-g2o-file> <odom-threshold> <pcm-threshold> <output-g2o-file> <verbosity>*/
 template<class T>
 void Simulate(gtsam::GraphAndValues gv, 
-			double odom_thresh, double pmc_thresh, 
+      double odom_thresh, double pmc_thresh, 
       std::string output_folder, 
       bool debug=true) {
 
-	gtsam::NonlinearFactorGraph nfg = *gv.first;
+  gtsam::NonlinearFactorGraph nfg = *gv.first;
   gtsam::Values values = *gv.second;
   
   OutlierRemoval *pcm = new PCM<T>(odom_thresh, pmc_thresh);
@@ -52,8 +52,8 @@ void Simulate(gtsam::GraphAndValues gv,
   pgo->force_optimize(); 
 }
 int main(int argc, char *argv[]) {
-	gtsam::GraphAndValues graphNValues; 
-	std::string dim = argv[1];
+  gtsam::GraphAndValues graphNValues; 
+  std::string dim = argv[1];
   std::string output_folder;
   if (argc > 5) output_folder = argv[5];
   bool verbose = false;
@@ -67,18 +67,18 @@ int main(int argc, char *argv[]) {
 		graphNValues = gtsam::load2D(argv[2], gtsam::SharedNoiseModel(),
         0, false, true, gtsam::NoiseFormatG2O);
 		Simulate<gtsam::Pose2>(graphNValues,
-				atof(argv[3]), atof(argv[4]), 
-        output_folder, verbose);
-
-	} else if (dim == "3d") {
-		graphNValues = gtsam::load3D(argv[2]);
-		Simulate<gtsam::Pose3>(graphNValues,
 				atof(argv[3]), atof(argv[4]),
         output_folder, verbose);
 
-	} else {
-		log<WARNING>("Unsupported input format: ");
-		log<WARNING>("Should be ./RpgoReadG2o <2d or 3d> <g2o file> <odom thresh> <pcm thresh> <opt: output_folder> <opt: v for messages");
-	}
+  } else if (dim == "3d") {
+    graphNValues = gtsam::load3D(argv[2]);
+    Simulate<gtsam::Pose3>(graphNValues,
+        atof(argv[3]), atof(argv[4]),
+        output_folder, verbose);
+
+  } else {
+    log<WARNING>("Unsupported input format: ");
+    log<WARNING>("Should be ./RpgoReadG2o <2d or 3d> <g2o file> <odom thresh> <pcm thresh> <opt: output_folder> <opt: v for messages");
+  }
   
 }

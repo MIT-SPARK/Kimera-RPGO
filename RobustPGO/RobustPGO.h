@@ -35,6 +35,10 @@ public:
               gtsam::Values values=gtsam::Values(),
               gtsam::FactorIndices factorsToRemove=gtsam::FactorIndices());
 
+  void forceUpdate(gtsam::NonlinearFactorGraph nfg=gtsam::NonlinearFactorGraph(), 
+              gtsam::Values values=gtsam::Values(),
+              gtsam::FactorIndices factorsToRemove=gtsam::FactorIndices());
+
   void force_optimize();
 
   template<class T>

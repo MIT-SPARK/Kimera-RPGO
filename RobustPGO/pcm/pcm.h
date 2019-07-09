@@ -224,6 +224,22 @@ public:
     return true;
   }
 
+  virtual bool processForcedLoopclosure(
+      gtsam::NonlinearFactorGraph new_factors, 
+      gtsam::Values new_values,
+      gtsam::NonlinearFactorGraph& output_nfg, 
+      gtsam::Values& output_values){
+    // force loop closure (without outlier rejection)
+    nfg_special_.add(new_factors);
+    output_values.insert(new_values);
+    // reset graph
+    output_nfg = gtsam::NonlinearFactorGraph(); // reset
+    output_nfg.add(nfg_odom_);
+    output_nfg.add(nfg_good_lc_);
+    output_nfg.add(nfg_special_); // still need to update the class overall factorgraph
+    return true;
+  }
+
 private:
 
   bool specialSymbol(char symb) {

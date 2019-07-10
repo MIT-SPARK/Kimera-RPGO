@@ -35,8 +35,17 @@ struct PoseWithCovariance {
     gtsam::Matrix Ha, Hb;
     
     out.pose = pose.compose(other.pose, Ha, Hb);
-    out.covariance_matrix = Ha * covariance_matrix * Ha.transpose() +
-        Hb * other.covariance_matrix * Hb.transpose();
+    // linear case so ignore all rotation components 
+    Eigen::MatrixXd lin_cov_matrix = Eigen::MatrixXd::Zero(covariance_matrix.rows(),
+        covariance_matrix.cols());
+    lin_cov_matrix.block(3,3,3,3) = covariance_matrix.block(3,3,3,3);
+
+    Eigen::MatrixXd lin_other_cov_matrix = Eigen::MatrixXd::Zero(other.covariance_matrix.rows(),
+        other.covariance_matrix.cols());
+    lin_other_cov_matrix.block(3,3,3,3) = other.covariance_matrix.block(3,3,3,3);
+
+    out.covariance_matrix = Ha * lin_cov_matrix * Ha.transpose() +
+        Hb * lin_other_cov_matrix * Hb.transpose();
 
     return out;
   }
@@ -59,20 +68,26 @@ struct PoseWithCovariance {
     PoseWithCovariance<T> out; 
     gtsam::Matrix Ha, Hb;
     out.pose = pose.between(other.pose, Ha, Hb); // returns between in a frame 
+    // linear case so ignore all rotation components 
+    Eigen::MatrixXd lin_cov_matrix = Eigen::MatrixXd::Zero(covariance_matrix.rows(),
+        covariance_matrix.cols());
+    lin_cov_matrix.block(3,3,3,3) = covariance_matrix.block(3,3,3,3);
 
-    out.covariance_matrix = other.covariance_matrix - 
-        Ha * covariance_matrix * Ha.transpose();
+    Eigen::MatrixXd lin_other_cov_matrix = Eigen::MatrixXd::Zero(other.covariance_matrix.rows(),
+        other.covariance_matrix.cols());
+    lin_other_cov_matrix.block(3,3,3,3) = other.covariance_matrix.block(3,3,3,3);
+
+    out.covariance_matrix = lin_other_cov_matrix - lin_cov_matrix;
     bool pos_semi_def = true;
     // compute the Cholesky decomp
-    Eigen::LLT<Eigen::MatrixXd> lltCovar1(out.covariance_matrix);
+    Eigen::LLT<Eigen::MatrixXd> lltCovar1(out.covariance_matrix.block(3,3,3,3));
     if(lltCovar1.info() == Eigen::NumericalIssue){  
       pos_semi_def = false;
     } 
 
     if (!pos_semi_def) { 
       other.pose.between(pose, Ha, Hb); // returns between in a frame 
-      out.covariance_matrix = covariance_matrix - 
-          Ha * other.covariance_matrix * Ha.transpose();
+      out.covariance_matrix = lin_cov_matrix - lin_other_cov_matrix;
 
       // Check if positive semidef 
       Eigen::LLT<Eigen::MatrixXd> lltCovar2(out.covariance_matrix);

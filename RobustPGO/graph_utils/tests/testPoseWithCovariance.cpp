@@ -55,27 +55,17 @@ TEST(PoseWithCovariance, Compose)
 
   A.pose = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1,1,1)); // start
   A.covariance_matrix = 0.1 * Eigen::MatrixXd::Identity(6,6);
+  A.covariance_matrix.block(0,0,3,3) = Eigen::MatrixXd::Zero(3,3);
 
   // First test a translation only 
   gtsam::Pose3 poseAB(gtsam::Rot3(), gtsam::Point3(1,1,1));
   AB.pose = poseAB;
   AB.covariance_matrix = 0.1 * Eigen::MatrixXd::Identity(6,6);
+  AB.covariance_matrix.block(0,0,3,3) = Eigen::MatrixXd::Zero(3,3);
 
   B = A.compose(AB);
 
   EXPECT(gtsam::assert_equal(A.pose.compose(AB.pose), B.pose));
-
-  // test first with calculation (so should be exact)
-  Eigen::MatrixXd B_covar = Eigen::MatrixXd::Zero(6,6);
-  B_covar.row(0) << 2, 0, 0, 0, -1, 1;
-  B_covar.row(1) << 0, 2, 0, 1, 0, -1;
-  B_covar.row(2) << 0, 0, 2, -1, 1, 0;
-  B_covar.row(3) << 0, 1, -1, 4, -1, -1;
-  B_covar.row(4) << -1, 0, 1, -1, 4, -1;
-  B_covar.row(5) << 1, -1, 0, -1, -1, 4;
-  B_covar = 0.1 * B_covar;
-
-  EXPECT(gtsam::assert_equal(B.covariance_matrix, B_covar));
 
   // then test with monte carlo result (would take a while to compute)
   size_t sample_size = 1000;
@@ -94,24 +84,14 @@ TEST(PoseWithCovariance, Compose)
   EXPECT(gtsam::assert_equal(cov, B.covariance_matrix, 0.1));
 
   // Then rotation only 
-  gtsam::Pose3 poseBC(gtsam::Rot3(0,0,0,1), gtsam::Point3());
+  gtsam::Pose3 poseBC(gtsam::Rot3(1,0,0,0), gtsam::Point3());
   BC.pose = poseBC;
-  BC.covariance_matrix = 0.1 * Eigen::MatrixXd::Identity(6,6);
+  BC.covariance_matrix = Eigen::MatrixXd::Zero(6,6);
   BC.covariance_matrix.block(3,3,3,3) = 0.01 * Eigen::MatrixXd::Identity(3,3);
 
   C = B.compose(BC);
 
   EXPECT(gtsam::assert_equal(B.pose.compose(BC.pose), C.pose));
-
-  Eigen::MatrixXd C_covar = Eigen::MatrixXd::Zero(6,6);
-  C_covar.row(0) << 0.3, 0, 0, 0, -0.1, -0.1;
-  C_covar.row(1) << 0, 0.3, 0, 0.1, 0, 0.1;
-  C_covar.row(2) << 0, 0, 0.3, 0.1, -0.1, 0;
-  C_covar.row(3) << 0, 0.1, 0.1, 0.41, -0.1, 0.1;
-  C_covar.row(4) << -0.1, 0, -0.1, -0.1, 0.41, 0.1;
-  C_covar.row(5) << -0.1, 0.1, 0, 0.1, 0.1, 0.41;
-
-  EXPECT(gtsam::assert_equal(C.covariance_matrix, C_covar));
 
   // then test with monte carlo result (would take a while to compute)
   cov = Eigen::MatrixXd::Zero(6,6);
@@ -129,23 +109,14 @@ TEST(PoseWithCovariance, Compose)
   EXPECT(gtsam::assert_equal(cov, C.covariance_matrix, 0.1));
 
   // rotation and translation 
-  gtsam::Pose3 poseCD(gtsam::Rot3(0,0,1,0), gtsam::Point3(1,0,0));
+  gtsam::Pose3 poseCD(gtsam::Rot3(1,0,0,0), gtsam::Point3(1,0,0));
   CD.pose = poseCD;
   CD.covariance_matrix = 0.1 * Eigen::MatrixXd::Identity(6,6);
+  CD.covariance_matrix.block(0,0,3,3) = Eigen::MatrixXd::Zero(3,3);
 
   D = C.compose(CD);
 
   EXPECT(gtsam::assert_equal(C.pose.compose(CD.pose), D.pose));
-
-  Eigen::MatrixXd D_covar = Eigen::MatrixXd::Zero(6,6);
-  D_covar.row(0) << 0.4, 0, 0, 0, 0.1, -0.1;
-  D_covar.row(1) << 0, 0.4, 0, -0.1, 0, 0.2;
-  D_covar.row(2) << 0, 0, 0.4, 0.1, -0.2, 0;
-  D_covar.row(3) << 0, -0.1, 0.1, 0.51, 0, 0;
-  D_covar.row(4) << 0.1, 0, -0.2, 0, 0.61, -0.1;
-  D_covar.row(5) << -0.1, 0.2, 0, 0, -0.1, 0.61;
-
-  EXPECT(gtsam::assert_equal(D.covariance_matrix, D_covar));
 
   // then test with monte carlo result (would take a while to compute)
   cov = Eigen::MatrixXd::Zero(6,6);
@@ -174,32 +145,22 @@ TEST(PoseWithCovariance, Between)
   A.pose = gtsam::Pose3();
 
   Eigen::MatrixXd A_covar = Eigen::MatrixXd::Zero(6,6);
-  A_covar.row(0) << 0.3, 0, 0, 0, -0.1, -0.1;
-  A_covar.row(1) << 0, 0.3, 0, 0.1, 0, 0.1;
-  A_covar.row(2) << 0, 0, 0.3, 0.1, -0.1, 0;
-  A_covar.row(3) << 0, 0.1, 0.1, 0.41, -0.1, 0.1;
-  A_covar.row(4) << -0.1, 0, -0.1, -0.1, 0.41, 0.1;
-  A_covar.row(5) << -0.1, 0.1, 0, 0.1, 0.1, 0.41;
+  A_covar.row(3) << 0, 0, 0, 0.41, 0, 0;
+  A_covar.row(4) << 0, 0, 0, 0, 0.41, 0;
+  A_covar.row(5) << 0, 0, 0, 0, 0, 0.41;
   A.covariance_matrix = A_covar; 
 
-  C.pose = gtsam::Pose3(gtsam::Rot3(0,0,1,0), gtsam::Point3(1,0,0));
+  C.pose = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1,0,0));
 
   Eigen::MatrixXd C_covar = Eigen::MatrixXd::Zero(6,6);
-  C_covar.row(0) << 0.4, 0, 0, 0, 0.1, -0.1;
-  C_covar.row(1) << 0, 0.4, 0, -0.1, 0, 0.2;
-  C_covar.row(2) << 0, 0, 0.4, 0.1, -0.2, 0;
-  C_covar.row(3) << 0, -0.1, 0.1, 0.51, 0, 0;
-  C_covar.row(4) << 0.1, 0, -0.2, 0, 0.61, -0.1;
-  C_covar.row(5) << -0.1, 0.2, 0, 0, -0.1, 0.61;
+  C_covar.row(3) << 0, 0, 0, 0.51, 0, 0;
+  C_covar.row(4) << 0, 0, 0, 0, 0.61, 0;
+  C_covar.row(5) << 0, 0, 0, 0, 0, 0.61;
   C.covariance_matrix = C_covar;
 
   B = A.between(C);
-  gtsam::Pose3 B_pose = gtsam::Pose3(gtsam::Rot3(0,0,1,0), gtsam::Point3(1,0,0));
+  gtsam::Pose3 B_pose = gtsam::Pose3(gtsam::Rot3(1,0,0,0), gtsam::Point3(1,0,0));
   EXPECT(gtsam::assert_equal(B.pose, B.pose));
-
-  Eigen::MatrixXd B_covar = 0.1 * Eigen::MatrixXd::Identity(6,6);
-  EXPECT(gtsam::assert_equal(B_covar, B.covariance_matrix));
-
   // check with monte carlo result 
   size_t sample_size = 1000;
   Eigen::MatrixXd cov = Eigen::MatrixXd::Zero(6,6);

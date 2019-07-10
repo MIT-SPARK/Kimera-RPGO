@@ -276,7 +276,7 @@ private:
     gtsam::Matrix covar =
         boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
         (odom_factor.get_noiseModel())->covariance(); // return covariance matrix
-
+    
     gtsam::Key new_key = odom_factor.back();
 
     // construct pose with covariance for odometry measurement 
@@ -322,22 +322,14 @@ private:
 
     // get pij_lc = (Tij_lc, Covij_lc) from factor
     pji_lc.pose = lc_factor.measured().inverse(); 
-    gtsam::Matrix pji_lc_covar = boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
-        (lc_factor.get_noiseModel())->covariance();
-
-    bool rotation_info = true;
-    const int dim = graph_utils::getDim<T>();
+    
+    // Check if includes rotation info 
+    bool rotation_info = true; 
     const int r_dim = graph_utils::getRotationDim<T>(); 
     const int t_dim = graph_utils::getTranslationDim<T>(); 
-    if (std::isnan(pji_lc_covar.block(0,0,r_dim,r_dim).trace())) {
-      rotation_info = false;
-      Eigen::MatrixXd temp = Eigen::MatrixXd::Zero(dim, dim);
-      temp.block(r_dim,r_dim,t_dim,t_dim) = 
-          pji_lc_covar.block(r_dim,r_dim,t_dim,t_dim);
-      pji_lc_covar = temp; 
-    }
 
-    pji_lc.covariance_matrix = pji_lc_covar;
+    pji_lc.covariance_matrix = boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
+        (lc_factor.get_noiseModel())->covariance();
 
     // check consistency (Tij_odom,Cov_ij_odom, Tij_lc, Cov_ij_lc)
     result = pij_odom.compose(pji_lc);
@@ -347,14 +339,9 @@ private:
     // check with threshold
     double threshold = odom_threshold_;
     // comput sqaure mahalanobis distance (the computation is wrong in robust mapper repo) 
-    if (rotation_info) {
-      mahalanobis_dist = std::sqrt(consistency_error.transpose() 
-          * gtsam::inverse(result.covariance_matrix) * consistency_error);
-    } else {
-      mahalanobis_dist = std::sqrt(consistency_error.tail(t_dim).transpose()
-          * gtsam::inverse(result.covariance_matrix.block(r_dim,r_dim,t_dim,t_dim))
-          * consistency_error.tail(t_dim));
-    }
+    mahalanobis_dist = std::sqrt(consistency_error.tail(t_dim).transpose()
+        * gtsam::inverse(result.covariance_matrix.block(r_dim,r_dim,t_dim,t_dim))
+        * consistency_error.tail(t_dim));
 
     if (debug_) log<INFO>("odometry consistency distance: %1%") % mahalanobis_dist; 
     if (mahalanobis_dist < threshold) {
@@ -375,34 +362,12 @@ private:
 
     graph_utils::PoseWithCovariance<T> p1_lc_inv, p2_lc; 
     p1_lc_inv.pose = lc_1.measured().inverse();
-    gtsam::Matrix p1_lc_covar = boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
+    p1_lc_inv.covariance_matrix = boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
         (lc_1.get_noiseModel())->covariance();
 
-    bool rotation_info = true;
-    const int dim = graph_utils::getDim<T>();
-    const int r_dim = graph_utils::getRotationDim<T>(); 
-    const int t_dim = graph_utils::getTranslationDim<T>(); 
-    if (std::isnan(p1_lc_covar.block(0,0,r_dim,r_dim).trace())) {
-      rotation_info = false; 
-      Eigen::MatrixXd temp = Eigen::MatrixXd::Zero(dim, dim);
-      temp.block(r_dim,r_dim,t_dim,t_dim) = 
-          p1_lc_covar.block(r_dim,r_dim,t_dim,t_dim);
-      p1_lc_covar = temp;
-    }
-    p1_lc_inv.covariance_matrix = p1_lc_covar;
-
     p2_lc.pose = lc_2.measured();
-    gtsam::Matrix p2_lc_covar = boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
+    p2_lc.covariance_matrix = boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
         (lc_2.get_noiseModel())->covariance();
-
-    if (std::isnan(p2_lc_covar.block(0,0,r_dim,r_dim).trace())) {
-      rotation_info = false; 
-      Eigen::MatrixXd temp = Eigen::MatrixXd::Zero(dim, dim);
-      temp.block(r_dim,r_dim,t_dim,t_dim) = 
-          p2_lc_covar.block(r_dim,r_dim,t_dim,t_dim);
-      p2_lc_covar = temp; 
-    }
-    p2_lc.covariance_matrix = p2_lc_covar;
 
     // find odometry from 1a to 2a 
     graph_utils::PoseWithCovariance<T> p1a_odom, p2a_odom, p1a2a_odom; 
@@ -423,16 +388,11 @@ private:
     result = p1a1b.compose(p1_lc_inv);
 
     gtsam::Vector consistency_error = T::Logmap(result.pose);
-
+    // std::cout << result.covariance_matrix << std::endl;
     // comput sqaure mahalanobis distance 
-    if (rotation_info) {
-      mahalanobis_dist = std::sqrt(consistency_error.transpose() 
-          * gtsam::inverse(result.covariance_matrix) * consistency_error);
-    } else {
-      mahalanobis_dist = std::sqrt(consistency_error.tail(t_dim).transpose()
-          * gtsam::inverse(result.covariance_matrix.block(r_dim,r_dim,t_dim,t_dim))
-          * consistency_error.tail(t_dim));
-    }
+    mahalanobis_dist = std::sqrt(consistency_error.tail(t_dim).transpose() 
+        * gtsam::inverse(result.covariance_matrix.block(r_dim,r_dim,t_dim,t_dim)) 
+        * consistency_error.tail(t_dim));
 
     if (debug_) log<INFO>("loop consistency distance: %1%") % mahalanobis_dist; 
     if (mahalanobis_dist < pc_threshold_) {

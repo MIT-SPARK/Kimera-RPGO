@@ -41,15 +41,31 @@ public:
   void loadGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values,
       gtsam::PriorFactor<T> prior) {
     gtsam::NonlinearFactorGraph prior_factor;
+    gtsam::Values prior_values; 
     prior_factor.add(prior);
-    gtsam::Values priot_values; 
-    priot_values.insert(prior.key(), prior.prior());
-    update(prior_factor, priot_values); // triggers initialization
-    addGraph<T>(factors, values, prior.key());
+    prior_values.insert(prior.key(), prior.prior());
+    outlier_removal_->process(prior_factor, prior_values, nfg_, values_);
+
+    connectGraph<T>(factors, values, prior.key());
   }
 
   template<class T>
-  void addGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values, gtsam::Key key0) {
+  void addGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values,
+      gtsam::BetweenFactor<T> connector) {
+
+    gtsam::Key key0 = connector.back();
+
+    gtsam::NonlinearFactorGraph connect_factor;
+    gtsam::Values connect_values; 
+    connect_factor.add(connector);
+    connect_values.insert(key0, values.at<T>(key0));
+    outlier_removal_->process(connect_factor, connect_values, nfg_, values_);
+
+    connectGraph<T>(factors, values, key0);
+  }
+
+  template<class T>
+  void connectGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values, gtsam::Key key0) {
 
     // load graph assumes that the previous graph has been cleared
     gtsam::Key current_key = key0; // initial key
@@ -71,7 +87,7 @@ public:
           gtsam::NonlinearFactorGraph new_factors; 
           new_values.insert(current_key + 1, values.at<T>(current_key + 1));
           new_factors.add(factors[i]);
-          update(new_factors, new_values);
+          outlier_removal_->process(new_factors, new_values, nfg_, values_);
           current_key = current_key + 1;
           factors[i].reset();
           break;
@@ -90,7 +106,7 @@ public:
           new_values.insert(factors[i]->back(), values.at<T>(factors[i]->back()));
           new_factors.add(factors[i]);
 
-          update(new_factors, new_values);
+          outlier_removal_->process(new_factors, new_values, nfg_, values_);
           factors[i].reset();
           break;
         }
@@ -105,7 +121,7 @@ public:
         //   std::cout << "loop closure: " << factors[i]->front() << ">" << factors[i]->back() << std::endl;
         // }
         new_factors.add(factors[i]);
-        update(new_factors, gtsam::Values());
+        outlier_removal_->process(new_factors, gtsam::Values(), nfg_, values_);
       }
     }
   }

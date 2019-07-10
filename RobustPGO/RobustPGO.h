@@ -48,7 +48,7 @@ public:
     gtsam::Values prior_values; 
     prior_factor.add(prior);
     prior_values.insert(prior.key(), prior.prior());
-    update(prior_factor, prior_values); // triggers initialization
+    outlier_removal_->process(prior_factor, prior_values, nfg_, values_);
 
     connectGraph<T>(factors, values, prior.key());
   }
@@ -63,7 +63,7 @@ public:
     gtsam::Values connect_values; 
     connect_factor.add(connector);
     connect_values.insert(key0, values.at<T>(key0));
-    update(connect_factor, connect_values); // add "bridge"
+    outlier_removal_->process(connect_factor, connect_values, nfg_, values_);
 
     connectGraph<T>(factors, values, key0);
   }
@@ -91,7 +91,7 @@ public:
           gtsam::NonlinearFactorGraph new_factors; 
           new_values.insert(current_key + 1, values.at<T>(current_key + 1));
           new_factors.add(factors[i]);
-          update(new_factors, new_values);
+          outlier_removal_->process(new_factors, new_values, nfg_, values_);
           current_key = current_key + 1;
           factors[i].reset();
           break;
@@ -110,7 +110,7 @@ public:
           new_values.insert(factors[i]->back(), values.at<T>(factors[i]->back()));
           new_factors.add(factors[i]);
 
-          update(new_factors, new_values);
+          outlier_removal_->process(new_factors, new_values, nfg_, values_);
           factors[i].reset();
           break;
         }
@@ -125,7 +125,7 @@ public:
         //   std::cout << "loop closure: " << factors[i]->front() << ">" << factors[i]->back() << std::endl;
         // }
         new_factors.add(factors[i]);
-        update(new_factors, gtsam::Values());
+        outlier_removal_->process(new_factors, gtsam::Values(), nfg_, values_);
       }
     }
   }

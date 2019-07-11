@@ -1,6 +1,6 @@
 /**
- * @file    testPoseWithCovariance.cpp
- * @brief   Unit test for PoseWithCovariance and calculations 
+ * @file    testTrajectory.cpp
+ * @brief   Unit test for long trajectory
  * @author  Yun Chang
  */
 

@@ -1,6 +1,6 @@
 /**
- * @file    testDoOptimize.cpp
- * @brief   Unit test for pcm and optimize conditions
+ * @file    testForceProcess.cpp
+ * @brief   Unit test for pcm force optimize
  * @author  Yun Chang
  */
 

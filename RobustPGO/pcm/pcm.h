@@ -522,7 +522,7 @@ private:
     if (debug_) log<INFO>("total loop closures registered: %1%") % lc_adjacency_matrix_.rows();
 
     std::vector<int> max_clique_data;
-    int max_clique_size = graph_utils::findMaxClique(lc_adjacency_matrix_, max_clique_data);
+    int max_clique_size = graph_utils::findMaxCliqueHeu(lc_adjacency_matrix_, max_clique_data);
     if (debug_) log<INFO>("number of inliers: %1%") % max_clique_size;
     for (size_t i = 0; i < max_clique_size; i++) {
       // std::cout << max_clique_data[i] << " "; 

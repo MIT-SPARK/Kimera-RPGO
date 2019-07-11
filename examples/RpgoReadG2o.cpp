@@ -63,11 +63,11 @@ int main(int argc, char *argv[]) {
     if (flag == "v") verbose = true; 
   }
 
-  if (dim == "2d") {
-    graphNValues = gtsam::load2D(argv[2], gtsam::SharedNoiseModel(),
+	if (dim == "2d") {
+		graphNValues = gtsam::load2D(argv[2], gtsam::SharedNoiseModel(),
         0, false, true, gtsam::NoiseFormatG2O);
-    Simulate<gtsam::Pose2>(graphNValues,
-        atof(argv[3]), atof(argv[4]), 
+		Simulate<gtsam::Pose2>(graphNValues,
+				atof(argv[3]), atof(argv[4]),
         output_folder, verbose);
 
   } else if (dim == "3d") {

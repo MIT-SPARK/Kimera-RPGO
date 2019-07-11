@@ -57,3 +57,16 @@ void RobustPGO::update(gtsam::NonlinearFactorGraph nfg,
     optimize();
   }
 }
+
+void RobustPGO::forceUpdate(gtsam::NonlinearFactorGraph nfg, 
+                       gtsam::Values values, 
+                       gtsam::FactorIndices factorsToRemove) {
+  // remove factors
+  for (size_t index : factorsToRemove) {
+    nfg_[index].reset();
+  }
+
+  outlier_removal_->processForcedLoopclosure(nfg, values, nfg_, values_);
+  // optimize
+  optimize();
+}

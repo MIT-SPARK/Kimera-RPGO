@@ -1,6 +1,6 @@
 /**
- * @file    testPoseWithCovariance.cpp
- * @brief   Unit test for PoseWithCovariance and calculations 
+ * @file    testTrajectory.cpp
+ * @brief   Unit test for long trajectory
  * @author  Yun Chang
  */
 
@@ -104,7 +104,7 @@ TEST(PoseWithCovariance, Trajectory)
   EXPECT(gtsam::assert_equal(between_pose.pose, between_rebuild.pose));
   EXPECT(gtsam::assert_equal(between_pose.covariance_matrix, between_rebuild.covariance_matrix));
   // error grows as covariance grows (as trajectory gets long)
-  EXPECT(gtsam::assert_equal(between_rebuild.covariance_matrix, cov, 5));
+  EXPECT(gtsam::assert_equal(between_rebuild.covariance_matrix, cov, 10));
 
 }
 

@@ -63,110 +63,113 @@ public:
                gtsam::Values new_values,
                gtsam::NonlinearFactorGraph& output_nfg, 
                gtsam::Values& output_values) {
-    bool odometry = false; 
-    bool loop_closure = false; 
+    bool odometry = false;
+    bool loop_closure = false;
+    bool special_odometry = false;
     bool special_loop_closure = false;
 
-    // special for LAMP
-    bool landmark_add = false; 
-    bool uwb_add = false; 
+    // current logic: odometry and loop_closure are for those handled by outlier rej
+    // mostly the betweenFactors and the PriorFactors
+    // specials are those that are not handled: the rangefactors for example (uwb)
 
+    // initialize if pose is enoty: requrires either a single value or a prior factor
     if (posesAndCovariances_odom_.trajectory_poses.size() == 0) {
-      // initialize 
+      // single value no prior case 
       if (new_values.size() == 1 && new_factors.size() == 0) {
         if (debug_) log<INFO>("Initializing without prior");
         initialize(new_values.keys()[0]);
-
+        output_values.insert(new_values);
+        return false; // nothing to optimize yet
+      // prior factor case 
       } else if (boost::dynamic_pointer_cast<gtsam::PriorFactor<T> >(new_factors[0])) {
         if (debug_) log<INFO>("Initializing with prior");
         gtsam::PriorFactor<T> prior_factor =
             *boost::dynamic_pointer_cast<gtsam::PriorFactor<T> >(new_factors[0]);
         initializeWithPrior(prior_factor);
-
+        output_values.insert(new_values);
+        output_nfg.add(new_factors); // assumption is that there is only one factor in new_factors
+        return false; // noothing to optimize yet 
+      // unknow case, fail 
       } else {
         log<WARNING> ("Unhandled initialization case.");
+        return false; 
       }
       if (debug_) log<INFO>("Initialized trajectory");
-    } 
+    }
 
+    // now if the value size is one, should be an odometry
+    // (could also have a loop closure if factor size > 1)
     if (new_values.size() == 1) {
-      if (new_factors.size() == 1) {
-        if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0])) {
-          // if it is a between factor 
-          gtsam::BetweenFactor<T> nfg_factor =
-                *boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0]);
-          if (nfg_factor.front() == nfg_factor.back() - 1) {
-            odometry = true;
-          }
-        } 
-      }
-      
-      gtsam::Symbol symb(new_values.keys()[0]);
-      if (specialSymbol(symb.chr())) {
-        special_loop_closure = true;
-        if (symb.chr() == 'l') {
-          landmark_add = true; 
-        } else if (symb.chr() == 'u') {
-          uwb_add = true; 
+      if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0]) ||
+          (boost::dynamic_pointer_cast<gtsam::PriorFactor<T> >(new_factors[0]) &&
+          boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[1]))) {
+        // specifically what outlier rejection handles
+        odometry = true; 
+      } else {
+        if (new_factors.size() < 2) {
+          special_odometry = true;
+        } else {
+          special_loop_closure = true;
         }
       }
 
     } else if (new_factors.size() == 1 && new_values.size() == 0) {
-      // check if it is a between factor
+      // check if it is a between factor for classic loop closure case
       if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0])) {
-        gtsam::BetweenFactor<T> nfg_factor =
-              *boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0]);
-        gtsam::Symbol symb_front(nfg_factor.front());
-        gtsam::Symbol symb_back(nfg_factor.back());
-        if (specialSymbol(symb_front.chr()) || specialSymbol(symb_back.chr())) {
-          special_loop_closure = true; // if one of the keys is special 
-
-        } else {
-          loop_closure = true;
-        }
+        loop_closure = true; 
       } else { // non-between factor (etc. range factor)
         special_loop_closure = true;
       }
 
-    } else if (new_factors.size() > 1) {
-      // check if range factor 
-      if (boost::dynamic_pointer_cast<gtsam::RangeFactor<T> >(new_factors[0])) {
-        special_loop_closure = true; // want this to optimize for uwb
-      } else if (boost::dynamic_pointer_cast<gtsam::PriorFactor<T> >(new_factors[0])) {
-        gtsam::PriorFactor<T> p_factor =
-              *boost::dynamic_pointer_cast<gtsam::PriorFactor<T> >(new_factors[0]);
-        gtsam::Symbol symb_prior(p_factor.key());
-        if (specialSymbol(symb_prior.chr())) {
-          // special symbols with priors 
-          special_loop_closure = true;
-        }
-      }
     }
+
+    // other cases will just be put through the special loop closures (which needs to be carefully considered)
 
     if (odometry) {
       // update posesAndCovariances_odom_;
       graph_utils::PoseWithCovariance<T> new_pose;
-      // extract between factor 
-      gtsam::BetweenFactor<T> nfg_factor =
-              *boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0]);
 
-      updateOdom(nfg_factor, new_pose);
-      // TODO: compare the new pose from out pose_compose with values pose 
-      // should be the same 
+      // possible cases are that the first pose is a between factor or a prior 
+      // also possible that there are two factors (a prior and a between)
+      // (this triggers a loop closure)
+      gtsam::NonlinearFactorGraph odom_factors, lc_factors; 
+
+      if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0])) {
+        // extract between factor 
+        gtsam::BetweenFactor<T> odom_factor =
+            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0]);
+        updateOdom(odom_factor, new_pose);
+        odom_factors.add(odom_factor);
+      } else if (boost::dynamic_pointer_cast<gtsam::PriorFactor<T> >(new_factors[0])) {
+        // extract prior factor 
+        gtsam::PriorFactor<T> prior_factor =
+            *boost::dynamic_pointer_cast<gtsam::PriorFactor<T> >(new_factors[0]);
+        updateOdom(prior_factor, new_pose);
+        odom_factors.add(prior_factor);
+        if (new_factors.size() == 2 && 
+            boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[1])) {
+          // a prior and a between
+          lc_factors.add(new_factors[1]);
+          loop_closure = true;
+        }
+      }
 
       // - store factor in nfg_odom_
-      nfg_odom_.add(new_factors);
+      nfg_odom_.add(odom_factors);
+      new_factors = lc_factors; // this will be carried over to the loop_closure section 
 
-      // - store latest pose in values_ (note: values_ is the optimized estimate, while trajectory is the odom estimate)
-      output_values.insert(new_values);
-      output_nfg = gtsam::NonlinearFactorGraph(); // reset 
-      output_nfg.add(nfg_special_); // still need to update the class overall factorgraph 
-      output_nfg.add(nfg_good_lc_);
-      output_nfg.add(nfg_odom_);
+      if (!loop_closure) {
+        // - store latest pose in values_ (note: values_ is the optimized estimate, while trajectory is the odom estimate)
+        output_values.insert(new_values);
+        output_nfg = gtsam::NonlinearFactorGraph(); // reset 
+        output_nfg.add(nfg_odom_);
+        output_nfg.add(nfg_good_lc_);
+        output_nfg.add(nfg_special_); // still need to update the class overall factorgraph
+        return false; // no need to optimize just for odometry
+      }
+    } 
 
-      return false; // no need to optimize just for odometry 
-
-    } else if (loop_closure) { // in this case we should run consistency check to see if loop closure is good
+    if (loop_closure) { // in this case we should run consistency check to see if loop closure is good
       // * odometric consistency check (will only compare against odometry - if loop fails this, we can just drop it)
       // extract between factor 
       gtsam::BetweenFactor<T> nfg_factor =
@@ -188,37 +191,53 @@ public:
       // * optimize and update values (for now just LM add others later)
       output_nfg = gtsam::NonlinearFactorGraph(); // reset
       output_nfg.add(nfg_odom_);
-      output_nfg.add(nfg_special_);
       output_nfg.add(nfg_good_lc_);
+      output_nfg.add(nfg_special_); // still need to update the class overall factorgraph
       return true; 
 
-    } else if (special_loop_closure) {
+    } 
+
+    if (debug_) log<INFO>("Adding odom or loop closure unhandled by outlier reject");
+    if (special_odometry) {
       nfg_special_.add(new_factors);
       output_values.insert(new_values);
       // reset graph
       output_nfg = gtsam::NonlinearFactorGraph(); // reset
-      output_nfg.add(nfg_special_);
-      output_nfg.add(nfg_good_lc_);
       output_nfg.add(nfg_odom_);
-
-      if (landmark_add || uwb_add) {
-        return false; 
-      }
-      return true;
-
-    } else {
-      // Basically the cases not yet considered by pcm
-      // also priors
-      output_nfg.add(new_factors);
-      output_values.insert(new_values);
-
-      // nothing added  so no optimization
-      if (new_factors.size() == 0) {
-        return false; // nothing to optimize 
-      }
-      return true;
-
+      output_nfg.add(nfg_good_lc_);
+      output_nfg.add(nfg_special_); // still need to update the class overall factorgraph
+      return false;
     }
+
+    // the remainders are speical loop closure cases
+    nfg_special_.add(new_factors);
+    output_values.insert(new_values);
+    // reset graph
+    output_nfg = gtsam::NonlinearFactorGraph(); // reset
+    output_nfg.add(nfg_odom_);
+    output_nfg.add(nfg_good_lc_);
+    output_nfg.add(nfg_special_); // still need to update the class overall factorgraph
+    // nothing added  so no optimization
+    if (new_factors.size() == 0) {
+      return false; // nothing to optimize 
+    }
+    return true;
+  }
+
+  virtual bool processForcedLoopclosure(
+      gtsam::NonlinearFactorGraph new_factors, 
+      gtsam::Values new_values,
+      gtsam::NonlinearFactorGraph& output_nfg, 
+      gtsam::Values& output_values){
+    // force loop closure (without outlier rejection)
+    nfg_special_.add(new_factors);
+    output_values.insert(new_values);
+    // reset graph
+    output_nfg = gtsam::NonlinearFactorGraph(); // reset
+    output_nfg.add(nfg_odom_);
+    output_nfg.add(nfg_good_lc_);
+    output_nfg.add(nfg_special_); // still need to update the class overall factorgraph
+    return true;
   }
 
 private:
@@ -304,6 +323,28 @@ private:
     posesAndCovariances_odom_.trajectory_poses[new_key] = new_trajectorypose; 
   }
 
+  void updateOdom(gtsam::PriorFactor<T> prior_factor, 
+                  graph_utils::PoseWithCovariance<T> &new_pose) {
+
+    // update odometry when a prior added (considering multirobot use )
+    gtsam::Matrix covar =
+        boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
+        (prior_factor.get_noiseModel())->covariance(); // return covariance matrix
+
+    gtsam::Key new_key = prior_factor.key();
+
+    // construct pose with covariance for new prior measurement 
+    new_pose.covariance_matrix = covar;
+    new_pose.pose = prior_factor.prior();
+    // update trajectory 
+    posesAndCovariances_odom_.end_id = new_key; // update end key 
+    // add to trajectory 
+    graph_utils::TrajectoryPose<T> new_trajectorypose; 
+    new_trajectorypose.pose = new_pose;
+    new_trajectorypose.id = new_key;
+    posesAndCovariances_odom_.trajectory_poses[new_key] = new_trajectorypose; 
+  }
+
   bool isOdomConsistent(gtsam::BetweenFactor<T> lc_factor,
                         double& mahalanobis_dist) {
     // assume loop is between pose i and j
@@ -341,7 +382,7 @@ private:
 
     // check consistency (Tij_odom,Cov_ij_odom, Tij_lc, Cov_ij_lc)
     result = pij_odom.compose(pji_lc);
-    if (debug_) result.pose.print("odom consistency check: ");
+    // if (debug_) result.pose.print("odom consistency check: ");
 
     gtsam::Vector consistency_error = T::Logmap(result.pose);
     // check with threshold
@@ -356,7 +397,7 @@ private:
           * consistency_error.tail(t_dim));
     }
 
-    if (debug_) log<INFO>("odometry consistency distance: %1%") % mahalanobis_dist; 
+    // if (debug_) log<INFO>("odometry consistency distance: %1%") % mahalanobis_dist; 
     if (mahalanobis_dist < threshold) {
       return true;
     }
@@ -434,7 +475,7 @@ private:
           * consistency_error.tail(t_dim));
     }
 
-    if (debug_) log<INFO>("loop consistency distance: %1%") % mahalanobis_dist; 
+    // if (debug_) log<INFO>("loop consistency distance: %1%") % mahalanobis_dist; 
     if (mahalanobis_dist < pc_threshold_) {
       return true;
     }
@@ -481,7 +522,7 @@ private:
     if (debug_) log<INFO>("total loop closures registered: %1%") % lc_adjacency_matrix_.rows();
 
     std::vector<int> max_clique_data;
-    int max_clique_size = graph_utils::findMaxClique(lc_adjacency_matrix_, max_clique_data);
+    int max_clique_size = graph_utils::findMaxCliqueHeu(lc_adjacency_matrix_, max_clique_data);
     if (debug_) log<INFO>("number of inliers: %1%") % max_clique_size;
     for (size_t i = 0; i < max_clique_size; i++) {
       // std::cout << max_clique_data[i] << " "; 

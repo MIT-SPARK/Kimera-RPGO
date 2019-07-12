@@ -64,7 +64,7 @@ public:
     connect_factor.add(connector);
     connect_values.insert(key0, values.at<T>(key0));
     outlier_removal_->process(connect_factor, connect_values, nfg_, values_);
-
+    log<INFO>("In loadGraph, pre connectGraph");
     connectGraph<T>(factors, values, key0);
   }
 
@@ -91,6 +91,7 @@ public:
           gtsam::NonlinearFactorGraph new_factors; 
           new_values.insert(current_key + 1, values.at<T>(current_key + 1));
           new_factors.add(factors[i]);
+          log<INFO>("In connectGRaph, pre outlier removal process");
           outlier_removal_->process(new_factors, new_values, nfg_, values_);
           current_key = current_key + 1;
           factors[i].reset();
@@ -109,7 +110,7 @@ public:
           gtsam::NonlinearFactorGraph new_factors; 
           new_values.insert(factors[i]->back(), values.at<T>(factors[i]->back()));
           new_factors.add(factors[i]);
-
+          log<INFO>("In loadGraph, pre outlier removal for special ");
           outlier_removal_->process(new_factors, new_values, nfg_, values_);
           factors[i].reset();
           break;

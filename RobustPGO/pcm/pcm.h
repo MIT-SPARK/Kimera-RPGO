@@ -73,6 +73,7 @@ public:
     // specials are those that are not handled: the rangefactors for example (uwb)
 
     // initialize if pose is enoty: requrires either a single value or a prior factor
+    log<INFO>("Pre init");
     if (posesAndCovariances_odom_.trajectory_poses.size() == 0) {
       // single value no prior case 
       if (new_values.size() == 1 && new_factors.size() == 0) {
@@ -96,10 +97,12 @@ public:
       }
       if (debug_) log<INFO>("Initialized trajectory");
     }
+    log<INFO>("No init");
 
     // now if the value size is one, should be an odometry
     // (could also have a loop closure if factor size > 1)
     if (new_values.size() == 1) {
+      log<INFO>("odom candidate");
       if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0]) ||
           (boost::dynamic_pointer_cast<gtsam::PriorFactor<T> >(new_factors[0]) &&
           boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[1]))) {
@@ -114,6 +117,7 @@ public:
       }
 
     } else if (new_factors.size() == 1 && new_values.size() == 0) {
+      log<INFO>("loop closure candidate");
       // check if it is a between factor for classic loop closure case
       if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0])) {
         loop_closure = true; 
@@ -175,6 +179,7 @@ public:
       gtsam::BetweenFactor<T> nfg_factor =
               *boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0]);
 
+      log<INFO>("Pre odom check");
       double odom_mah_dist; 
       if (isOdomConsistent(nfg_factor, odom_mah_dist)) {
         nfg_lc_.add(new_factors); // add factor to nfg_lc_
@@ -184,6 +189,7 @@ public:
         return false; // discontinue since loop closure not consistent with odometry 
       }
       
+      log<INFO>("Pre find inliers");
       // Find inliers with Pairwise consistent measurement set maximization
       nfg_good_lc_ = gtsam::NonlinearFactorGraph(); // reset
       findInliers(nfg_good_lc_); // update nfg_good_lc_

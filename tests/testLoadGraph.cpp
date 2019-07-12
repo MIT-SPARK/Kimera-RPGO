@@ -91,6 +91,35 @@ TEST(RobustPGO, Add1)
 }
 
 /* ************************************************************************* */
+TEST(RobustPGO, Load1NoPrior)
+{
+  // load graph
+  // read g2o file for robot a 
+  gtsam::GraphAndValues gv = gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
+  gtsam::NonlinearFactorGraph nfg = *gv.first;
+  gtsam::Values values = *gv.second;
+
+  // set up RobustPGO solver 
+  OutlierRemoval *pcm = new PCM<gtsam::Pose3>(0.0, 10.0); // set odom check to be small
+  pcm->setQuiet(); // turn off print messages for pcm
+
+  std::unique_ptr<RobustPGO> pgo;
+  pgo.reset(new RobustPGO(pcm));
+  pgo->setQuiet(); // turn off print messages
+
+  gtsam::Key init_key = gtsam::Symbol('a', 0);
+
+  // Load graph using prior
+  pgo->loadGraph<gtsam::Pose3>(nfg, values, init_key);
+
+  gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
+  gtsam::Values values_out = pgo->calculateEstimate();
+
+  // Since odom check threshold is 0, should only have the odom edges
+  EXPECT(gtsam::assert_equal(nfg_out.size(), size_t(49)));
+  EXPECT(gtsam::assert_equal(values_out.size(), size_t(50)));
+}
+/* ************************************************************************* */
 TEST(RobustPGO, Load2)
 {
   // load graph

@@ -175,6 +175,11 @@ public:
       gtsam::BetweenFactor<T> nfg_factor =
               *boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0]);
 
+      if (!output_values.exists(nfg_factor.front()) || !output_values.exists(nfg_factor.back())) {
+        log<WARNING>("Adding loop closure to non-existent keys");
+        return false;
+      }
+      
       double odom_mah_dist; 
       if (isOdomConsistent(nfg_factor, odom_mah_dist)) {
         nfg_lc_.add(new_factors); // add factor to nfg_lc_

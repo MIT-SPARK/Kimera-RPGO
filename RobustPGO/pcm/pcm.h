@@ -100,6 +100,7 @@ public:
     // now if the value size is one, should be an odometry
     // (could also have a loop closure if factor size > 1)
     if (new_values.size() == 1) {
+      // log<INFO>("odom candidate");
       if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0]) ||
           (boost::dynamic_pointer_cast<gtsam::PriorFactor<T> >(new_factors[0]) &&
           boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[1]))) {
@@ -114,6 +115,7 @@ public:
       }
 
     } else if (new_factors.size() == 1 && new_values.size() == 0) {
+      // log<INFO>("loop closure candidate");
       // check if it is a between factor for classic loop closure case
       if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0])) {
         loop_closure = true; 

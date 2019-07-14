@@ -134,7 +134,7 @@ TEST(RobustPGO, Add2)
   gtsam::Values values = *gv.second;
 
   OutlierRemoval *pcm = new PCM<gtsam::Pose3>(100.0, 100.0); // set thresholds to be large
-  // pcm->setQuiet(); // turn off print messages for pcm
+  pcm->setQuiet(); // turn off print messages for pcm
 
   std::unique_ptr<RobustPGO> pgo;
   pgo.reset(new RobustPGO(pcm));

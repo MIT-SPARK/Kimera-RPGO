@@ -54,7 +54,7 @@ TEST(ForceOptimize, LC)
   do_optimize = pcm->process(lc_factors, gtsam::Values(), nfg, est);
   EXPECT(gtsam::assert_equal(size_t(3), nfg.size()));
   EXPECT(gtsam::assert_equal(size_t(3), est.size()));
-  EXPECT(do_optimize == false);
+  EXPECT(do_optimize == true);
 
   // now try bad loop closure with forced update 
   do_optimize = pcm->processForcedLoopclosure(lc_factors, gtsam::Values(), nfg, est);

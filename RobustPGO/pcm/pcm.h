@@ -236,7 +236,7 @@ public:
     return true;
   }
 
-  virtual bool processForcedLoopclosure(
+  bool processForcedLoopclosure(
       gtsam::NonlinearFactorGraph new_factors, 
       gtsam::Values new_values,
       gtsam::NonlinearFactorGraph& output_nfg, 
@@ -250,6 +250,11 @@ public:
     output_nfg.add(nfg_good_lc_);
     output_nfg.add(nfg_special_); // still need to update the class overall factorgraph
     return true;
+  }
+
+  void saveData() {
+    saveDistanceMatrix();
+    saveCliqueSizeData();
   }
 
 private:
@@ -531,10 +536,6 @@ private:
     }
     lc_adjacency_matrix_ = new_adj_matrix;
     lc_distance_matrix_ = new_dst_matrix;
-    std::ofstream file("log/pcm_dist_matrix.txt");
-    if (file.is_open()) {
-      file << lc_distance_matrix_;
-    }
   }
 
   void findInliers(gtsam::NonlinearFactorGraph &inliers) {
@@ -546,6 +547,35 @@ private:
     for (size_t i = 0; i < max_clique_size; i++) {
       // std::cout << max_clique_data[i] << " "; 
       inliers.add(nfg_lc_[max_clique_data[i]]);
+    }
+  }
+
+  void saveCliqueSizeData() {
+    log<INFO>("Saving clique size data");
+    std::stringstream filename;
+    filename << "log/clique_size" << std::setfill('0') 
+        << std::setw(3) << lc_distance_matrix_.rows() << ".txt";
+
+    std::ofstream cfile(filename.str());
+    if (cfile.is_open()) {
+      // output for various thresholds 
+      for (size_t i=0; i < lc_distance_matrix_.rows()-1; i++) {
+        for (size_t j=i+1; j < lc_distance_matrix_.cols(); j++) {
+          double threshold = lc_distance_matrix_(i,j); 
+          Eigen::MatrixXd adj_matrix = (lc_distance_matrix_.array() < threshold).cast<double>();
+          std::vector<int> max_clique_data;
+          int max_clique_size = graph_utils::findMaxClique(adj_matrix, max_clique_data);
+          cfile << threshold << " " << max_clique_size << std::endl; 
+        }
+      }
+    }
+  }
+
+  void saveDistanceMatrix() {
+    log<INFO>("Saving distance matrix");
+    std::ofstream file("log/pcm_dist_matrix.txt");
+    if (file.is_open()) {
+      file << lc_distance_matrix_;
     }
   }
 };

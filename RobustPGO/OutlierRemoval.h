@@ -21,6 +21,8 @@ public:
 			gtsam::NonlinearFactorGraph& nfg, 
 			gtsam::Values& values){}; // force a loop closure
 
+	virtual void saveData() {}
+
 	void setQuiet() { debug_ = false; }
 
 protected:

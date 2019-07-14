@@ -50,6 +50,7 @@ void Simulate(gtsam::GraphAndValues gv,
 
   // in case no loop closure, need to force optimize with only odom 
   pgo->force_optimize(); 
+  // pcm->saveData();
 }
 int main(int argc, char *argv[]) {
   gtsam::GraphAndValues graphNValues; 

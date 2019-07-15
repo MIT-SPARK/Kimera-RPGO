@@ -92,6 +92,7 @@ TEST(PoseWithCovariance, Compose)
   }
   cov = cov/sample_size;
   EXPECT(gtsam::assert_equal(cov, B.covariance_matrix, 0.1));
+  // 0.1 tolerance due to second order approximation
 
   // Then rotation only 
   gtsam::Pose3 poseBC(gtsam::Rot3(0,0,0,1), gtsam::Point3());

@@ -563,7 +563,7 @@ private:
       for (size_t i=0; i < lc_distance_matrix_.rows()-1; i++) {
         for (size_t j=i+1; j < lc_distance_matrix_.cols(); j++) {
           double threshold = lc_distance_matrix_(i,j); 
-          Eigen::MatrixXd adj_matrix = (lc_distance_matrix_.array() < threshold).cast<double>();
+          Eigen::MatrixXd adj_matrix = (lc_distance_matrix_.array() < threshold).template cast<double>();
           std::vector<int> max_clique_data;
           int max_clique_size = graph_utils::findMaxClique(adj_matrix, max_clique_data);
           cfile << threshold << " " << max_clique_size << std::endl; 

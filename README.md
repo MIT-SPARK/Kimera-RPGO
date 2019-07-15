@@ -33,7 +33,7 @@ cd build
 cmake ..
 make 
 ```
-If GTSAM Unittests give you trouble, you can do `cmake .. -DUNIT_TESTS=OFFF`
+If GTSAM Unittests give you trouble, you can do `cmake .. -DUNIT_TESTS=OFF`
 
 ## Usage 
 This repository can be used as an optimization backend. A sample setup looks something like: 

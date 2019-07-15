@@ -31,8 +31,9 @@ cd RobustPGO
 mkdir build
 cd build
 cmake ..
-sudo make install
+make 
 ```
+If GTSAM Unittests give you trouble, you can do `cmake .. -DUNIT_TESTS=OFFF`
 
 ## Usage 
 This repository can be used as an optimization backend. A sample setup looks something like: 
@@ -47,9 +48,9 @@ optimizer_.reset(new RobustPGO(pcm, SOLVER, special_symbs));
 optimizer_->update(new_factor, new_values);
 
 ```
-This can also be used as a standalone experimental tool. A read g2o function can be found in examples. 
-go to the build folder `cd build` and create a log folder `mkdir log`. 
-The results (consistency matrix and g2o files) from running the following script in the build folder will be saved to the `log` folder
+This can also be used as a standalone experimental tool. A read g2o function can be found in examples.
+You can create a `log` folder inside the `build` folder.
+The results (distance matrix and clique size data) from running the following script in the build folder will be saved to the `log` folder
 ```
 # for 2D: 
 ./RpgoReadG2o 2d <g2o-file> <odom-check-threshold> <pcm-threshold> <optional:folder-to-save-g2o> <optional:v to toggle verbosity>

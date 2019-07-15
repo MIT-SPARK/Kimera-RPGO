@@ -13,6 +13,7 @@ author: Yun Chang, Luca Carlone
 #include <fstream>
 #include <sstream>
 #include <math.h>
+#include <iomanip>
 
 #include <gtsam/base/Vector.h>
 #include <gtsam/base/Lie.h>

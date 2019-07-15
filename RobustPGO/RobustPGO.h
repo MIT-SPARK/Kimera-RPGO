@@ -118,16 +118,17 @@ public:
     }
      
     // add the other non-odom loop closures
+    gtsam::NonlinearFactorGraph new_factors;
     for (size_t i = 0; i < factors.size(); i++) { 
       if (factors[i] != NULL) {
-        gtsam::NonlinearFactorGraph new_factors;
         // if (debug_) {
         //   std::cout << "loop closure: " << factors[i]->front() << ">" << factors[i]->back() << std::endl;
         // }
         new_factors.add(factors[i]);
-        outlier_removal_->process(new_factors, gtsam::Values(), nfg_, values_);
       }
     }
+    outlier_removal_->process(new_factors, gtsam::Values(), nfg_, values_);
+    optimize();
   }
 
 private:

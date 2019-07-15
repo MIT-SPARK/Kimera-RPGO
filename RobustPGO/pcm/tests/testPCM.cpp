@@ -74,7 +74,7 @@ TEST(PCM, OdometryCheck)
   do_optimize = pcm->process(lc_factor2, gtsam::Values(), nfg, est);
   EXPECT(gtsam::assert_equal(size_t(5), nfg.size()));
   EXPECT(gtsam::assert_equal(size_t(4), est.size()));
-  EXPECT(do_optimize == false);
+  EXPECT(do_optimize == true);
 }
 
 /* ************************************************************************* */

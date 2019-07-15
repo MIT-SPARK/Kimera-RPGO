@@ -3,6 +3,8 @@ project(RobustPGO)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC")
 
+option(UNIT_TESTS "Enable/Disable including unit tests." ON)
+
 ###########################################################################
 # Find GTSAM
 find_package(GTSAM REQUIRED)
@@ -11,8 +13,10 @@ if (NOT GTSAM_FOUND)
 endif(NOT GTSAM_FOUND)
 
 # for unittest examples
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${GTSAM_DIR}/../GTSAMCMakeTools")
-include(GtsamTesting)
+if (UNIT_TESTS)
+	set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${GTSAM_DIR}/../GTSAMCMakeTools")
+	include(GtsamTesting)
+endif()
 
 ###########################################################################
 # Find Boost
@@ -44,6 +48,8 @@ target_link_libraries(RpgoReadG2o RobustPGO)
 
 ###########################################################################
 # Tests
-add_subdirectory(tests)
-set(TEST_DATA_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
-configure_file(tests/test_config.h.in test_config.h)
+if (UNIT_TESTS)
+	add_subdirectory(tests)
+	set(TEST_DATA_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
+	configure_file(tests/test_config.h.in test_config.h)
+endif()

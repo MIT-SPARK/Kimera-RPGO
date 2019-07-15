@@ -13,6 +13,7 @@ author: Yun Chang, Luca Carlone
 #include <fstream>
 #include <sstream>
 #include <math.h>
+#include <iomanip>
 
 #include <gtsam/base/Vector.h>
 #include <gtsam/base/Lie.h>
@@ -64,7 +65,7 @@ public:
                gtsam::NonlinearFactorGraph& output_nfg, 
                gtsam::Values& output_values) {
     bool odometry = false;
-    bool loop_closure = false;
+    bool loop_closures = false;
     bool special_odometry = false;
     bool special_loop_closure = false;
 
@@ -113,14 +114,8 @@ public:
         }
       }
 
-    } else if (new_factors.size() == 1 && new_values.size() == 0) {
-      // check if it is a between factor for classic loop closure case
-      if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0])) {
-        loop_closure = true; 
-      } else { // non-between factor (etc. range factor)
-        special_loop_closure = true;
-      }
-
+    } else if (new_factors.size() > 0 && new_values.size() == 0) {
+      loop_closures = true;
     }
 
     // other cases will just be put through the special loop closures (which needs to be carefully considered)
@@ -150,7 +145,7 @@ public:
             boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[1])) {
           // a prior and a between
           lc_factors.add(new_factors[1]);
-          loop_closure = true;
+          loop_closures = true;
         }
       }
 
@@ -158,7 +153,7 @@ public:
       nfg_odom_.add(odom_factors);
       new_factors = lc_factors; // this will be carried over to the loop_closure section 
 
-      if (!loop_closure) {
+      if (!loop_closures) {
         // - store latest pose in values_ (note: values_ is the optimized estimate, while trajectory is the odom estimate)
         output_values.insert(new_values);
         output_nfg = gtsam::NonlinearFactorGraph(); // reset 
@@ -169,35 +164,52 @@ public:
       }
     } 
 
-    if (loop_closure) { // in this case we should run consistency check to see if loop closure is good
-      // * odometric consistency check (will only compare against odometry - if loop fails this, we can just drop it)
-      // extract between factor 
-      gtsam::BetweenFactor<T> nfg_factor =
-              *boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[0]);
+    if (loop_closures) { 
+      for (size_t i = 0; i < new_factors.size(); i++) {
+        // iterate through the factors 
+        if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[i])) {
+          // regular loop closure. 
+          // in this case we should run consistency check to see if loop closure is good
+          // * odometric consistency check (will only compare against odometry
+          // - if loop fails this, we can just drop it)
+          // extract between factor 
+          gtsam::BetweenFactor<T> nfg_factor =
+              *boost::dynamic_pointer_cast<gtsam::BetweenFactor<T> >(new_factors[i]);
 
-      double odom_mah_dist; 
-      if (isOdomConsistent(nfg_factor, odom_mah_dist)) {
-        nfg_lc_.add(new_factors); // add factor to nfg_lc_
+          if (!output_values.exists(nfg_factor.front()) ||
+              !output_values.exists(nfg_factor.back())) {
+            log<WARNING>("Cannot add loop closure with non-existing keys");
+            continue;
+          }
 
-      } else {
-        if (debug_) log<WARNING>("Discarded loop closure (inconsistent with odometry)");
-        return false; // discontinue since loop closure not consistent with odometry 
+          double odom_mah_dist; 
+          if (isOdomConsistent(nfg_factor, odom_mah_dist)) {
+            nfg_lc_.add(new_factors[i]); // add factor to nfg_lc_
+
+          } else {
+            if (debug_) log<WARNING>("Discarded loop closure (inconsistent with odometry)");
+            continue; // discontinue since loop closure not consistent with odometry 
+          }
+          
+          incrementAdjMatrix();
+
+        } else {
+          // add as special loop closure
+          // the remainders are speical loop closure cases
+          nfg_special_.add(new_factors[i]);
+        }
       }
-      
       // Find inliers with Pairwise consistent measurement set maximization
       nfg_good_lc_ = gtsam::NonlinearFactorGraph(); // reset
       findInliers(nfg_good_lc_); // update nfg_good_lc_
       
-      // * optimize and update values (for now just LM add others later)
       output_nfg = gtsam::NonlinearFactorGraph(); // reset
       output_nfg.add(nfg_odom_);
       output_nfg.add(nfg_good_lc_);
       output_nfg.add(nfg_special_); // still need to update the class overall factorgraph
-      return true; 
-
+      return true;
     } 
 
-    if (debug_) log<INFO>("Adding odom or loop closure unhandled by outlier reject");
     if (special_odometry) {
       nfg_special_.add(new_factors);
       output_values.insert(new_values);
@@ -212,19 +224,20 @@ public:
     // the remainders are speical loop closure cases
     nfg_special_.add(new_factors);
     output_values.insert(new_values);
+    // nothing added  so no optimization
+    if (new_factors.size() == 0) {
+      return false; // nothing to optimize 
+    }
+
     // reset graph
     output_nfg = gtsam::NonlinearFactorGraph(); // reset
     output_nfg.add(nfg_odom_);
     output_nfg.add(nfg_good_lc_);
     output_nfg.add(nfg_special_); // still need to update the class overall factorgraph
-    // nothing added  so no optimization
-    if (new_factors.size() == 0) {
-      return false; // nothing to optimize 
-    }
     return true;
   }
 
-  virtual bool processForcedLoopclosure(
+  bool processForcedLoopclosure(
       gtsam::NonlinearFactorGraph new_factors, 
       gtsam::Values new_values,
       gtsam::NonlinearFactorGraph& output_nfg, 
@@ -238,6 +251,11 @@ public:
     output_nfg.add(nfg_good_lc_);
     output_nfg.add(nfg_special_); // still need to update the class overall factorgraph
     return true;
+  }
+
+  void saveData() {
+    saveDistanceMatrix();
+    saveCliqueSizeData();
   }
 
 private:
@@ -483,7 +501,7 @@ private:
     return false;
   }
 
-  void findInliers(gtsam::NonlinearFactorGraph &inliers) {
+  void incrementAdjMatrix() {
     // * pairwise consistency check (will also compare other loops - if loop fails we still store it, but not include in the optimization)
     // -- add 1 row and 1 column to lc_adjacency_matrix_;
     // -- populate extra row and column by testing pairwise consistency of new lc against all previous ones
@@ -519,8 +537,11 @@ private:
     }
     lc_adjacency_matrix_ = new_adj_matrix;
     lc_distance_matrix_ = new_dst_matrix;
-    if (debug_) log<INFO>("total loop closures registered: %1%") % lc_adjacency_matrix_.rows();
+  }
 
+  void findInliers(gtsam::NonlinearFactorGraph &inliers) {
+    if (debug_) log<INFO>("total loop closures registered: %1%") % nfg_lc_.size();
+    if (nfg_lc_.size() == 0) return;
     std::vector<int> max_clique_data;
     int max_clique_size = graph_utils::findMaxCliqueHeu(lc_adjacency_matrix_, max_clique_data);
     if (debug_) log<INFO>("number of inliers: %1%") % max_clique_size;
@@ -528,6 +549,31 @@ private:
       // std::cout << max_clique_data[i] << " "; 
       inliers.add(nfg_lc_[max_clique_data[i]]);
     }
+  }
+
+  void saveCliqueSizeData() {
+    log<INFO>("Saving clique size data");
+    std::stringstream filename;
+    filename << "log/clique_size" << std::setfill('0') 
+        << std::setw(3) << lc_distance_matrix_.rows() << ".txt";
+
+    std::ofstream cfile(filename.str());
+    if (cfile.is_open()) {
+      // output for various thresholds 
+      for (size_t i=0; i < lc_distance_matrix_.rows()-1; i++) {
+        for (size_t j=i+1; j < lc_distance_matrix_.cols(); j++) {
+          double threshold = lc_distance_matrix_(i,j); 
+          Eigen::MatrixXd adj_matrix = (lc_distance_matrix_.array() < threshold).cast<double>();
+          std::vector<int> max_clique_data;
+          int max_clique_size = graph_utils::findMaxClique(adj_matrix, max_clique_data);
+          cfile << threshold << " " << max_clique_size << std::endl; 
+        }
+      }
+    }
+  }
+
+  void saveDistanceMatrix() {
+    log<INFO>("Saving distance matrix");
     std::ofstream file("log/pcm_dist_matrix.txt");
     if (file.is_open()) {
       file << lc_distance_matrix_;

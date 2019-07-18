@@ -10,6 +10,8 @@ author: Yun Chang, Luca Carlone
 
 #include "RobustPGO/pcm/pcm.h"
 
+namespace RobustPGO {
+
 template<class T>
 class PCM_Distance : public PCM<T>{
 public:
@@ -26,7 +28,7 @@ private:
 
   gtsam::Matrix lc_error_matrix_trans_;
   gtsam::Matrix lc_error_matrix_rot_;
-  graph_utils::DistTrajectory<T> posesAndDistances_odom_;
+  DistTrajectory<T> posesAndDistances_odom_;
 
 private:
 
@@ -35,7 +37,7 @@ private:
     gtsam::Key initial_key = prior_factor.front();
 
     // construct initial pose with covar 
-    graph_utils::PoseWithDistance<T> initial_pose; 
+    PoseWithDistance<T> initial_pose; 
     initial_pose.pose = initial_value;
     initial_pose.distance = 0; 
 
@@ -49,7 +51,7 @@ private:
 
   void initialize(gtsam::Key initial_key) {
     // construct initial pose with covar 
-    graph_utils::PoseWithDistance<T> initial_pose; 
+    PoseWithDistance<T> initial_pose; 
     initial_pose.pose = T();
     initial_pose.distance = 0;
 
@@ -60,7 +62,7 @@ private:
   }
 
   void updateOdom(gtsam::BetweenFactor<T> odom_factor, 
-                  graph_utils::PoseWithDistance<T> &new_pose) {
+                  PoseWithDistance<T> &new_pose) {
     // first get measurement and movement distance from factor
     T delta = odom_factor.measured(); 
 
@@ -70,7 +72,7 @@ private:
 
     // Now get the latest pose in trajectory and compose 
     gtsam::Key prev_key = odom_factor.front();
-    graph_utils::PoseWithDistance<T> prev_pose;
+    PoseWithDistance<T> prev_pose;
     try {
       prev_pose = 
         posesAndDistances_odom_.trajectory_poses.at(prev_key).pose;
@@ -93,10 +95,10 @@ private:
     gtsam::Key key_i = lc_factor.front();
     gtsam::Key key_j = lc_factor.back();
     
-    graph_utils::PoseWithDistance<T> pij_odom, pji_lc, result;
+    PoseWithDistance<T> pij_odom, pji_lc, result;
 
     // access (T_i,Cov_i) and (T_j, Cov_j) from trajectory_
-    graph_utils::PoseWithDistance<T> pi_odom, pj_odom; 
+    PoseWithDistance<T> pi_odom, pj_odom; 
     pi_odom = posesAndDistances_odom_.trajectory_poses[key_i].pose;
     pj_odom = posesAndDistances_odom_.trajectory_poses[key_j].pose;
 
@@ -113,8 +115,8 @@ private:
 
     gtsam::Vector consistency_error = T::Logmap(result.pose);
 
-    const int r_dim = graph_utils::getRotationDim<T>(); 
-    const int t_dim = graph_utils::getTranslationDim<T>();
+    const int r_dim = getRotationDim<T>(); 
+    const int t_dim = getTranslationDim<T>();
     avg_trans_error = std::sqrt(consistency_error.tail(t_dim).transpose() *
         consistency_error.tail(t_dim)) / result.distance;
     avg_rot_error = std::sqrt(consistency_error.head(r_dim).transpose() *
@@ -136,7 +138,7 @@ private:
     gtsam::Key key2a = lc_2.front();
     gtsam::Key key2b = lc_2.back();
 
-    graph_utils::PoseWithDistance<T> p1_lc_inv, p2_lc; 
+    PoseWithDistance<T> p1_lc_inv, p2_lc; 
     p1_lc_inv.pose = lc_1.measured().inverse();
     p1_lc_inv.distance = lc_1.measured().translation().norm();
 
@@ -144,21 +146,21 @@ private:
     p2_lc.distance = lc_2.measured().translation().norm();
 
     // find odometry from 1a to 2a 
-    graph_utils::PoseWithDistance<T> p1a_odom, p2a_odom, p1a2a_odom; 
+    PoseWithDistance<T> p1a_odom, p2a_odom, p1a2a_odom; 
     p1a_odom = posesAndDistances_odom_.trajectory_poses[key1a].pose;
     p2a_odom = posesAndDistances_odom_.trajectory_poses[key2a].pose;
     p1a2a_odom.pose = p1a_odom.pose.between(p2a_odom.pose);
     p1a2a_odom.distance = abs(p1a_odom.distance - p2a_odom.distance);
 
     // find odometry from 2b to 1b 
-    graph_utils::PoseWithDistance<T> p1b_odom, p2b_odom, p2b1b_odom; 
+    PoseWithDistance<T> p1b_odom, p2b_odom, p2b1b_odom; 
     p1b_odom = posesAndDistances_odom_.trajectory_poses[key1b].pose;
     p2b_odom = posesAndDistances_odom_.trajectory_poses[key2b].pose;
     p2b1b_odom.pose = p2b_odom.pose.between(p1b_odom.pose);
     p2b1b_odom.distance = abs(p2b_odom.distance - p1b_odom.distance);
 
     // check that lc_1 pose is consistent with pose from 1a to 1b 
-    graph_utils::PoseWithDistance<T> p1a2b, p1a1b, result; 
+    PoseWithDistance<T> p1a2b, p1a1b, result; 
     p1a2b.pose = p1a2a_odom.pose.compose(p2_lc.pose);
     p1a2b.distance = p1a2a_odom.distance + p2_lc.distance;
     p1a1b.pose = p1a2b.pose.compose(p2b1b_odom.pose);
@@ -168,8 +170,8 @@ private:
 
     gtsam::Vector consistency_error = T::Logmap(result.pose);
 
-    const int r_dim = graph_utils::getRotationDim<T>(); 
-    const int t_dim = graph_utils::getTranslationDim<T>();
+    const int r_dim = getRotationDim<T>(); 
+    const int t_dim = getTranslationDim<T>();
     avg_trans_error = std::sqrt(consistency_error.tail(t_dim).transpose() *
         consistency_error.tail(t_dim)) / result.distance;
     avg_rot_error = std::sqrt(consistency_error.head(r_dim).transpose() *
@@ -230,7 +232,7 @@ private:
     if (debug_) log<INFO>("total loop closures registered: %1%") % nfg_lc_.size();
     if (nfg_lc_.size() == 0) return;
     std::vector<int> max_clique_data;
-    int max_clique_size = graph_utils::findMaxCliqueHeu(lc_adjacency_matrix_, max_clique_data);
+    int max_clique_size = findMaxCliqueHeu(lc_adjacency_matrix_, max_clique_data);
     if (debug_) log<INFO>("number of inliers: %1%") % max_clique_size;
     for (size_t i = 0; i < max_clique_size; i++) {
       // std::cout << max_clique_data[i] << " "; 
@@ -253,7 +255,7 @@ private:
     //       double threshold = lc_distance_matrix_(i,j); 
     //       Eigen::MatrixXd adj_matrix = (lc_distance_matrix_.array() < threshold).template cast<double>();
     //       std::vector<int> max_clique_data;
-    //       int max_clique_size = graph_utils::findMaxClique(adj_matrix, max_clique_data);
+    //       int max_clique_size = findMaxClique(adj_matrix, max_clique_data);
     //       cfile << threshold << " " << max_clique_size << std::endl; 
     //     }
     //   }
@@ -272,5 +274,7 @@ private:
     }
   }
 };
+
+}
 
 #endif

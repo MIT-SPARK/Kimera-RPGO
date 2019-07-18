@@ -11,6 +11,8 @@ author: Yun Chang
 #include <iostream>
 using namespace std;
 
+namespace RobustPGO {
+
 enum log_level_t {
   WARNING,
   INFO,
@@ -39,6 +41,8 @@ protected:
 template <log_level_t level>
 log_impl::formatted_log_t log(const char* msg) {
   return log_impl::formatted_log_t( level, msg );
+}
+
 }
 
 #endif 

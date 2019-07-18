@@ -6,6 +6,8 @@ author: Yun Chang, Luca Carlone
 
 #include "RobustPGO/GenericSolver.h"
 
+namespace RobustPGO {
+
 GenericSolver::GenericSolver(int solvertype, 
                              std::vector<char> special_symbols): 
   nfg_(gtsam::NonlinearFactorGraph()),
@@ -81,4 +83,6 @@ void GenericSolver::removeFactorsNoUpdate(
   for (size_t index : factorsToRemove) {
     nfg_[index].reset();
   }
+}
+
 }

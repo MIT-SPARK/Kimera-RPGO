@@ -31,6 +31,8 @@ author: Yun Chang, Luca Carlone
 #include "RobustPGO/logger.h"
 #include "RobustPGO/OutlierRemoval.h"
 
+namespace RobustPGO {
+
 template<class T>
 class PCM : public OutlierRemoval{
 public:
@@ -56,7 +58,7 @@ protected:
   gtsam::NonlinearFactorGraph nfg_good_lc_; 
   gtsam::Matrix lc_adjacency_matrix_;
   gtsam::Matrix lc_distance_matrix_;
-  graph_utils::Trajectory<T> posesAndCovariances_odom_; 
+  Trajectory<T> posesAndCovariances_odom_; 
 
   std::vector<char> special_symbols_;
 
@@ -121,7 +123,7 @@ public:
 
     if (odometry) {
       // update posesAndCovariances_odom_;
-      graph_utils::PoseWithCovariance<T> new_pose;
+      PoseWithCovariance<T> new_pose;
 
       // possible cases are that the first pose is a between factor or a prior 
       // also possible that there are two factors (a prior and a between)
@@ -268,13 +270,13 @@ protected:
 
   void initializeWithPrior(const gtsam::PriorFactor<T>& prior_factor) {
     T initial_value = prior_factor.prior();
-    const int dim = graph_utils::getDim<T>();
+    const int dim = getDim<T>();
     gtsam::Matrix covar = 
         Eigen::MatrixXd::Zero(dim, dim); // initialize as zero
     gtsam::Key initial_key = prior_factor.front();
 
     // construct initial pose with covar 
-    graph_utils::PoseWithCovariance<T> initial_pose; 
+    PoseWithCovariance<T> initial_pose; 
     initial_pose.pose = initial_value;
     initial_pose.covariance_matrix = covar; 
 
@@ -287,12 +289,12 @@ protected:
   }
 
   void initialize(const gtsam::Key& initial_key) {
-    const int dim = graph_utils::getDim<T>();
+    const int dim = getDim<T>();
     gtsam::Matrix covar = 
         Eigen::MatrixXd::Zero(dim, dim); // initialize as zero
 
     // construct initial pose with covar 
-    graph_utils::PoseWithCovariance<T> initial_pose; 
+    PoseWithCovariance<T> initial_pose; 
     initial_pose.pose = T();
     initial_pose.covariance_matrix = covar; 
 
@@ -303,7 +305,7 @@ protected:
   }
 
   void updateOdom(const gtsam::BetweenFactor<T>& odom_factor, 
-                  graph_utils::PoseWithCovariance<T>& new_pose) {
+                  PoseWithCovariance<T>& new_pose) {
 
     // update posesAndCovariances_odom_ (compose last value with new odom value)
     
@@ -316,13 +318,13 @@ protected:
     gtsam::Key new_key = odom_factor.back();
 
     // construct pose with covariance for odometry measurement 
-    graph_utils::PoseWithCovariance<T> odom_delta; 
+    PoseWithCovariance<T> odom_delta; 
     odom_delta.pose = delta; 
     odom_delta.covariance_matrix = covar; 
 
     // Now get the latest pose in trajectory and compose 
     gtsam::Key prev_key = odom_factor.front();
-    graph_utils::PoseWithCovariance<T> prev_pose;
+    PoseWithCovariance<T> prev_pose;
     try {
       prev_pose = 
         posesAndCovariances_odom_.trajectory_poses.at(prev_key).pose;
@@ -334,14 +336,14 @@ protected:
     // update trajectory 
     posesAndCovariances_odom_.end_id = new_key; // update end key 
     // add to trajectory 
-    graph_utils::TrajectoryPose<T> new_trajectorypose; 
+    TrajectoryPose<T> new_trajectorypose; 
     new_trajectorypose.pose = new_pose;
     new_trajectorypose.id = new_key;
     posesAndCovariances_odom_.trajectory_poses[new_key] = new_trajectorypose; 
   }
 
   void updateOdom(const gtsam::PriorFactor<T>& prior_factor, 
-                  graph_utils::PoseWithCovariance<T>& new_pose) {
+                  PoseWithCovariance<T>& new_pose) {
 
     // update odometry when a prior added (considering multirobot use )
     gtsam::Matrix covar =
@@ -356,7 +358,7 @@ protected:
     // update trajectory 
     posesAndCovariances_odom_.end_id = new_key; // update end key 
     // add to trajectory 
-    graph_utils::TrajectoryPose<T> new_trajectorypose; 
+    TrajectoryPose<T> new_trajectorypose; 
     new_trajectorypose.pose = new_pose;
     new_trajectorypose.id = new_key;
     posesAndCovariances_odom_.trajectory_poses[new_key] = new_trajectorypose; 
@@ -369,10 +371,10 @@ protected:
     gtsam::Key key_i = lc_factor.front();
     gtsam::Key key_j = lc_factor.back();
     
-    graph_utils::PoseWithCovariance<T> pij_odom, pji_lc, result;
+    PoseWithCovariance<T> pij_odom, pji_lc, result;
 
     // access (T_i,Cov_i) and (T_j, Cov_j) from trajectory_
-    graph_utils::PoseWithCovariance<T> pi_odom, pj_odom; 
+    PoseWithCovariance<T> pi_odom, pj_odom; 
     pi_odom = posesAndCovariances_odom_.trajectory_poses[key_i].pose;
     pj_odom = posesAndCovariances_odom_.trajectory_poses[key_j].pose;
 
@@ -384,9 +386,9 @@ protected:
         (lc_factor.get_noiseModel())->covariance();
 
     bool rotation_info = true;
-    const int dim = graph_utils::getDim<T>();
-    const int r_dim = graph_utils::getRotationDim<T>(); 
-    const int t_dim = graph_utils::getTranslationDim<T>(); 
+    const int dim = getDim<T>();
+    const int r_dim = getRotationDim<T>(); 
+    const int t_dim = getTranslationDim<T>(); 
     if (std::isnan(pji_lc_covar.block(0,0,r_dim,r_dim).trace())) {
       rotation_info = false;
       Eigen::MatrixXd temp = Eigen::MatrixXd::Zero(dim, dim);
@@ -431,15 +433,15 @@ protected:
     gtsam::Key key2a = lc_2.front();
     gtsam::Key key2b = lc_2.back();
 
-    graph_utils::PoseWithCovariance<T> p1_lc_inv, p2_lc; 
+    PoseWithCovariance<T> p1_lc_inv, p2_lc; 
     p1_lc_inv.pose = lc_1.measured().inverse();
     gtsam::Matrix p1_lc_covar = boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
         (lc_1.get_noiseModel())->covariance();
 
     bool rotation_info = true;
-    const int dim = graph_utils::getDim<T>();
-    const int r_dim = graph_utils::getRotationDim<T>(); 
-    const int t_dim = graph_utils::getTranslationDim<T>(); 
+    const int dim = getDim<T>();
+    const int r_dim = getRotationDim<T>(); 
+    const int t_dim = getTranslationDim<T>(); 
     if (std::isnan(p1_lc_covar.block(0,0,r_dim,r_dim).trace())) {
       rotation_info = false; 
       Eigen::MatrixXd temp = Eigen::MatrixXd::Zero(dim, dim);
@@ -463,19 +465,19 @@ protected:
     p2_lc.covariance_matrix = p2_lc_covar;
 
     // find odometry from 1a to 2a 
-    graph_utils::PoseWithCovariance<T> p1a_odom, p2a_odom, p1a2a_odom; 
+    PoseWithCovariance<T> p1a_odom, p2a_odom, p1a2a_odom; 
     p1a_odom = posesAndCovariances_odom_.trajectory_poses[key1a].pose;
     p2a_odom = posesAndCovariances_odom_.trajectory_poses[key2a].pose;
     p1a2a_odom = p1a_odom.between(p2a_odom);
 
     // find odometry from 2b to 1b 
-    graph_utils::PoseWithCovariance<T> p1b_odom, p2b_odom, p2b1b_odom; 
+    PoseWithCovariance<T> p1b_odom, p2b_odom, p2b1b_odom; 
     p1b_odom = posesAndCovariances_odom_.trajectory_poses[key1b].pose;
     p2b_odom = posesAndCovariances_odom_.trajectory_poses[key2b].pose;
     p2b1b_odom = p2b_odom.between(p1b_odom);
 
     // check that lc_1 pose is consistent with pose from 1a to 1b 
-    graph_utils::PoseWithCovariance<T> p1a2b, p1a1b, result; 
+    PoseWithCovariance<T> p1a2b, p1a1b, result; 
     p1a2b = p1a2a_odom.compose(p2_lc);
     p1a1b = p1a2b.compose(p2b1b_odom);
     result = p1a1b.compose(p1_lc_inv);
@@ -542,7 +544,7 @@ protected:
     if (debug_) log<INFO>("total loop closures registered: %1%") % nfg_lc_.size();
     if (nfg_lc_.size() == 0) return;
     std::vector<int> max_clique_data;
-    size_t max_clique_size = graph_utils::findMaxCliqueHeu(lc_adjacency_matrix_, max_clique_data);
+    size_t max_clique_size = findMaxCliqueHeu(lc_adjacency_matrix_, max_clique_data);
     if (debug_) log<INFO>("number of inliers: %1%") % max_clique_size;
     for (size_t i = 0; i < max_clique_size; i++) {
       // std::cout << max_clique_data[i] << " "; 
@@ -566,7 +568,7 @@ protected:
           double threshold = lc_distance_matrix_(i,j); 
           Eigen::MatrixXd adj_matrix = (lc_distance_matrix_.array() < threshold).template cast<double>();
           std::vector<int> max_clique_data;
-          int max_clique_size = graph_utils::findMaxClique(adj_matrix, max_clique_data);
+          int max_clique_size = findMaxClique(adj_matrix, max_clique_data);
           cfile << threshold << " " << max_clique_size << std::endl; 
         }
       }
@@ -581,5 +583,7 @@ protected:
     }
   }
 };
+
+}
 
 #endif

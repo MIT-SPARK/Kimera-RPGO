@@ -8,6 +8,8 @@ author: Yun Chang
 #ifndef OUTLIERREMOVAL_H
 #define OUTLIERREMOVAL_H
 
+namespace RobustPGO {
+
 class OutlierRemoval {
 public:
 	virtual ~OutlierRemoval() = default;
@@ -30,4 +32,5 @@ protected:
 	bool debug_ = true;
 };
 
+}
 #endif

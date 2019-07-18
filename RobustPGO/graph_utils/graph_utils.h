@@ -15,7 +15,7 @@
 /** \namespace graph_utils
  *  \brief This namespace encapsulates utility functions to manipulate graphs
  */
-namespace graph_utils {
+namespace RobustPGO {
 
 /** \struct PoseWithCovariance
  *  \brief Structure to store a pose and its covariance data
@@ -90,7 +90,7 @@ struct PoseWithCovariance {
 template <class T>
 struct Transform {
     gtsam::Key i, j;
-    graph_utils::PoseWithCovariance<T> pose;
+    PoseWithCovariance<T> pose;
     bool is_separator;
 };
 
@@ -100,7 +100,7 @@ struct Transform {
 template <class T>
 struct Transforms {
     gtsam::Key start_id, end_id;
-    std::map<std::pair<gtsam::Key,gtsam::Key>, graph_utils::Transform<T>> transforms;
+    std::map<std::pair<gtsam::Key,gtsam::Key>, Transform<T>> transforms;
 };
 
 /** \struct TrajectoryPose
@@ -109,7 +109,7 @@ struct Transforms {
 template <class T>
 struct TrajectoryPose {
     gtsam::Key id;
-    graph_utils::PoseWithCovariance<T> pose;
+    PoseWithCovariance<T> pose;
 };
 
 /** \struct Trajectory
@@ -118,7 +118,7 @@ struct TrajectoryPose {
 template <class T>
 struct Trajectory {
     gtsam::Key start_id, end_id;
-    std::map<gtsam::Key, graph_utils::TrajectoryPose<T>> trajectory_poses;
+    std::map<gtsam::Key, TrajectoryPose<T>> trajectory_poses;
 };
 
 /** \struct DistTrajectoryPose
@@ -136,7 +136,7 @@ struct PoseWithDistance {
 template <class T>
 struct DistTrajectory {
     gtsam::Key start_id, end_id;
-    std::map<gtsam::Key, graph_utils::PoseWithDistance<T>> trajectory_poses;
+    std::map<gtsam::Key, PoseWithDistance<T>> trajectory_poses;
 };
 
 int findMaxClique(const Eigen::MatrixXd adjMatrix, std::vector<int>& max_clique) {

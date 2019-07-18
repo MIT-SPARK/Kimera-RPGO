@@ -28,6 +28,8 @@ author: Yun Chang, Luca Carlone
 
 #include "RobustPGO/logger.h"
 
+namespace RobustPGO {
+
 class GenericSolver {
 public:
   GenericSolver(int solvertype=1, 
@@ -69,5 +71,7 @@ protected:
   bool save_g2o_; 
   std::string g2o_file_path_;
 };
+
+}
 
 #endif

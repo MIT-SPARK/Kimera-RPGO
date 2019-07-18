@@ -3,8 +3,8 @@ Backend solver class (Robust Pose Graph Optimizer)
 author: Yun Chang, Luca Carlone
 */
 
-#ifndef ROBUSTPGO_H
-#define ROBUSTPGO_H
+#ifndef ROBUSTSOLVER_H
+#define ROBUSTSOLVER_H
 
 #include <gtsam/base/Vector.h>
 #include <gtsam/geometry/Pose3.h>
@@ -24,9 +24,11 @@ author: Yun Chang, Luca Carlone
 #include "RobustPGO/logger.h"
 #include "RobustPGO/OutlierRemoval.h"
 
-class RobustPGO : public GenericSolver{
+namespace RobustPGO {
+
+class RobustSolver : public GenericSolver{
 public:
-  RobustPGO(const std::shared_ptr<OutlierRemoval>& outlier_remover,
+  RobustSolver(const std::shared_ptr<OutlierRemoval>& outlier_remover,
             int solvertype=1, 
             const std::vector<char>& special_symbols=std::vector<char>());
       // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton
@@ -138,4 +140,5 @@ private:
   void optimize(); 
 };
 
+}
 #endif

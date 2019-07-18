@@ -3,16 +3,18 @@ Generic solver class
 author: Yun Chang, Luca Carlone
 */
 
-#include "RobustPGO/RobustPGO.h"
+#include "RobustPGO/RobustSolver.h"
 
-RobustPGO::RobustPGO(const std::shared_ptr<OutlierRemoval>& outlier_remover,
+namespace RobustPGO {
+
+RobustSolver::RobustSolver(const std::shared_ptr<OutlierRemoval>& outlier_remover,
                      int solvertype, 
                      const std::vector<char>& special_symbols) :
                      GenericSolver(solvertype, special_symbols), 
                      outlier_removal_(outlier_remover) {
 }
 
-void RobustPGO::optimize() {
+void RobustSolver::optimize() {
   if (solver_type_ == 1) {
     gtsam::LevenbergMarquardtParams params;
     if (debug_){
@@ -38,12 +40,12 @@ void RobustPGO::optimize() {
   }
 }
 
-void RobustPGO::force_optimize() {
+void RobustSolver::force_optimize() {
   if (debug_) log<WARNING>("Forcing optimization, typically should only use update method. ");
   optimize();
 }
 
-void RobustPGO::update(const gtsam::NonlinearFactorGraph& nfg, 
+void RobustSolver::update(const gtsam::NonlinearFactorGraph& nfg, 
                        const gtsam::Values& values, 
                        const gtsam::FactorIndices& factorsToRemove) {
   // remove factors
@@ -58,7 +60,7 @@ void RobustPGO::update(const gtsam::NonlinearFactorGraph& nfg,
   }
 }
 
-void RobustPGO::forceUpdate(const gtsam::NonlinearFactorGraph& nfg, 
+void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg, 
                        const gtsam::Values& values, 
                        const gtsam::FactorIndices& factorsToRemove) {
   // remove factors
@@ -69,4 +71,6 @@ void RobustPGO::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,
   outlier_removal_->processForcedLoopclosure(nfg, values, nfg_, values_);
   // optimize
   optimize();
+}
+
 }

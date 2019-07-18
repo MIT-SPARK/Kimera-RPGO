@@ -3,7 +3,7 @@ Generic solver class
 author: Yun Chang
 */
 
-#include "RobustPGO/RobustPGO.h"
+#include "RobustPGO/RobustSolver.h"
 #include "RobustPGO/pcm/pcm.h"
 // #include "RobustPGO/pcm/pcm_distance.h"
 #include "RobustPGO/logger.h"
@@ -14,6 +14,8 @@ author: Yun Chang
 
 #include <stdlib.h>
 #include <memory>
+
+using namespace RobustPGO;
 
 /* Usage: ./RpgoReadG2o 2d <some-2d-g2o-file> <odom-threshold> <pcm-threshold> <output-g2o-file> <verbosity>
    [or]   ./RpgoReadG2o 3d <some-3d-g2o-file> <odom-threshold> <pcm-threshold> <output-g2o-file> <verbosity>*/
@@ -29,13 +31,13 @@ void Simulate(gtsam::GraphAndValues gv,
   std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<T>>(odom_thresh, pmc_thresh);
   if (!debug) pcm->setQuiet();
 
-  std::shared_ptr<RobustPGO> pgo = std::make_shared<RobustPGO>(pcm);
+  std::shared_ptr<RobustSolver> pgo = std::make_shared<RobustSolver>(pcm);
   pgo->saveG2oResult(output_folder); // tell pgo to save g2o result
 
   if (!debug) pgo->setQuiet(); // turn off print messages
   if (debug) log<INFO>("Initiated robust pose graph optimizer");
 
-  Eigen::VectorXd noise = Eigen::VectorXd::Zero(graph_utils::getDim<T>());
+  Eigen::VectorXd noise = Eigen::VectorXd::Zero(getDim<T>());
   static const gtsam::SharedNoiseModel& init_noise = 
       gtsam::noiseModel::Diagonal::Sigmas(noise);
 

@@ -8,12 +8,14 @@
 #include <random>
 #include <memory>
 
-#include "RobustPGO/RobustPGO.h"
+#include "RobustPGO/RobustSolver.h"
 #include "RobustPGO/pcm/pcm.h" 
 #include "test_config.h"
 
+using namespace RobustPGO;
+
 /* ************************************************************************* */
-TEST(RobustPGO, Load1)
+TEST(RobustSolver, Load1)
 {
   // load graph
   // read g2o file for robot a 
@@ -25,7 +27,7 @@ TEST(RobustPGO, Load1)
   std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<gtsam::Pose3>>(0.0, 10.0); // set odom check to be small
   pcm->setQuiet(); // turn off print messages for pcm
 
-  std::shared_ptr<RobustPGO> pgo = std::make_shared<RobustPGO>(pcm);
+  std::shared_ptr<RobustSolver> pgo = std::make_shared<RobustSolver>(pcm);
   pgo->setQuiet(); // turn off print messages
 
   // Create prior
@@ -47,7 +49,7 @@ TEST(RobustPGO, Load1)
 }
 
 /* ************************************************************************* */
-TEST(RobustPGO, Add1)
+TEST(RobustSolver, Add1)
 {
   // load graph for robot a (same as above)
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
@@ -57,7 +59,7 @@ TEST(RobustPGO, Add1)
   std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<gtsam::Pose3>>(0.0, 10.0); // set odom check to be small
   pcm->setQuiet(); // turn off print messages for pcm
 
-  std::shared_ptr<RobustPGO> pgo = std::make_shared<RobustPGO>(pcm);
+  std::shared_ptr<RobustSolver> pgo = std::make_shared<RobustSolver>(pcm);
   pgo->setQuiet(); // turn off print messages
 
   static const gtsam::SharedNoiseModel& noise = 
@@ -91,7 +93,7 @@ TEST(RobustPGO, Add1)
 }
 
 /* ************************************************************************* */
-TEST(RobustPGO, Load2)
+TEST(RobustSolver, Load2)
 {
   // load graph
   // read g2o file for robot a 
@@ -103,7 +105,7 @@ TEST(RobustPGO, Load2)
   std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<gtsam::Pose3>>(100.0, 100.0); // set odom check to be small
   pcm->setQuiet(); // turn off print messages for pcm
 
-  std::shared_ptr<RobustPGO> pgo = std::make_shared<RobustPGO>(pcm);
+  std::shared_ptr<RobustSolver> pgo = std::make_shared<RobustSolver>(pcm);
   pgo->setQuiet(); // turn off print messages
 
   // Create prior
@@ -125,7 +127,7 @@ TEST(RobustPGO, Load2)
 }
 
 /* ************************************************************************* */
-TEST(RobustPGO, Add2)
+TEST(RobustSolver, Add2)
 {
   // load graph for robot a (same as above)
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
@@ -135,7 +137,7 @@ TEST(RobustPGO, Add2)
   std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<gtsam::Pose3>>(100.0, 100.0); // set odom check to be small
   pcm->setQuiet(); // turn off print messages for pcm
 
-  std::shared_ptr<RobustPGO> pgo = std::make_shared<RobustPGO>(pcm);
+  std::shared_ptr<RobustSolver> pgo = std::make_shared<RobustSolver>(pcm);
   pgo->setQuiet(); // turn off print messages
 
   static const gtsam::SharedNoiseModel& noise = 

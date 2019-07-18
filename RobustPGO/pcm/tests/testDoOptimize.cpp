@@ -9,6 +9,8 @@
 
 #include "RobustPGO/pcm/pcm.h" 
 
+using namespace RobustPGO;
+
 /* ************************************************************************* */
 TEST(DoOptimize, Odometry)
 {

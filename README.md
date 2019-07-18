@@ -36,17 +36,19 @@ make
 If GTSAM Unittests give you trouble, you can do `cmake .. -DUNIT_TESTS=OFF`
 
 ## Usage 
-This repository can be used as an optimization backend. A sample setup looks something like: 
+This repository can be used as an optimization backend. A sample setup looks something like below. The default solver is `SOLVER=1` which uses LM for optimization. 
 ```cpp
 // Set up 
-OutlierRemoval *pcm = new PCM<Pose3>(odom_threshold_, pw_threshold_, special_symbs);
-optimizer_.reset(new RobustPGO(pcm, SOLVER, special_symbs));
+std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<gtsam::Pose3>>(odom_threshold, pw_threshold, special_symbs);
+pcm->setQuiet(); // optional: to turn off print messages for pcm
+
+std::shared_ptr<RobustPGO> optimizer = std::make_shared<RobustPGO>(pcm, SOLVER, special_symbs);
+pgo->setQuiet(); // optional: turn off print messages
 //...
 //...
 
 // Run 
 optimizer_->update(new_factor, new_values);
-
 ```
 This can also be used as a standalone experimental tool. A read g2o function can be found in examples.
 You can create a `log` folder inside the `build` folder.

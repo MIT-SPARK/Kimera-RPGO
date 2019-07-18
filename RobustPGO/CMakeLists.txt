@@ -5,6 +5,7 @@ add_library(RobustPGO
     max_clique_finder/graphIO.cpp
     graph_utils/graph_utils.h
     pcm/pcm.h
+    pcm/pcm_distance.h
     GenericSolver.cpp
     RobustPGO.cpp
 )

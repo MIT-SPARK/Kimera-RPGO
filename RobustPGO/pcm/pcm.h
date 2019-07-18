@@ -44,7 +44,7 @@ public:
 }
   // initialize with odometry detect threshold and pairwise consistency threshold
 
-private:
+protected:
   double odom_threshold_;
   double pc_threshold_;
 
@@ -258,7 +258,7 @@ public:
     saveCliqueSizeData();
   }
 
-private:
+protected:
 
   bool specialSymbol(char symb) {
     for (size_t i = 0; i < special_symbols_.size(); i++) {

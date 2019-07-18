@@ -121,6 +121,24 @@ struct Trajectory {
     std::map<gtsam::Key, graph_utils::TrajectoryPose<T>> trajectory_poses;
 };
 
+/** \struct DistTrajectoryPose
+ *  \brief Pose and distance traveled
+ */
+template <class T>
+struct PoseWithDistance {
+    T pose;
+    double distance;
+};
+
+/** \struct DistTrajectory
+ *  \brief Same as Trajectory but instead of covariance tracks distance
+ */
+template <class T>
+struct DistTrajectory {
+    gtsam::Key start_id, end_id;
+    std::map<gtsam::Key, graph_utils::PoseWithDistance<T>> trajectory_poses;
+};
+
 int findMaxClique(const Eigen::MatrixXd adjMatrix, std::vector<int>& max_clique) {
   // Compute maximum clique
   FMC::CGraphIO gio;

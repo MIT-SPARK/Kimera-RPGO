@@ -543,7 +543,7 @@ protected:
     if (debug_) log<INFO>("total loop closures registered: %1%") % nfg_lc_.size();
     if (nfg_lc_.size() == 0) return;
     std::vector<int> max_clique_data;
-    int max_clique_size = graph_utils::findMaxCliqueHeu(lc_adjacency_matrix_, max_clique_data);
+    size_t max_clique_size = graph_utils::findMaxCliqueHeu(lc_adjacency_matrix_, max_clique_data);
     if (debug_) log<INFO>("number of inliers: %1%") % max_clique_size;
     for (size_t i = 0; i < max_clique_size; i++) {
       // std::cout << max_clique_data[i] << " "; 
@@ -559,9 +559,11 @@ protected:
 
     std::ofstream cfile(filename.str());
     if (cfile.is_open()) {
-      // output for various thresholds 
-      for (size_t i=0; i < lc_distance_matrix_.rows()-1; i++) {
-        for (size_t j=i+1; j < lc_distance_matrix_.cols(); j++) {
+      // output for various thresholds
+      size_t num_matrix_rows = lc_distance_matrix_.rows();
+      size_t num_matrix_cols = lc_distance_matrix_.cols();
+      for (size_t i=0; i < num_matrix_rows; i++) {
+        for (size_t j=i+1; j < num_matrix_cols; j++) {
           double threshold = lc_distance_matrix_(i,j); 
           Eigen::MatrixXd adj_matrix = (lc_distance_matrix_.array() < threshold).template cast<double>();
           std::vector<int> max_clique_data;

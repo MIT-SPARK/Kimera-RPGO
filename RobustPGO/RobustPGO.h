@@ -26,7 +26,7 @@ author: Yun Chang, Luca Carlone
 
 class RobustPGO : public GenericSolver{
 public:
-  RobustPGO(const std::shared_ptr<OutlierRemoval>& OR,
+  RobustPGO(const std::shared_ptr<OutlierRemoval>& outlier_remover,
             int solvertype=1, 
             const std::vector<char>& special_symbols=std::vector<char>());
       // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton

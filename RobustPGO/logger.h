@@ -30,8 +30,8 @@ public:
     return *this;
   }    
 protected:
-  log_level_t level;
   boost::format fmt;
+  log_level_t level;
 };
 }//namespace log_impl
 

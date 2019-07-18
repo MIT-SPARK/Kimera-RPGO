@@ -26,7 +26,7 @@ void Simulate(gtsam::GraphAndValues gv,
   gtsam::NonlinearFactorGraph nfg = *gv.first;
   gtsam::Values values = *gv.second;
   
-  std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<gtsam::Pose2>>(odom_thresh, pmc_thresh);
+  std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<T>>(odom_thresh, pmc_thresh);
   if (!debug) pcm->setQuiet();
 
   std::shared_ptr<RobustPGO> pgo = std::make_shared<RobustPGO>(pcm);

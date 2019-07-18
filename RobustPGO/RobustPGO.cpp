@@ -5,11 +5,11 @@ author: Yun Chang, Luca Carlone
 
 #include "RobustPGO/RobustPGO.h"
 
-RobustPGO::RobustPGO(const std::shared_ptr<OutlierRemoval>& OR,
+RobustPGO::RobustPGO(const std::shared_ptr<OutlierRemoval>& outlier_remover,
                      int solvertype, 
                      const std::vector<char>& special_symbols) :
                      GenericSolver(solvertype, special_symbols), 
-                     outlier_removal_(OR) {
+                     outlier_removal_(outlier_remover) {
 }
 
 void RobustPGO::optimize() {

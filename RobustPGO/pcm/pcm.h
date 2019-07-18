@@ -150,7 +150,6 @@ public:
 
       // - store factor in nfg_odom_
       nfg_odom_.add(odom_factors);
-      new_factors = new_factors;
       new_factors = lc_factors; // this will be carried over to the loop_closure section 
 
       if (!loop_closures) {
@@ -253,7 +252,7 @@ public:
     return true;
   }
 
-  void saveData() {
+  void saveData() override{
     saveDistanceMatrix();
     saveCliqueSizeData();
   }

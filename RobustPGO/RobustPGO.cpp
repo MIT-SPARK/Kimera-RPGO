@@ -5,9 +5,9 @@ author: Yun Chang, Luca Carlone
 
 #include "RobustPGO/RobustPGO.h"
 
-RobustPGO::RobustPGO(OutlierRemoval* OR,
+RobustPGO::RobustPGO(const std::shared_ptr<OutlierRemoval>& OR,
                      int solvertype, 
-                     std::vector<char> special_symbols) :
+                     const std::vector<char>& special_symbols) :
                      GenericSolver(solvertype, special_symbols), 
                      outlier_removal_(OR) {
 }
@@ -43,9 +43,9 @@ void RobustPGO::force_optimize() {
   optimize();
 }
 
-void RobustPGO::update(gtsam::NonlinearFactorGraph nfg, 
-                       gtsam::Values values, 
-                       gtsam::FactorIndices factorsToRemove) {
+void RobustPGO::update(const gtsam::NonlinearFactorGraph& nfg, 
+                       const gtsam::Values& values, 
+                       const gtsam::FactorIndices& factorsToRemove) {
   // remove factors
   for (size_t index : factorsToRemove) {
     nfg_[index].reset();
@@ -58,9 +58,9 @@ void RobustPGO::update(gtsam::NonlinearFactorGraph nfg,
   }
 }
 
-void RobustPGO::forceUpdate(gtsam::NonlinearFactorGraph nfg, 
-                       gtsam::Values values, 
-                       gtsam::FactorIndices factorsToRemove) {
+void RobustPGO::forceUpdate(const gtsam::NonlinearFactorGraph& nfg, 
+                       const gtsam::Values& values, 
+                       const gtsam::FactorIndices& factorsToRemove) {
   // remove factors
   for (size_t index : factorsToRemove) {
     nfg_[index].reset();

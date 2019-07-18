@@ -6,6 +6,7 @@
 
 #include <CppUnitLite/TestHarness.h>
 #include <random>
+#include <memory>
 
 #include "RobustPGO/RobustPGO.h"
 #include "RobustPGO/pcm/pcm.h" 
@@ -21,11 +22,10 @@ TEST(RobustPGO, Load1)
   gtsam::Values values = *gv.second;
 
   // set up RobustPGO solver 
-  OutlierRemoval *pcm = new PCM<gtsam::Pose3>(0.0, 10.0); // set odom check to be small
+  std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<gtsam::Pose3>>(0.0, 10.0); // set odom check to be small
   pcm->setQuiet(); // turn off print messages for pcm
 
-  std::unique_ptr<RobustPGO> pgo;
-  pgo.reset(new RobustPGO(pcm));
+  std::shared_ptr<RobustPGO> pgo = std::make_shared<RobustPGO>(pcm);
   pgo->setQuiet(); // turn off print messages
 
   // Create prior
@@ -54,11 +54,10 @@ TEST(RobustPGO, Add1)
   gtsam::NonlinearFactorGraph nfg = *gv.first;
   gtsam::Values values = *gv.second;
 
-  OutlierRemoval *pcm = new PCM<gtsam::Pose3>(0.0, 10.0); // set odom check to be small
+  std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<gtsam::Pose3>>(0.0, 10.0); // set odom check to be small
   pcm->setQuiet(); // turn off print messages for pcm
 
-  std::unique_ptr<RobustPGO> pgo;
-  pgo.reset(new RobustPGO(pcm));
+  std::shared_ptr<RobustPGO> pgo = std::make_shared<RobustPGO>(pcm);
   pgo->setQuiet(); // turn off print messages
 
   static const gtsam::SharedNoiseModel& noise = 
@@ -100,11 +99,10 @@ TEST(RobustPGO, Load2)
   gtsam::Values values = *gv.second;
 
   // set up RobustPGO solver 
-  OutlierRemoval *pcm = new PCM<gtsam::Pose3>(100.0, 100.0); // set thresholds to be large
+  std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<gtsam::Pose3>>(100.0, 100.0); // set odom check to be small
   pcm->setQuiet(); // turn off print messages for pcm
 
-  std::unique_ptr<RobustPGO> pgo;
-  pgo.reset(new RobustPGO(pcm));
+  std::shared_ptr<RobustPGO> pgo = std::make_shared<RobustPGO>(pcm);
   pgo->setQuiet(); // turn off print messages
 
   // Create prior
@@ -133,11 +131,10 @@ TEST(RobustPGO, Add2)
   gtsam::NonlinearFactorGraph nfg = *gv.first;
   gtsam::Values values = *gv.second;
 
-  OutlierRemoval *pcm = new PCM<gtsam::Pose3>(100.0, 100.0); // set thresholds to be large
+  std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<gtsam::Pose3>>(100.0, 100.0); // set odom check to be small
   pcm->setQuiet(); // turn off print messages for pcm
 
-  std::unique_ptr<RobustPGO> pgo;
-  pgo.reset(new RobustPGO(pcm));
+  std::shared_ptr<RobustPGO> pgo = std::make_shared<RobustPGO>(pcm);
   pgo->setQuiet(); // turn off print messages
 
   static const gtsam::SharedNoiseModel& noise = 

@@ -26,24 +26,24 @@ author: Yun Chang, Luca Carlone
 
 class RobustPGO : public GenericSolver{
 public:
-  RobustPGO(OutlierRemoval* OR,
+  RobustPGO(const std::shared_ptr<OutlierRemoval>& OR,
             int solvertype=1, 
-            std::vector<char> special_symbols=std::vector<char>());
+            const std::vector<char>& special_symbols=std::vector<char>());
       // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton
 
-  void update(gtsam::NonlinearFactorGraph nfg=gtsam::NonlinearFactorGraph(), 
-              gtsam::Values values=gtsam::Values(),
-              gtsam::FactorIndices factorsToRemove=gtsam::FactorIndices());
+  void update(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(), 
+              const gtsam::Values& values=gtsam::Values(),
+              const gtsam::FactorIndices& factorsToRemove=gtsam::FactorIndices());
 
-  void forceUpdate(gtsam::NonlinearFactorGraph nfg=gtsam::NonlinearFactorGraph(), 
-              gtsam::Values values=gtsam::Values(),
-              gtsam::FactorIndices factorsToRemove=gtsam::FactorIndices());
+  void forceUpdate(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(), 
+              const gtsam::Values& values=gtsam::Values(),
+              const gtsam::FactorIndices& factorsToRemove=gtsam::FactorIndices());
 
   void force_optimize();
 
   template<class T>
-  void loadGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values,
-      gtsam::PriorFactor<T> prior) {
+  void loadGraph(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values,
+      const gtsam::PriorFactor<T>& prior) {
     gtsam::NonlinearFactorGraph prior_factor;
     gtsam::Values prior_values; 
     prior_factor.add(prior);
@@ -54,8 +54,8 @@ public:
   }
 
   template<class T>
-  void addGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values,
-      gtsam::BetweenFactor<T> connector) {
+  void addGraph(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values,
+      const gtsam::BetweenFactor<T>& connector) {
 
     gtsam::Key key0 = connector.back();
 
@@ -69,7 +69,8 @@ public:
   }
 
   template<class T>
-  void connectGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values, gtsam::Key key0) {
+  void connectGraph(gtsam::NonlinearFactorGraph factors, 
+      const gtsam::Values& values, const gtsam::Key& key0) {
 
     // load graph assumes that the previous graph has been cleared
     gtsam::Key current_key = key0; // initial key
@@ -132,7 +133,7 @@ public:
   }
 
 private:
-  OutlierRemoval* outlier_removal_; // outlier removal method; 
+  std::shared_ptr<OutlierRemoval> outlier_removal_; // outlier removal method; 
 
   void optimize(); 
 };

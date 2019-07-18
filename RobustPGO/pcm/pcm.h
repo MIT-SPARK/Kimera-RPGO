@@ -35,13 +35,15 @@ template<class T>
 class PCM : public OutlierRemoval{
 public:
   PCM(double odom_threshold, double pc_threshold, 
-    std::vector<char> special_symbols=std::vector<char>()):
+    const std::vector<char>& special_symbols=std::vector<char>()):
+    OutlierRemoval(),
     odom_threshold_(odom_threshold), 
     pc_threshold_(pc_threshold),
     special_symbols_(special_symbols) {
   // check if templated value valid
   BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<T>));
 }
+  ~PCM() = default;
   // initialize with odometry detect threshold and pairwise consistency threshold
 
 protected:
@@ -60,10 +62,10 @@ protected:
 
 public:
 
-  bool process(gtsam::NonlinearFactorGraph new_factors, 
+  virtual bool process(gtsam::NonlinearFactorGraph new_factors, 
                gtsam::Values new_values,
                gtsam::NonlinearFactorGraph& output_nfg, 
-               gtsam::Values& output_values) {
+               gtsam::Values& output_values) override{
     bool odometry = false;
     bool loop_closures = false;
     bool special_odometry = false;
@@ -148,6 +150,7 @@ public:
 
       // - store factor in nfg_odom_
       nfg_odom_.add(odom_factors);
+      new_factors = new_factors;
       new_factors = lc_factors; // this will be carried over to the loop_closure section 
 
       if (!loop_closures) {
@@ -234,11 +237,11 @@ public:
     return true;
   }
 
-  bool processForcedLoopclosure(
+  virtual bool processForcedLoopclosure(
       gtsam::NonlinearFactorGraph new_factors, 
       gtsam::Values new_values,
       gtsam::NonlinearFactorGraph& output_nfg, 
-      gtsam::Values& output_values){
+      gtsam::Values& output_values) override{
     // force loop closure (without outlier rejection)
     nfg_special_.add(new_factors);
     output_values.insert(new_values);
@@ -264,7 +267,7 @@ protected:
     return false; 
   }
 
-  void initializeWithPrior(gtsam::PriorFactor<T> prior_factor) {
+  void initializeWithPrior(const gtsam::PriorFactor<T>& prior_factor) {
     T initial_value = prior_factor.prior();
     const int dim = graph_utils::getDim<T>();
     gtsam::Matrix covar = 
@@ -284,7 +287,7 @@ protected:
     nfg_odom_.add(prior_factor); // add to initial odometry
   }
 
-  void initialize(gtsam::Key initial_key) {
+  void initialize(const gtsam::Key& initial_key) {
     const int dim = graph_utils::getDim<T>();
     gtsam::Matrix covar = 
         Eigen::MatrixXd::Zero(dim, dim); // initialize as zero
@@ -300,8 +303,8 @@ protected:
     posesAndCovariances_odom_.end_id = initial_key;
   }
 
-  void updateOdom(gtsam::BetweenFactor<T> odom_factor, 
-                  graph_utils::PoseWithCovariance<T> &new_pose) {
+  void updateOdom(const gtsam::BetweenFactor<T>& odom_factor, 
+                  graph_utils::PoseWithCovariance<T>& new_pose) {
 
     // update posesAndCovariances_odom_ (compose last value with new odom value)
     
@@ -338,8 +341,8 @@ protected:
     posesAndCovariances_odom_.trajectory_poses[new_key] = new_trajectorypose; 
   }
 
-  void updateOdom(gtsam::PriorFactor<T> prior_factor, 
-                  graph_utils::PoseWithCovariance<T> &new_pose) {
+  void updateOdom(const gtsam::PriorFactor<T>& prior_factor, 
+                  graph_utils::PoseWithCovariance<T>& new_pose) {
 
     // update odometry when a prior added (considering multirobot use )
     gtsam::Matrix covar =
@@ -360,7 +363,7 @@ protected:
     posesAndCovariances_odom_.trajectory_poses[new_key] = new_trajectorypose; 
   }
 
-  bool isOdomConsistent(gtsam::BetweenFactor<T> lc_factor,
+  bool isOdomConsistent(const gtsam::BetweenFactor<T>& lc_factor,
                         double& mahalanobis_dist) {
     // assume loop is between pose i and j
     // extract the keys 
@@ -420,8 +423,8 @@ protected:
     return false;
   }
 
-  bool areLoopsConsistent(gtsam::BetweenFactor<T> lc_1, 
-                          gtsam::BetweenFactor<T> lc_2,
+  bool areLoopsConsistent(const gtsam::BetweenFactor<T>& lc_1, 
+                          const gtsam::BetweenFactor<T>& lc_2,
                           double& mahalanobis_dist) {
     // check if two loop closures are consistent 
     gtsam::Key key1a = lc_1.front();

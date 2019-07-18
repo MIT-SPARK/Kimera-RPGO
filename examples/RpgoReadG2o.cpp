@@ -5,7 +5,7 @@ author: Yun Chang
 
 #include "RobustPGO/RobustPGO.h"
 #include "RobustPGO/pcm/pcm.h"
-#include "RobustPGO/pcm/pcm_distance.h"
+// #include "RobustPGO/pcm/pcm_distance.h"
 #include "RobustPGO/logger.h"
 
 #include <gtsam/slam/dataset.h>
@@ -13,6 +13,7 @@ author: Yun Chang
 #include <gtsam/geometry/Pose2.h>
 
 #include <stdlib.h>
+#include <memory>
 
 /* Usage: ./RpgoReadG2o 2d <some-2d-g2o-file> <odom-threshold> <pcm-threshold> <output-g2o-file> <verbosity>
    [or]   ./RpgoReadG2o 3d <some-3d-g2o-file> <odom-threshold> <pcm-threshold> <output-g2o-file> <verbosity>*/
@@ -25,11 +26,10 @@ void Simulate(gtsam::GraphAndValues gv,
   gtsam::NonlinearFactorGraph nfg = *gv.first;
   gtsam::Values values = *gv.second;
   
-  OutlierRemoval *pcm = new PCM_Distance<T>(odom_thresh, pmc_thresh);
+  std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<gtsam::Pose2>>(odom_thresh, pmc_thresh);
   if (!debug) pcm->setQuiet();
 
-  std::unique_ptr<RobustPGO> pgo;
-  pgo.reset(new RobustPGO(pcm));
+  std::shared_ptr<RobustPGO> pgo = std::make_shared<RobustPGO>(pcm);
   pgo->saveG2oResult(output_folder); // tell pgo to save g2o result
 
   if (!debug) pgo->setQuiet(); // turn off print messages
@@ -53,6 +53,7 @@ void Simulate(gtsam::GraphAndValues gv,
   pgo->force_optimize(); 
   // pcm->saveData();
 }
+
 int main(int argc, char *argv[]) {
   gtsam::GraphAndValues graphNValues; 
   std::string dim = argv[1];

@@ -8,7 +8,7 @@ author: Yun Chang, Luca Carlone
 
 namespace RobustPGO {
 
-GenericSolver::GenericSolver(int solvertype, 
+GenericSolver::GenericSolver(Solver solvertype, 
                              std::vector<char> special_symbols): 
   nfg_(gtsam::NonlinearFactorGraph()),
   values_(gtsam::Values()),
@@ -49,7 +49,7 @@ void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
 
   if (do_optimize) {
     // optimize
-    if (solver_type_ == 1) {
+    if (solver_type_ == LM) {
       gtsam::LevenbergMarquardtParams params;
       if (debug_) {
         params.setVerbosityLM("SUMMARY");
@@ -57,15 +57,16 @@ void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
       }
       params.diagonalDamping = true; 
       values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
-    }else if (solver_type_ == 2) {
+    }else if (solver_type_ == GN) {
       gtsam::GaussNewtonParams params;
       if (debug_){
         params.setVerbosity("ERROR");
         log<INFO>("Running GN");
       }
       values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, params).optimize();
-    }else if (solver_type_ == 3) {
-      // TODO: something (SE-SYNC?)
+    } else {
+      log<WARNING>("Unsupported Solver");
+      exit (EXIT_FAILURE);
     }
     // save result 
     if (save_g2o_) {

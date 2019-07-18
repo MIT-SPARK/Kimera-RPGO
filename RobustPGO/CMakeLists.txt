@@ -8,6 +8,7 @@ add_library(RobustPGO
     pcm/pcm_distance.h
     GenericSolver.cpp
     RobustSolver.cpp
+    SolverParams.h
 )
 
 target_link_libraries(RobustPGO

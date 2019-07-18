@@ -23,14 +23,13 @@ author: Yun Chang, Luca Carlone
 #include "RobustPGO/GenericSolver.h"
 #include "RobustPGO/logger.h"
 #include "RobustPGO/OutlierRemoval.h"
+#include "RobustPGO/RobustSolverParams.h"
 
 namespace RobustPGO {
 
 class RobustSolver : public GenericSolver{
 public:
-  RobustSolver(const std::shared_ptr<OutlierRemoval>& outlier_remover,
-            int solvertype=1, 
-            const std::vector<char>& special_symbols=std::vector<char>());
+  RobustSolver(const RobustSolverParams& params);
       // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton
 
   void update(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(), 
@@ -69,7 +68,7 @@ public:
 
     connectGraph<T>(factors, values, key0);
   }
-  
+
 private:
   template<class T>
   void connectGraph(gtsam::NonlinearFactorGraph factors, 

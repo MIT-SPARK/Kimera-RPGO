@@ -27,12 +27,13 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/slam/dataset.h>
 
 #include "RobustPGO/logger.h"
+#include "RobustPGO/SolverParams.h"
 
 namespace RobustPGO {
 
 class GenericSolver {
 public:
-  GenericSolver(int solvertype=1, 
+  GenericSolver(Solver solvertype=LM, 
                 std::vector<char> special_symbols=std::vector<char>()); 
   // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton
   // special symbols denote non odometry factors - perhaps semantics 
@@ -84,7 +85,7 @@ protected:
   bool specialSymbol(char symb);
   gtsam::Values values_;
   gtsam::NonlinearFactorGraph nfg_;
-  int solver_type_;
+  Solver solver_type_;
   std::vector<char> special_symbols_; 
   bool debug_;
 

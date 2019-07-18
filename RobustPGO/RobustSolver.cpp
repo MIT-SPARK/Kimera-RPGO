@@ -4,14 +4,31 @@ author: Yun Chang, Luca Carlone
 */
 
 #include "RobustPGO/RobustSolver.h"
+#include "RobustPGO/pcm/pcm.h"
 
 namespace RobustPGO {
 
-RobustSolver::RobustSolver(const std::shared_ptr<OutlierRemoval>& outlier_remover,
-                     int solvertype, 
-                     const std::vector<char>& special_symbols) :
-                     GenericSolver(solvertype, special_symbols), 
-                     outlier_removal_(outlier_remover) {
+RobustSolver::RobustSolver(const RobustSolverParams& params,
+    const std::shared_ptr<OutlierRemoval>& outlier_remover) :
+    GenericSolver(params.solver, params.specialSymbols) {
+  switch (params.OutlierRemovalMethod) {
+    case PCM :
+    {
+      outlier_removal_ = std::make_shared<PCM<T>>(
+          params.pcm_odomThreshold, params.pcm_lcThreshold, params.specialSymbols);
+    }
+    break; 
+    case PCM_Distance:
+    {
+      // outlier_removal_ = std::make_shared<PCM_Distance<T>>()
+    }
+    break; 
+    default: 
+    {
+      log<WARNING>("Undefined outlier removal method");
+      exit (EXIT_FAILURE);
+    }
+  }
 }
 
 void RobustSolver::optimize() {

@@ -10,15 +10,15 @@ author: Yun Chang
 
 class OutlierRemoval {
 public:
-	virtual bool process(gtsam::NonlinearFactorGraph new_factors, 
+	virtual bool process(gtsam::NonlinearFactorGraph new_factors,
 				               gtsam::Values new_values,
-				               gtsam::NonlinearFactorGraph& nfg, 
+				               gtsam::NonlinearFactorGraph& nfg,
 				               gtsam::Values& values){};
 
 	virtual bool processForcedLoopclosure(
-			gtsam::NonlinearFactorGraph new_factors, 
+			gtsam::NonlinearFactorGraph new_factors,
 			gtsam::Values new_values,
-			gtsam::NonlinearFactorGraph& nfg, 
+			gtsam::NonlinearFactorGraph& nfg,
 			gtsam::Values& values){}; // force a loop closure
 
 	virtual void saveData() {}

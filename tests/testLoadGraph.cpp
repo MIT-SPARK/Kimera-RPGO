@@ -42,8 +42,8 @@ TEST(RobustPGO, Load1)
   gtsam::Values values_out = pgo->calculateEstimate();
 
   // Since odom check threshold is 0, should only have the odom edges + prior (no lc should have passed)
-  EXPECT(gtsam::assert_equal(nfg_out.size(), size_t(50)));
-  EXPECT(gtsam::assert_equal(values_out.size(), size_t(50)));
+  EXPECT(nfg_out.size()==size_t(50));
+  EXPECT(values_out.size()==size_t(50));
 }
 
 /* ************************************************************************* */
@@ -86,8 +86,8 @@ TEST(RobustPGO, Add1)
   gtsam::Values values_out = pgo->calculateEstimate();
 
   // Since odom check threshold is 0, should only have the odom edges + prior + between (no lc should have passed)
-  EXPECT(gtsam::assert_equal(nfg_out.size(), size_t(92)));
-  EXPECT(gtsam::assert_equal(values_out.size(), size_t(92)));
+  EXPECT(nfg_out.size()==size_t(92));
+  EXPECT(values_out.size()==size_t(92));
 }
 
 /* ************************************************************************* */
@@ -121,8 +121,8 @@ TEST(RobustPGO, Load2)
   gtsam::Values values_out = pgo->calculateEstimate();
 
   // Since thresholds are high, should have all the edges
-  EXPECT(gtsam::assert_equal(nfg_out.size(), size_t(53)));
-  EXPECT(gtsam::assert_equal(values_out.size(), size_t(50)));
+  EXPECT(nfg_out.size()==size_t(53));
+  EXPECT(values_out.size()==size_t(50));
 }
 
 /* ************************************************************************* */
@@ -165,8 +165,8 @@ TEST(RobustPGO, Add2)
   gtsam::Values values_out = pgo->calculateEstimate();
 
   // Since thresholds are high, should have all the edges
-  EXPECT(gtsam::assert_equal(nfg_out.size(), size_t(97)));
-  EXPECT(gtsam::assert_equal(values_out.size(), size_t(92)));
+  EXPECT(nfg_out.size()==size_t(97));
+  EXPECT(values_out.size()==size_t(92));
 }
 /* ************************************************************************* */
   int main() { TestResult tr; return TestRegistry::runAllTests(tr);}

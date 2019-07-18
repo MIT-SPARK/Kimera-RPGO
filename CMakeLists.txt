@@ -12,19 +12,20 @@ if (NOT GTSAM_FOUND)
   message(FATAL_ERROR "This program requires the GTSAM library.")
 endif(NOT GTSAM_FOUND)
 
+find_package(GTSAMCMakeTools)
+include(GtsamMakeConfigFile)
+include(GtsamBuildTypes)
+include(GtsamTesting)
+
 # for unittest examples
 if (UNIT_TESTS)
+	# for unittest scripts
 	set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${GTSAM_DIR}/../GTSAMCMakeTools")
-	include(GtsamTesting)
 endif()
 
 ###########################################################################
 # Find Boost
 find_package(Boost 1.58 COMPONENTS filesystem program_options timer REQUIRED)
-
-###########################################################################
-# Find Eigen 
-find_package(Eigen3 REQUIRED)
 
 ###########################################################################
 include_directories(

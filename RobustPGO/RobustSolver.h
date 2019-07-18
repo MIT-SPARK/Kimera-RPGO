@@ -69,7 +69,8 @@ public:
 
     connectGraph<T>(factors, values, key0);
   }
-
+  
+private:
   template<class T>
   void connectGraph(gtsam::NonlinearFactorGraph factors, 
       const gtsam::Values& values, const gtsam::Key& key0) {

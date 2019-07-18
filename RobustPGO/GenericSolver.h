@@ -37,9 +37,9 @@ public:
   // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton
   // special symbols denote non odometry factors - perhaps semantics 
 
-  void update(gtsam::NonlinearFactorGraph nfg=gtsam::NonlinearFactorGraph(), 
-              gtsam::Values values=gtsam::Values(),
-              gtsam::FactorIndices factorsToRemove=gtsam::FactorIndices());
+  void update(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(), 
+              const gtsam::Values& values=gtsam::Values(),
+              const gtsam::FactorIndices& factorsToRemove=gtsam::FactorIndices());
 
   void removeFactorsNoUpdate(
       gtsam::FactorIndices factorsToRemove = gtsam::FactorIndices());
@@ -58,6 +58,26 @@ public:
   void saveG2oResult(std::string folder_path) {
     save_g2o_ = true; 
     g2o_file_path_ = folder_path + "/result.g2o";
+  }
+
+  template<class T>
+  void loadGraph(const gtsam::NonlinearFactorGraph& factors, 
+      const gtsam::Values values, 
+      const gtsam::PriorFactor<T>& prior) {
+    gtsam::NonlinearFactorGraph nfg;
+    nfg.add(factors);
+    nfg.add(prior);
+    update(nfg, values);
+  }
+
+  template<class T>
+  void addGraph(const gtsam::NonlinearFactorGraph& factors, 
+      const gtsam::Values values, 
+      const gtsam::BetweenFactor<T>& connector) {
+    gtsam::NonlinearFactorGraph nfg;
+    nfg.add(factors);
+    nfg.add(connector);
+    update(nfg, values);
   }
 
 protected:

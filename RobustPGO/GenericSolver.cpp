@@ -24,9 +24,9 @@ bool GenericSolver::specialSymbol(char symb) {
   return false; 
 }
 
-void GenericSolver::update(gtsam::NonlinearFactorGraph nfg, 
-                           gtsam::Values values, 
-                           gtsam::FactorIndices factorsToRemove) {
+void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg, 
+                           const gtsam::Values& values, 
+                           const gtsam::FactorIndices& factorsToRemove) {
   // remove factors
   for (size_t index : factorsToRemove) {
     nfg_[index].reset();
@@ -39,10 +39,7 @@ void GenericSolver::update(gtsam::NonlinearFactorGraph nfg,
 
   // Do not optimize for just odometry additions 
   // odometry values would not have prefix 'l' unlike artifact values
-  if (nfg.size() == 1 && values.size() == 1) {
-    const gtsam::Symbol symb(values.keys()[0]); 
-    if (!specialSymbol(symb.chr())) {do_optimize = false;}
-  }
+  if (nfg.size() == 1 && values.size() == 1) {do_optimize = false;}
 
   // nothing added so no optimization 
   if (nfg.size() == 0 && values.size() == 0) {do_optimize = false;}

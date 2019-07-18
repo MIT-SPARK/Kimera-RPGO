@@ -67,7 +67,6 @@ public:
     bool odometry = false;
     bool loop_closures = false;
     bool special_odometry = false;
-    bool special_loop_closure = false;
 
     // current logic: odometry and loop_closure are for those handled by outlier rej
     // mostly the betweenFactors and the PriorFactors
@@ -109,8 +108,6 @@ public:
       } else {
         if (new_factors.size() < 2) {
           special_odometry = true;
-        } else {
-          special_loop_closure = true;
         }
       }
 

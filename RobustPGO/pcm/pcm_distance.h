@@ -11,11 +11,11 @@ author: Yun Chang, Luca Carlone
 #include "RobustPGO/pcm/pcm.h"
 
 template<class T>
-class PCM_Distance : public PCM{
+class PCM_Distance : public PCM<T>{
 public:
   PCM_Distance(double trans_threshold, double rot_threshold):
-    trans_threshold_(odom_threshold), 
-    rot_threshold_(pc_threshold) {
+    trans_threshold_(trans_threshold), 
+    rot_threshold_(rot_threshold) {
   // check if templated value valid
   BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<T>));
 }

@@ -5,6 +5,7 @@ author: Yun Chang
 
 #include "RobustPGO/RobustPGO.h"
 #include "RobustPGO/pcm/pcm.h"
+#include "RobustPGO/pcm/pcm_distance.h"
 #include "RobustPGO/logger.h"
 
 #include <gtsam/slam/dataset.h>
@@ -24,7 +25,7 @@ void Simulate(gtsam::GraphAndValues gv,
   gtsam::NonlinearFactorGraph nfg = *gv.first;
   gtsam::Values values = *gv.second;
   
-  OutlierRemoval *pcm = new PCM<T>(odom_thresh, pmc_thresh);
+  OutlierRemoval *pcm = new PCM_Distance<T>(odom_thresh, pmc_thresh);
   if (!debug) pcm->setQuiet();
 
   std::unique_ptr<RobustPGO> pgo;

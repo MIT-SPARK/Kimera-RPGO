@@ -51,8 +51,6 @@ void Simulate(gtsam::GraphAndValues gv,
 
   pgo->loadGraph(nfg, values, prior_factor);
 
-  // in case no loop closure, need to force optimize with only odom 
-  pgo->force_optimize(); 
   // pcm->saveData();
 }
 

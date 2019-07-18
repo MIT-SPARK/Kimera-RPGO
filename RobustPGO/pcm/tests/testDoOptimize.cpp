@@ -29,8 +29,8 @@ TEST(DoOptimize, Odometry)
   init_factors.add(gtsam::PriorFactor<gtsam::Pose3>(0, gtsam::Pose3(), noise));
   pcm->process(init_factors, init_vals, nfg, est);
 
-  EXPECT(gtsam::assert_equal(nfg.size(), size_t(1)));
-  EXPECT(gtsam::assert_equal(est.size(), size_t(1)));
+  EXPECT(nfg.size()==size_t(1));
+  EXPECT(est.size()==size_t(1));
 
   // add odometry 
   gtsam::Values vals;
@@ -39,8 +39,8 @@ TEST(DoOptimize, Odometry)
   vals.insert(1, odom);
   factors.add(gtsam::BetweenFactor<gtsam::Pose3>(0, 1, odom, noise));
   bool do_optimize = pcm->process(factors, vals, nfg, est);
-  EXPECT(gtsam::assert_equal(nfg.size(), size_t(2)));
-  EXPECT(gtsam::assert_equal(est.size(), size_t(2)));
+  EXPECT(nfg.size()==size_t(2));
+  EXPECT(est.size()==size_t(2));
   EXPECT(do_optimize == false);
 }
 
@@ -61,8 +61,8 @@ TEST(DoOptimize, OdometryNoPrior)
   init_vals.insert(0, gtsam::Pose3());
   pcm->process(gtsam::NonlinearFactorGraph(), init_vals, nfg, est);
 
-  EXPECT(gtsam::assert_equal(nfg.size(), size_t(0)));
-  EXPECT(gtsam::assert_equal(est.size(), size_t(1)));
+  EXPECT(nfg.size()==size_t(0));
+  EXPECT(est.size()==size_t(1));
 
   // add odometry 
   gtsam::Values vals;
@@ -71,8 +71,8 @@ TEST(DoOptimize, OdometryNoPrior)
   vals.insert(1, odom);
   factors.add(gtsam::BetweenFactor<gtsam::Pose3>(0, 1, odom, noise));
   bool do_optimize = pcm->process(factors, vals, nfg, est);
-  EXPECT(gtsam::assert_equal(nfg.size(), size_t(1)));
-  EXPECT(gtsam::assert_equal(est.size(), size_t(2)));
+  EXPECT(nfg.size()==size_t(1));
+  EXPECT(est.size()==size_t(2));
   EXPECT(do_optimize == false);
 }
 /* ************************************************************************* */
@@ -109,16 +109,16 @@ TEST(DoOptimize, LoopClosure)
   factors.add(gtsam::BetweenFactor<gtsam::Pose3>(1, 2, odom2, noise));
   pcm->process(factors, vals, nfg, est);
 
-  EXPECT(gtsam::assert_equal(nfg.size(), size_t(2)));
-  EXPECT(gtsam::assert_equal(est.size(), size_t(3)));
+  EXPECT(nfg.size()==size_t(2));
+  EXPECT(est.size()==size_t(3));
 
   // loop closure
   factors = gtsam::NonlinearFactorGraph(); //reset
   factors.add(gtsam::BetweenFactor<gtsam::Pose3>(2, 0, gtsam::Pose3(), noise));
   bool do_optimize = pcm->process(factors, gtsam::Values(), nfg, est);
 
-  EXPECT(gtsam::assert_equal(nfg.size(), size_t(3)));
-  EXPECT(gtsam::assert_equal(est.size(), size_t(3)));
+  EXPECT(nfg.size()==size_t(3));
+  EXPECT(est.size()==size_t(3));
 
   EXPECT(do_optimize == true);
 }
@@ -153,8 +153,8 @@ TEST(DoOptimize, landmarks)
   factors.add(gtsam::BetweenFactor<gtsam::Pose3>(0, landmark_key, meas1, noise));
   bool do_optimize = pcm->process(factors, vals, nfg, est);
 
-  EXPECT(gtsam::assert_equal(nfg.size(), size_t(1)));
-  EXPECT(gtsam::assert_equal(est.size(), size_t(2)));
+  EXPECT(nfg.size()==size_t(1));
+  EXPECT(est.size()==size_t(2));
   EXPECT(do_optimize == false);
 
   // add odometry 
@@ -165,8 +165,8 @@ TEST(DoOptimize, landmarks)
   factors.add(gtsam::BetweenFactor<gtsam::Pose3>(0, 1, odom, noise));
   do_optimize = pcm->process(factors, vals, nfg, est);
 
-  EXPECT(gtsam::assert_equal(nfg.size(), size_t(2)));
-  EXPECT(gtsam::assert_equal(est.size(), size_t(3)));
+  EXPECT(nfg.size()==size_t(2));
+  EXPECT(est.size()==size_t(3));
   EXPECT(do_optimize == false);
 
   // add landmark recurrence 
@@ -176,8 +176,8 @@ TEST(DoOptimize, landmarks)
   factors.add(gtsam::BetweenFactor<gtsam::Pose3>(1, landmark_key, meas2, noise));
   do_optimize = pcm->process(factors, vals, nfg, est);
 
-  EXPECT(gtsam::assert_equal(size_t(3),nfg.size()));
-  EXPECT(gtsam::assert_equal(size_t(3),est.size()));
+  EXPECT(size_t(3)==nfg.size());
+  EXPECT(size_t(3)==est.size());
   EXPECT(do_optimize == true);
 }
 
@@ -202,8 +202,8 @@ TEST(DoOptimize, Beacon)
   init_vals.insert(0, gtsam::Pose3());
   bool do_optimize = pcm->process(gtsam::NonlinearFactorGraph(), init_vals, nfg, est);
 
-  EXPECT(gtsam::assert_equal(size_t(0),nfg.size()));
-  EXPECT(gtsam::assert_equal(size_t(1),est.size()));
+  EXPECT(size_t(0)==nfg.size());
+  EXPECT(size_t(1)==est.size());
   EXPECT(do_optimize == false);
 
   // add first Beacon observation 
@@ -229,8 +229,8 @@ TEST(DoOptimize, Beacon)
 
   do_optimize = pcm->process(factors, vals, nfg, est);
 
-  EXPECT(gtsam::assert_equal(size_t(2),nfg.size()));
-  EXPECT(gtsam::assert_equal(size_t(2),est.size()));
+  EXPECT(size_t(2)==nfg.size());
+  EXPECT(size_t(2)==est.size());
   EXPECT(do_optimize == true);
 
   // add odometry 
@@ -241,8 +241,8 @@ TEST(DoOptimize, Beacon)
   factors.add(gtsam::BetweenFactor<gtsam::Pose3>(0, 1, odom, noise));
   do_optimize = pcm->process(factors, vals, nfg, est);
 
-  EXPECT(gtsam::assert_equal(nfg.size(), size_t(3)));
-  EXPECT(gtsam::assert_equal(est.size(), size_t(3)));
+  EXPECT(nfg.size()==size_t(3));
+  EXPECT(est.size()==size_t(3));
   EXPECT(do_optimize == false);
 
   // add Beacon recurrence 
@@ -252,8 +252,8 @@ TEST(DoOptimize, Beacon)
   factors.add(gtsam::RangeFactor<gtsam::Pose3, gtsam::Pose3>(1, Beacon_key, meas2, rnoise));
   do_optimize = pcm->process(factors, vals, nfg, est);
 
-  // EXPECT(gtsam::assert_equal(nfg.size(), size_t(4)));
-  // EXPECT(gtsam::assert_equal(est.size(), size_t(3)));
+  // EXPECT(nfg.size()==size_t(4));
+  // EXPECT(est.size()==size_t(3));
   // EXPECT(do_optimize == true);
 }
 

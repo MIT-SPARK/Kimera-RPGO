@@ -12,14 +12,6 @@ if (NOT GTSAM_FOUND)
   message(FATAL_ERROR "This program requires the GTSAM library.")
 endif(NOT GTSAM_FOUND)
 
-find_package(GTSAMCMakeTools)
-include(GtsamMakeConfigFile)
-include(GtsamBuildTypes)
-include(GtsamTesting)
-
-# for unittest scripts
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${GTSAM_DIR}/../GTSAMCMakeTools")
-
 ###########################################################################
 # Find Boost
 find_package(Boost REQUIRED COMPONENTS filesystem regex timer date_time program_options)
@@ -67,11 +59,12 @@ target_link_libraries(RpgoReadG2o RobustPGO)
 
 ###########################################################################
 # Tests
-if (UNIT_TESTS)
-	add_subdirectory(tests)
-	set(TEST_DATA_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
-	configure_file(tests/test_config.h.in test_config.h)
-endif()
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/UnitTesting.cmake)
+add_subdirectory(tests)
+add_subdirectory(RobustPGO/pcm/tests)
+add_subdirectory(RobustPGO/utils/tests)
+set(TEST_DATA_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
+configure_file(tests/test_config.h.in tests/test_config.h)
 
 ###########################################################################
 # Installation

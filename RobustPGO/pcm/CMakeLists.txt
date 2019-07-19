@@ -5,8 +5,3 @@ target_sources(RobustPGO
 		"${CMAKE_CURRENT_LIST_DIR}/pcm_distance.h"
 )
 target_include_directories(RobustPGO PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-
-# Build tests
-if (UNIT_TESTS)
-	add_subdirectory(tests)
-endif()

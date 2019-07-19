@@ -14,7 +14,7 @@ using namespace RobustPGO;
 TEST(ForceOptimize, LC)
 {
   // test that when opdemtry edge is received added but return false
-  OutlierRemoval *pcm = new PCM<gtsam::Pose3>(1.0, 1.0);
+  OutlierRemoval *pcm = new Pcm3D(1.0, 1.0);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise = 

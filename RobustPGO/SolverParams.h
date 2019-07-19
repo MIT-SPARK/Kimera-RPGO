@@ -28,10 +28,10 @@ public:
 	RobustSolverParams():
 			solver(Solver::LM),
 			outlierRemovalMethod(OutlierRemovalMethod::PCM3D),
-			pcm_lcThreshold(5.0),
-			pcm_odomThreshold(10.0),
 			specialSymbols(),
-			verbosity(Verbosity::UPDATE) {}
+			verbosity(Verbosity::UPDATE),
+			pcm_odomThreshold(10.0),
+			pcm_lcThreshold(5.0) {}
 
 	void setPcm2DParams(double odomThreshold, 
 			double lcThreshold, Verbosity verbos=Verbosity::UPDATE) {
@@ -58,8 +58,8 @@ public:
 	Verbosity verbosity;
 
 	// for PCM
-	double pcm_lcThreshold; 
 	double pcm_odomThreshold;
+	double pcm_lcThreshold; 
 
 	// for PCM_Distance
 	double pcmDist_transThreshold;

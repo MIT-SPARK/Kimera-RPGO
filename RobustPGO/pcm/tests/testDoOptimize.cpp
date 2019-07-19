@@ -15,7 +15,7 @@ using namespace RobustPGO;
 TEST(DoOptimize, Odometry)
 {
   // test that when opdemtry edge is received added but return false
-  OutlierRemoval *pcm = new PCM<gtsam::Pose3>(1.0, 1.0);
+  OutlierRemoval *pcm = new Pcm3D(1.0, 1.0);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise = 
@@ -49,7 +49,7 @@ TEST(DoOptimize, Odometry)
 TEST(DoOptimize, OdometryNoPrior)
 {
   // test that when opdemtry edge is received added but return false
-  OutlierRemoval *pcm = new PCM<gtsam::Pose3>(1.0, 1.0);
+  OutlierRemoval *pcm = new Pcm3D(1.0, 1.0);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise = 
@@ -81,7 +81,7 @@ TEST(DoOptimize, OdometryNoPrior)
 TEST(DoOptimize, LoopClosure)
 {
   // test that when loop closure edge is received added and return true 
-  OutlierRemoval *pcm = new PCM<gtsam::Pose3>(1.0, 1.0);
+  OutlierRemoval *pcm = new Pcm3D(1.0, 1.0);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise = 
@@ -132,7 +132,7 @@ TEST(DoOptimize, landmarks)
   // first observation: do_optimize = false 
   // repeated observatio: do_optimize = true
   std::vector<char> special_symbs{'l', 'u'}; // for landmarks
-  OutlierRemoval *pcm = new PCM<gtsam::Pose3>(10.0, 10.0, special_symbs);
+  OutlierRemoval *pcm = new Pcm3D(10.0, 10.0, special_symbs);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise = 
@@ -190,7 +190,7 @@ TEST(DoOptimize, Beacon)
   // first observation: do_optimize = false 
   // repeated observatio: do_optimize = true
   std::vector<char> special_symbs{'l', 'u'}; // for landmarks
-  OutlierRemoval *pcm = new PCM<gtsam::Pose3>(1.0, 1.0, special_symbs);
+  OutlierRemoval *pcm = new Pcm3D(1.0, 1.0, special_symbs);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise = 

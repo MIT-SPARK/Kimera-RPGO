@@ -1,8 +1,9 @@
 cmake_minimum_required (VERSION 3.5)
-project(RobustPGO)
+project(RobustPGO LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(UNIT_TESTS "Enable/Disable including unit tests." ON)
 

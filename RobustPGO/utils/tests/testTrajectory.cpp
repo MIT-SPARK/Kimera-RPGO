@@ -7,7 +7,7 @@
 #include <CppUnitLite/TestHarness.h>
 #include <random>
 
-#include "RobustPGO/graph_utils/graph_utils.h" 
+#include "RobustPGO/utils/geometry_utils.h" 
 
 using namespace RobustPGO;
 

@@ -10,6 +10,7 @@
 
 #include "RobustPGO/RobustSolver.h"
 #include "RobustPGO/pcm/pcm.h" 
+#include "RobustPGO/SolverParams.h"
 #include "test_config.h"
 
 using namespace RobustPGO;
@@ -23,12 +24,11 @@ TEST(RobustSolver, Load1)
   gtsam::Values::shared_ptr values;
   boost::tie(nfg, values) = gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up RobustPGO solver 
-  std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<gtsam::Pose3>>(0.0, 10.0); // set odom check to be small
-  pcm->setQuiet(); // turn off print messages for pcm
+  // set up RobustPGO solver
+  RobustSolverParams params;
+  params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET); 
 
-  std::shared_ptr<RobustSolver> pgo = std::make_shared<RobustSolver>(pcm);
-  pgo->setQuiet(); // turn off print messages
+  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel& noise = 
@@ -56,11 +56,11 @@ TEST(RobustSolver, Add1)
   gtsam::Values::shared_ptr values;
   boost::tie(nfg, values) = gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<gtsam::Pose3>>(0.0, 10.0); // set odom check to be small
-  pcm->setQuiet(); // turn off print messages for pcm
+  // set up RobustPGO solver
+  RobustSolverParams params;
+  params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET); 
 
-  std::shared_ptr<RobustSolver> pgo = std::make_shared<RobustSolver>(pcm);
-  pgo->setQuiet(); // turn off print messages
+  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel& noise = 
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);   
@@ -101,12 +101,11 @@ TEST(RobustSolver, Load2)
   gtsam::Values::shared_ptr values;
   boost::tie(nfg, values) = gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up RobustPGO solver 
-  std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<gtsam::Pose3>>(100.0, 100.0); // set odom check to be small
-  pcm->setQuiet(); // turn off print messages for pcm
+  // set up RobustPGO solver
+  RobustSolverParams params;
+  params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET); 
 
-  std::shared_ptr<RobustSolver> pgo = std::make_shared<RobustSolver>(pcm);
-  pgo->setQuiet(); // turn off print messages
+  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel& noise = 
@@ -134,11 +133,11 @@ TEST(RobustSolver, Add2)
   gtsam::Values::shared_ptr values;
   boost::tie(nfg, values) = gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<gtsam::Pose3>>(100.0, 100.0); // set odom check to be small
-  pcm->setQuiet(); // turn off print messages for pcm
+  // set up RobustPGO solver
+  RobustSolverParams params;
+  params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET); 
 
-  std::shared_ptr<RobustSolver> pgo = std::make_shared<RobustSolver>(pcm);
-  pgo->setQuiet(); // turn off print messages
+  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel& noise = 
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);   

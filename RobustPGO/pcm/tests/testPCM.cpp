@@ -16,7 +16,7 @@ TEST(PCM, OdometryCheck)
 {
   // Here want to test carefully pcm
   // first test odometry check so set pcm thres high
-  OutlierRemoval *pcm = new PCM<gtsam::Pose3>(0.3, 100.0);
+  OutlierRemoval *pcm = new Pcm3D(0.3, 100.0);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =
@@ -84,7 +84,7 @@ TEST(PCM, ConsistencyCheck)
 {
   // Here want to test carefully pcm
   // test pcm check so set odom thres high
-  OutlierRemoval *pcm = new PCM<gtsam::Pose3>(100.0, 0.5);
+  OutlierRemoval *pcm = new Pcm3D(100.0, 0.5);
   // pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =

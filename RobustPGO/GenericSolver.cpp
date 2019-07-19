@@ -14,10 +14,9 @@ GenericSolver::GenericSolver(Solver solvertype,
   values_(gtsam::Values()),
   solver_type_(solvertype),
   special_symbols_(special_symbols),
-  debug_(true), 
-  save_g2o_(false) {}
+  debug_(true) {}
 
-bool GenericSolver::isSpecialSymbol(char symb) {
+bool GenericSolver::isSpecialSymbol(char symb) const {
   for (size_t i = 0; i < special_symbols_.size(); i++) {
     if (special_symbols_[i] == symb) return true;
   }
@@ -67,10 +66,6 @@ void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
     } else {
       log<WARNING>("Unsupported Solver");
       exit (EXIT_FAILURE);
-    }
-    // save result 
-    if (save_g2o_) {
-      gtsam::writeG2o(nfg_, values_, g2o_file_path_);
     }
   }
 }

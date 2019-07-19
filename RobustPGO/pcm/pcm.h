@@ -257,9 +257,9 @@ public:
     return true;
   }
 
-  void saveData() override{
-    saveDistanceMatrix();
-    saveCliqueSizeData();
+  virtual void saveData(std::string folder_path) override{
+    saveDistanceMatrix(folder_path);
+    // saveCliqueSizeData(folder_path);
   }
 
 protected:
@@ -555,10 +555,10 @@ protected:
     }
   }
 
-  void saveCliqueSizeData() {
+  void saveCliqueSizeData(std::string folder_path) {
     log<INFO>("Saving clique size data");
     std::stringstream filename;
-    filename << "log/clique_size" << std::setfill('0') 
+    filename << folder_path << "/clique_size" << std::setfill('0') 
         << std::setw(3) << lc_distance_matrix_.rows() << ".txt";
 
     std::ofstream cfile(filename.str());
@@ -578,9 +578,10 @@ protected:
     }
   }
 
-  void saveDistanceMatrix() {
+  void saveDistanceMatrix(std::string folder_path) {
     log<INFO>("Saving distance matrix");
-    std::ofstream file("log/pcm_dist_matrix.txt");
+    std::string filename = folder_path + "/pcm_dist_matrix.txt";
+    std::ofstream file(filename);
     if (file.is_open()) {
       file << lc_distance_matrix_;
     }

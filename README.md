@@ -4,8 +4,8 @@ This is a work in progress repository for robust backend optimization. Many feat
 
 ## Dependencies
 
-*[GTSAM](https://github.com/borglab/gtsam)*
-*Note* the BUILD_WITH_MARCH_NATIVE flag caused me some problems on a particular machine. 
+*[GTSAM](https://github.com/borglab/gtsam)* 
+(Note that the BUILD_WITH_MARCH_NATIVE flag caused me some problems on a particular machine. )
 
 Clone GTSAM to your preferred location:   
 ```bash
@@ -33,10 +33,9 @@ cd build
 cmake ..
 make 
 ```
-If GTSAM Unittests give you trouble, you can do `cmake .. -DUNIT_TESTS=OFF`
 
 ## Usage 
-This repository can be used as an optimization backend. A sample setup looks something like below. The default solver is `SOLVER=1` which uses LM for optimization. 
+This repository can be used as an optimization backend. A sample setup looks something like below. The default solver is LM.
 ```cpp
 // Set up 
 // set up RobustPGO solver
@@ -44,6 +43,8 @@ RobustSolverParams params;
 params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET); 
 // Verbosity levels are QUIET, UPDATE, and, ERROR in order of increasing number of messages (the default is UPDATE)
 // For 2D params.setPcm2DParams(0.0, 10.0); Have been tested 
+
+// To use GaussNewton instead of LM: params.solver = Solver::GN; 
 
 std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
 //...

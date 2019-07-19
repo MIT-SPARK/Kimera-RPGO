@@ -27,8 +27,7 @@ void Simulate(gtsam::GraphAndValues gv,
   gtsam::Values values = *gv.second;
 
   std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
-  pgo->saveG2oResult(output_folder); // tell pgo to save g2o result
-
+  
   size_t dim = getDim<T>();
 
   Eigen::VectorXd noise = Eigen::VectorXd::Zero(dim);
@@ -45,7 +44,7 @@ void Simulate(gtsam::GraphAndValues gv,
 
   pgo->loadGraph(nfg, values, prior_factor);
 
-  // pcm->saveData();
+  pgo->saveData(output_folder); // tell pgo to save g2o result
 }
 
 int main(int argc, char *argv[]) {

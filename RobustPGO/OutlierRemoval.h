@@ -24,7 +24,7 @@ public:
 			gtsam::NonlinearFactorGraph& nfg,
 			gtsam::Values& values) = 0; // force a loop closure
 
-	virtual void saveData() {}
+	virtual void saveData(std::string folder_path) {}
 
 	void setQuiet() { debug_ = false; }
 

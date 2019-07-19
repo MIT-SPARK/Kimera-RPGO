@@ -50,15 +50,15 @@ public:
   gtsam::Values getLinearizationPoint() { return values_; }
   gtsam::NonlinearFactorGraph getFactorsUnsafe(){ return nfg_; }
 
-  void print() {
+  void print() const {
     values_.print("");
   }
 
   void setQuiet() { debug_ = false; }
 
-  void saveG2oResult(std::string folder_path) {
-    save_g2o_ = true; 
-    g2o_file_path_ = folder_path + "/result.g2o";
+  void saveData(std::string folder_path) const {
+    std::string g2o_file_path = folder_path + "/result.g2o";
+    gtsam::writeG2o(nfg_, values_, g2o_file_path);
   }
 
   template<class T>
@@ -82,15 +82,12 @@ public:
   }
 
 protected:
-  bool isSpecialSymbol(char symb);
+  bool isSpecialSymbol(char symb) const;
   gtsam::Values values_;
   gtsam::NonlinearFactorGraph nfg_;
   Solver solver_type_;
   std::vector<char> special_symbols_; 
   bool debug_;
-
-  bool save_g2o_; 
-  std::string g2o_file_path_;
 };
 
 }

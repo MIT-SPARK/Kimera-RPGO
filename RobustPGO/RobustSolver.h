@@ -70,6 +70,12 @@ public:
     connectGraph<T>(factors, values, key0);
   }
 
+  void saveData(std::string folder_path) const {
+    std::string g2o_file_path = folder_path + "/result.g2o";
+    gtsam::writeG2o(nfg_, values_, g2o_file_path);
+    outlier_removal_->saveData(folder_path);
+  }
+
 private:
   template<class T>
   void connectGraph(gtsam::NonlinearFactorGraph factors, 

@@ -78,11 +78,6 @@ void RobustSolver::optimize() {
       log<WARNING>("Unsupported Solver");
       exit (EXIT_FAILURE);
   }
-  
-  // save result
-  if (save_g2o_) {
-    gtsam::writeG2o(nfg_, values_, g2o_file_path_);
-  }
 }
 
 void RobustSolver::force_optimize() {

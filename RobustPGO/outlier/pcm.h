@@ -40,7 +40,7 @@ namespace RobustPGO {
 // T can be PoseWithCovariance or PoseWithDistance based on
 // If using Pcm or PcmDistance
 
-template<class poseT, template <class poseT> class T>
+template<class poseT, template <class> class T>
 class Pcm : public OutlierRemoval{
 public:
   Pcm(double odom_threshold, double lc_threshold,

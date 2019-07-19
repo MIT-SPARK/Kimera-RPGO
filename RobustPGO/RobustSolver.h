@@ -56,6 +56,15 @@ public:
   }
 
   template<class T>
+  void loadGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values, gtsam::Key key0=0) {
+    gtsam::Values prior_values; 
+    prior_values.insert(key0, values.at<T>(key0));
+    outlier_removal_->process(gtsam::NonlinearFactorGraph(), prior_values, nfg_, values_);
+
+    connectGraph<T>(factors, values, key0);
+  }
+
+  template<class T>
   void addGraph(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values,
       const gtsam::BetweenFactor<T>& connector) {
 

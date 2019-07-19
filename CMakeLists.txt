@@ -5,8 +5,6 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(UNIT_TESTS "Enable/Disable including unit tests." ON)
-
 ###########################################################################
 # Find GTSAM
 find_package(GTSAM REQUIRED)
@@ -19,30 +17,48 @@ include(GtsamMakeConfigFile)
 include(GtsamBuildTypes)
 include(GtsamTesting)
 
-# for unittest examples
-if (UNIT_TESTS)
-	# for unittest scripts
-	set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${GTSAM_DIR}/../GTSAMCMakeTools")
-endif()
+# for unittest scripts
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${GTSAM_DIR}/../GTSAMCMakeTools")
 
 ###########################################################################
 # Find Boost
-find_package(Boost 1.58 COMPONENTS filesystem program_options timer REQUIRED)
+find_package(Boost REQUIRED COMPONENTS filesystem regex timer date_time program_options)
+if(NOT TARGET Boost::boost)
+  add_library(Boost::boost INTERFACE IMPORTED)
+  set_target_properties(Boost::boost PROPERTIES
+  INTERFACE_LINK_LIBRARIES "${Boost_LIBRARIES}"
+  INTERFACE_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")
+endif()
 
 ###########################################################################
-include_directories(
-  ${GTSAM_INCLUDE_DIR}
-  ${Boost_INCLUDE_DIR}
-  ${PROJECT_SOURCE_DIR}
-  ${PROJECT_BINARY_DIR}
-  ${EIGEN3_INCLUDE_DIRS}
+# Compile
+add_library(RobustPGO SHARED
+  RobustPGO/logger.h
+  RobustPGO/OutlierRemoval.h
+  RobustPGO/GenericSolver.cpp
+  RobustPGO/RobustSolver.cpp
+  RobustPGO/SolverParams.h )
+
+# Add source code for max clique finder
+include(RobustPGO/max_clique_finder/CMakeLists.txt)
+# Add source for pcm
+include(RobustPGO/pcm/CMakeLists.txt)
+# Add source for utils
+include(RobustPGO/utils/CMakeLists.txt)
+
+target_link_libraries(RobustPGO
+  PUBLIC
+    Boost::boost
+    gtsam
+    gtsam_unstable
 )
 
-link_directories(
-  ${GTSAM_LIBRARY_DIRS}
+target_include_directories(RobustPGO
+  PUBLIC
+    ${GTSAM_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:src>
 )
-
-add_subdirectory(RobustPGO)
 
 ###########################################################################
 # Define executables
@@ -56,3 +72,7 @@ if (UNIT_TESTS)
 	set(TEST_DATA_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
 	configure_file(tests/test_config.h.in test_config.h)
 endif()
+
+###########################################################################
+# Installation
+set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_PREFIX}/cmake/RobustPGO)

@@ -30,15 +30,14 @@ endif()
 # Compile
 add_library(RobustPGO SHARED
   RobustPGO/logger.h
-  RobustPGO/OutlierRemoval.h
   RobustPGO/GenericSolver.cpp
   RobustPGO/RobustSolver.cpp
   RobustPGO/SolverParams.h )
 
 # Add source code for max clique finder
 include(RobustPGO/max_clique_finder/CMakeLists.txt)
-# Add source for pcm
-include(RobustPGO/pcm/CMakeLists.txt)
+# Add source for outlier rejection stuff
+include(RobustPGO/outlier/CMakeLists.txt)
 # Add source for utils
 include(RobustPGO/utils/CMakeLists.txt)
 
@@ -66,7 +65,7 @@ target_link_libraries(RpgoReadG2o RobustPGO)
 # Tests
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/UnitTesting.cmake)
 add_subdirectory(tests)
-add_subdirectory(RobustPGO/pcm/tests)
+add_subdirectory(RobustPGO/outlier/tests)
 add_subdirectory(RobustPGO/utils/tests)
 set(TEST_DATA_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
 configure_file(tests/test_config.h.in tests/test_config.h)

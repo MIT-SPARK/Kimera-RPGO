@@ -32,7 +32,7 @@ author: Yun Chang, Luca Carlone
 #include "RobustPGO/utils/geometry_utils.h"
 #include "RobustPGO/utils/graph_utils.h"
 #include "RobustPGO/logger.h"
-#include "RobustPGO/OutlierRemoval.h"
+#include "RobustPGO/outlier/OutlierRemoval.h"
 
 namespace RobustPGO {
 

@@ -1,4 +1,4 @@
-/* 
+/*
 Backend solver class (Robust Pose Graph Optimizer)
 author: Yun Chang, Luca Carlone
 */
@@ -22,10 +22,9 @@ author: Yun Chang, Luca Carlone
 
 #include "RobustPGO/GenericSolver.h"
 #include "RobustPGO/logger.h"
-#include "RobustPGO/OutlierRemoval.h"
+#include "RobustPGO/outlier/OutlierRemoval.h"
 #include "RobustPGO/SolverParams.h"
-#include "RobustPGO/pcm/pcm.h"
-// #include "RobustPGO/pcm/pcmDistance.h"
+#include "RobustPGO/outlier/pcm.h"
 
 namespace RobustPGO {
 
@@ -34,11 +33,11 @@ public:
   RobustSolver(const RobustSolverParams& params);
       // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton
 
-  void update(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(), 
+  void update(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(),
               const gtsam::Values& values=gtsam::Values(),
               const gtsam::FactorIndices& factorsToRemove=gtsam::FactorIndices());
 
-  void forceUpdate(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(), 
+  void forceUpdate(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(),
               const gtsam::Values& values=gtsam::Values(),
               const gtsam::FactorIndices& factorsToRemove=gtsam::FactorIndices());
 
@@ -48,7 +47,7 @@ public:
   void loadGraph(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values,
       const gtsam::PriorFactor<T>& prior) {
     gtsam::NonlinearFactorGraph prior_factor;
-    gtsam::Values prior_values; 
+    gtsam::Values prior_values;
     prior_factor.add(prior);
     prior_values.insert(prior.key(), prior.prior());
     outlier_removal_->process(prior_factor, prior_values, nfg_, values_);
@@ -63,7 +62,7 @@ public:
     gtsam::Key key0 = connector.back();
 
     gtsam::NonlinearFactorGraph connect_factor;
-    gtsam::Values connect_values; 
+    gtsam::Values connect_values;
     connect_factor.add(connector);
     connect_values.insert(key0, values.at<T>(key0));
     outlier_removal_->process(connect_factor, connect_values, nfg_, values_);
@@ -79,27 +78,27 @@ public:
 
 private:
   template<class T>
-  void connectGraph(gtsam::NonlinearFactorGraph factors, 
+  void connectGraph(gtsam::NonlinearFactorGraph factors,
       const gtsam::Values& values, const gtsam::Key& key0) {
 
     // load graph assumes that the previous graph has been cleared
     gtsam::Key current_key = key0; // initial key
     // note that as of now only deal with between factors)
     // first load the odometry
-    // order a nonlinear factor graph as odometry first 
-    bool extracted_odom = false; 
+    // order a nonlinear factor graph as odometry first
+    bool extracted_odom = false;
     while (!extracted_odom) {
-      bool end_of_odom = true; 
-      for (size_t i = 0; i < factors.size(); i++) { 
-        // search through 
+      bool end_of_odom = true;
+      for (size_t i = 0; i < factors.size(); i++) {
+        // search through
         if (factors[i] != NULL &&
             factors[i]->front() == current_key && factors[i]->back() == current_key + 1) {
           end_of_odom = false;
           // if (debug_) {
-          //     std::cout << "odometry: " << current_key << ">" << current_key + 1 << std::endl; 
+          //     std::cout << "odometry: " << current_key << ">" << current_key + 1 << std::endl;
           // }
           gtsam::Values new_values;
-          gtsam::NonlinearFactorGraph new_factors; 
+          gtsam::NonlinearFactorGraph new_factors;
           new_values.insert(current_key + 1, values.at<T>(current_key + 1));
           new_factors.add(factors[i]);
           outlier_removal_->process(new_factors, new_values, nfg_, values_);
@@ -108,16 +107,16 @@ private:
           break;
         }
       }
-      if (end_of_odom) extracted_odom = true; 
+      if (end_of_odom) extracted_odom = true;
     }
 
     // now search for the special symbols (i.e. artifacts)
-    for (size_t i = 0; i < factors.size(); i++) { 
+    for (size_t i = 0; i < factors.size(); i++) {
       if (factors[i] != NULL){
         gtsam::Symbol symb(factors[i]->back());
         if (isSpecialSymbol(symb.chr())) {
           gtsam::Values new_values;
-          gtsam::NonlinearFactorGraph new_factors; 
+          gtsam::NonlinearFactorGraph new_factors;
           new_values.insert(factors[i]->back(), values.at<T>(factors[i]->back()));
           new_factors.add(factors[i]);
 
@@ -127,10 +126,10 @@ private:
         }
       }
     }
-     
+
     // add the other non-odom loop closures
     gtsam::NonlinearFactorGraph new_factors;
-    for (size_t i = 0; i < factors.size(); i++) { 
+    for (size_t i = 0; i < factors.size(); i++) {
       if (factors[i] != NULL) {
         // if (debug_) {
         //   std::cout << "loop closure: " << factors[i]->front() << ">" << factors[i]->back() << std::endl;
@@ -143,9 +142,9 @@ private:
   }
 
 private:
-  std::unique_ptr<OutlierRemoval> outlier_removal_; // outlier removal method; 
+  std::unique_ptr<OutlierRemoval> outlier_removal_; // outlier removal method;
 
-  void optimize(); 
+  void optimize();
 };
 
 }

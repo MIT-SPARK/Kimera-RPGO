@@ -1,5 +1,5 @@
-/* 
-Generic backend solver class 
+/*
+Generic backend solver class
 author: Yun Chang, Luca Carlone
 */
 
@@ -7,7 +7,7 @@ author: Yun Chang, Luca Carlone
 #define GENERICSOLVER_H
 
 // enables correct operations of GTSAM (correct Jacobians)
-#define SLOW_BUT_CORRECT_BETWEENFACTOR 
+#define SLOW_BUT_CORRECT_BETWEENFACTOR
 
 #include <gtsam/base/Vector.h>
 #include <gtsam/geometry/Pose3.h>
@@ -33,12 +33,12 @@ namespace RobustPGO {
 
 class GenericSolver {
 public:
-  GenericSolver(Solver solvertype=Solver::LM, 
-                std::vector<char> special_symbols=std::vector<char>()); 
+  GenericSolver(Solver solvertype=Solver::LM,
+                std::vector<char> special_symbols=std::vector<char>());
   // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton
-  // special symbols denote non odometry factors - perhaps semantics 
+  // special symbols denote non odometry factors - perhaps semantics
 
-  void update(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(), 
+  void update(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(),
               const gtsam::Values& values=gtsam::Values(),
               const gtsam::FactorIndices& factorsToRemove=gtsam::FactorIndices());
 
@@ -56,37 +56,12 @@ public:
 
   void setQuiet() { debug_ = false; }
 
-  void saveData(std::string folder_path) const {
-    std::string g2o_file_path = folder_path + "/result.g2o";
-    gtsam::writeG2o(nfg_, values_, g2o_file_path);
-  }
-
-  template<class T>
-  void loadGraph(const gtsam::NonlinearFactorGraph& factors, 
-      const gtsam::Values values, 
-      const gtsam::PriorFactor<T>& prior) {
-    gtsam::NonlinearFactorGraph nfg;
-    nfg.add(factors);
-    nfg.add(prior);
-    update(nfg, values);
-  }
-
-  template<class T>
-  void addGraph(const gtsam::NonlinearFactorGraph& factors, 
-      const gtsam::Values values, 
-      const gtsam::BetweenFactor<T>& connector) {
-    gtsam::NonlinearFactorGraph nfg;
-    nfg.add(factors);
-    nfg.add(connector);
-    update(nfg, values);
-  }
-
 protected:
   bool isSpecialSymbol(char symb) const;
   gtsam::Values values_;
   gtsam::NonlinearFactorGraph nfg_;
   Solver solver_type_;
-  std::vector<char> special_symbols_; 
+  std::vector<char> special_symbols_;
   bool debug_;
 };
 

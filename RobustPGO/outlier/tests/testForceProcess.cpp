@@ -7,7 +7,7 @@
 #include <CppUnitLite/TestHarness.h>
 #include <random>
 
-#include "RobustPGO/pcm/pcm.h" 
+#include "RobustPGO/outlier/pcm.h"
 
 using namespace RobustPGO;
 /* ************************************************************************* */
@@ -17,15 +17,15 @@ TEST(ForceOptimize, LC)
   OutlierRemoval *pcm = new Pcm3D(1.0, 1.0);
   pcm->setQuiet();
 
-  static const gtsam::SharedNoiseModel& noise = 
-      gtsam::noiseModel::Isotropic::Variance(6, 0.01);   
+  static const gtsam::SharedNoiseModel& noise =
+      gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
-  gtsam::NonlinearFactorGraph nfg; 
-  gtsam::Values est; 
+  gtsam::NonlinearFactorGraph nfg;
+  gtsam::Values est;
 
   // initialize first (w/ prior)
   gtsam::Values init_vals;
-  gtsam::NonlinearFactorGraph init_factors; 
+  gtsam::NonlinearFactorGraph init_factors;
   init_vals.insert(0, gtsam::Pose3());
   init_factors.add(gtsam::PriorFactor<gtsam::Pose3>(0, gtsam::Pose3(), noise));
   pcm->process(init_factors, init_vals, nfg, est);
@@ -35,7 +35,7 @@ TEST(ForceOptimize, LC)
 
   // add odometry edges
   gtsam::Values vals;
-  gtsam::NonlinearFactorGraph factors; 
+  gtsam::NonlinearFactorGraph factors;
   gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1,0,0));
   vals.insert(1, odom);
   factors.add(gtsam::BetweenFactor<gtsam::Pose3>(0, 1, odom, noise));
@@ -49,15 +49,15 @@ TEST(ForceOptimize, LC)
   EXPECT(size_t(3)==est.size());
   EXPECT(do_optimize == false);
 
-  // now try bad loop closure with reg update 
-  gtsam::NonlinearFactorGraph lc_factors; 
+  // now try bad loop closure with reg update
+  gtsam::NonlinearFactorGraph lc_factors;
   lc_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(2,0,gtsam::Pose3(),noise));
   do_optimize = pcm->process(lc_factors, gtsam::Values(), nfg, est);
   EXPECT(size_t(3)==nfg.size());
   EXPECT(size_t(3)==est.size());
   EXPECT(do_optimize == true);
 
-  // now try bad loop closure with forced update 
+  // now try bad loop closure with forced update
   do_optimize = pcm->processForcedLoopclosure(lc_factors, gtsam::Values(), nfg, est);
   EXPECT(size_t(4)==nfg.size());
   EXPECT(size_t(3)==est.size());

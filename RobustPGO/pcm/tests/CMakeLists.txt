@@ -1,1 +1,0 @@
-gtsamAddTestsGlob(PcmTests "test*.cpp" "" RobustPGO)

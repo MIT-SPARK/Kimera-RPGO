@@ -7,12 +7,12 @@
 #include <CppUnitLite/TestHarness.h>
 #include <random>
 
-#include "RobustPGO/pcm/pcm.h" 
+#include "RobustPGO/outlier/pcm.h"
 
 using namespace RobustPGO;
 
 /* ************************************************************************* */
-TEST(PCM, OdometryCheck)
+TEST(Pcm, OdometryCheck)
 {
   // Here want to test carefully pcm
   // first test odometry check so set pcm thres high
@@ -80,7 +80,7 @@ TEST(PCM, OdometryCheck)
 }
 
 /* ************************************************************************* */
-TEST(PCM, ConsistencyCheck)
+TEST(Pcm, ConsistencyCheck)
 {
   // Here want to test carefully pcm
   // test pcm check so set odom thres high
@@ -179,13 +179,13 @@ TEST(PCM, ConsistencyCheck)
 }
 
 /* ************************************************************************* */
-TEST(PCM, OdometryCheck2D)
+TEST(Pcm, OdometryCheck2D)
 {
   // TODO
 }
 
 /* ************************************************************************* */
-TEST(PCM, ConsistencyCheck2D)
+TEST(Pcm, ConsistencyCheck2D)
 {
   // TODO
 }

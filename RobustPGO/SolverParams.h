@@ -11,6 +11,7 @@ namespace RobustPGO {
 enum class Solver { LM, GN };
 
 enum class OutlierRemovalMethod {
+	NONE, // no outlier rejection
 	PCM2D,
 	PCM3D,
 	PCM_Distance2D,

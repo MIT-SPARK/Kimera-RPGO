@@ -9,7 +9,7 @@
 #include <memory>
 
 #include "RobustPGO/RobustSolver.h"
-#include "RobustPGO/pcm/pcm.h" 
+#include "RobustPGO/outlier/pcm.h"
 #include "RobustPGO/SolverParams.h"
 #include "test_config.h"
 
@@ -19,20 +19,20 @@ using namespace RobustPGO;
 TEST(RobustSolver, Load1)
 {
   // load graph
-  // read g2o file for robot a 
+  // read g2o file for robot a
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
   gtsam::Values::shared_ptr values;
   boost::tie(nfg, values) = gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
   // set up RobustPGO solver
   RobustSolverParams params;
-  params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET); 
+  params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
 
   // Create prior
-  static const gtsam::SharedNoiseModel& noise = 
-      gtsam::noiseModel::Isotropic::Variance(6, 0.01);   
+  static const gtsam::SharedNoiseModel& noise =
+      gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(init_key, values->at<gtsam::Pose3>(init_key), noise);
@@ -58,18 +58,18 @@ TEST(RobustSolver, Add1)
 
   // set up RobustPGO solver
   RobustSolverParams params;
-  params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET); 
+  params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
 
-  static const gtsam::SharedNoiseModel& noise = 
-      gtsam::noiseModel::Isotropic::Variance(6, 0.01);   
+  static const gtsam::SharedNoiseModel& noise =
+      gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init);// first load 
+  pgo->loadGraph(*nfg, *values, init);// first load
 
-  // add graph 
+  // add graph
   // read g2o file for robot b
   gtsam::NonlinearFactorGraph::shared_ptr nfg_b;
   gtsam::Values::shared_ptr values_b;
@@ -81,7 +81,7 @@ TEST(RobustSolver, Add1)
   gtsam::Pose3 transform_ab = values->at<gtsam::Pose3>(init_key).between(values_b->at<gtsam::Pose3>(init_key_b));
   gtsam::BetweenFactor<gtsam::Pose3> bridge(init_key, init_key_b, transform_ab, noise);
 
-  // add graph 
+  // add graph
   pgo->addGraph(*nfg_b, *values_b, bridge);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
@@ -96,20 +96,20 @@ TEST(RobustSolver, Add1)
 TEST(RobustSolver, Load2)
 {
   // load graph
-  // read g2o file for robot a 
+  // read g2o file for robot a
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
   gtsam::Values::shared_ptr values;
   boost::tie(nfg, values) = gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
   // set up RobustPGO solver
   RobustSolverParams params;
-  params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET); 
+  params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
 
   // Create prior
-  static const gtsam::SharedNoiseModel& noise = 
-      gtsam::noiseModel::Isotropic::Variance(6, 0.01);   
+  static const gtsam::SharedNoiseModel& noise =
+      gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(init_key, values->at<gtsam::Pose3>(init_key), noise);
@@ -135,18 +135,18 @@ TEST(RobustSolver, Add2)
 
   // set up RobustPGO solver
   RobustSolverParams params;
-  params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET); 
+  params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
 
-  static const gtsam::SharedNoiseModel& noise = 
-      gtsam::noiseModel::Isotropic::Variance(6, 0.01);   
+  static const gtsam::SharedNoiseModel& noise =
+      gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init);// first load 
+  pgo->loadGraph(*nfg, *values, init);// first load
 
-  // add graph 
+  // add graph
   // read g2o file for robot b
   gtsam::NonlinearFactorGraph::shared_ptr nfg_b;
   gtsam::Values::shared_ptr values_b;
@@ -157,7 +157,7 @@ TEST(RobustSolver, Add2)
   gtsam::Pose3 transform_ab = values->at<gtsam::Pose3>(init_key).between(values_b->at<gtsam::Pose3>(init_key_b));
   gtsam::BetweenFactor<gtsam::Pose3> bridge(init_key, init_key_b, transform_ab, noise);
 
-  // add graph 
+  // add graph
   pgo->addGraph(*nfg_b, *values_b, bridge);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
@@ -168,11 +168,11 @@ TEST(RobustSolver, Add2)
   EXPECT(values_out.size()==size_t(92));
 }
 
-/* ************************************************************************* */
+/* ************************************************************************* *
 TEST(GenericSolver, Load)
 {
   // load graph
-  // read g2o file for robot a 
+  // read g2o file for robot a
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
   gtsam::Values::shared_ptr values;
   boost::tie(nfg, values) = gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
@@ -181,8 +181,8 @@ TEST(GenericSolver, Load)
   std::unique_ptr<GenericSolver> pgo = std::make_unique<GenericSolver>();
 
   // Create prior
-  static const gtsam::SharedNoiseModel& noise = 
-      gtsam::noiseModel::Isotropic::Variance(6, 0.01);   
+  static const gtsam::SharedNoiseModel& noise =
+      gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(init_key, values->at<gtsam::Pose3>(init_key), noise);
@@ -198,7 +198,7 @@ TEST(GenericSolver, Load)
   EXPECT(values_out.size()==size_t(50));
 }
 
-/* ************************************************************************* */
+/* ************************************************************************* *
 TEST(GenericSolver, Add)
 {
   // load graph for robot a (same as above)
@@ -209,14 +209,14 @@ TEST(GenericSolver, Add)
   // set up GenericSolver
   std::unique_ptr<GenericSolver> pgo = std::make_unique<GenericSolver>();
 
-  static const gtsam::SharedNoiseModel& noise = 
-      gtsam::noiseModel::Isotropic::Variance(6, 0.01);   
+  static const gtsam::SharedNoiseModel& noise =
+      gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init);// first load 
+  pgo->loadGraph(*nfg, *values, init);// first load
 
-  // add graph 
+  // add graph
   // read g2o file for robot b
   gtsam::NonlinearFactorGraph::shared_ptr nfg_b;
   gtsam::Values::shared_ptr values_b;
@@ -227,7 +227,7 @@ TEST(GenericSolver, Add)
   gtsam::Pose3 transform_ab = values->at<gtsam::Pose3>(init_key).between(values_b->at<gtsam::Pose3>(init_key_b));
   gtsam::BetweenFactor<gtsam::Pose3> bridge(init_key, init_key_b, transform_ab, noise);
 
-  // add graph 
+  // add graph
   pgo->addGraph(*nfg_b, *values_b, bridge);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();

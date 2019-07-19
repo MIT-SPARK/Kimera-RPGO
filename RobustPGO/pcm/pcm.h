@@ -467,6 +467,8 @@ protected:
 
 typedef Pcm<gtsam::Pose2, PoseWithCovariance> Pcm2D;
 typedef Pcm<gtsam::Pose3, PoseWithCovariance> Pcm3D;
+typedef Pcm<gtsam::Pose2, PoseWithDistance> PcmDistance2D;
+typedef Pcm<gtsam::Pose3, PoseWithDistance> PcmDistance3D;
 
 }
 

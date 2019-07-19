@@ -71,7 +71,7 @@ struct PoseWithCovariance {
   /* basic constructor ---------------------------------------- */
   PoseWithCovariance(T pose_in, gtsam::Matrix matrix_in) {
     pose = pose_in;
-    matrix_in;
+    covariance_matrix = matrix_in;
   }
 
   /* construct from gtsam prior factor ------------------------ */
@@ -109,7 +109,7 @@ struct PoseWithCovariance {
 
   /* method to combine two poses (along with their covariances) */
   /* ---------------------------------------------------------- */
-  PoseWithCovariance compose(const PoseWithCovariance other) const {
+  PoseWithCovariance compose(const PoseWithCovariance& other) const {
     PoseWithCovariance<T> out;
     gtsam::Matrix Ha, Hb;
 
@@ -133,7 +133,7 @@ struct PoseWithCovariance {
 
   /* method to find the transform between two poses ------------ */
   /* ----------------------------------------------------------- */
-  PoseWithCovariance between(const PoseWithCovariance other) const {
+  PoseWithCovariance between(const PoseWithCovariance& other) const {
 
     PoseWithCovariance<T> out;
     gtsam::Matrix Ha, Hb;
@@ -166,6 +166,79 @@ struct PoseWithCovariance {
     // calculate mahalanobis norm
     gtsam::Vector log = T::Logmap(pose);
     return std::sqrt(log.transpose() * gtsam::inverse(covariance_matrix) * log);
+  }
+};
+
+/** \struct PoseWithDistance
+ *  \brief Structure to store a pose and its distance from start
+ *  \currently supports gtsam::Pose2 and gtsam::Pose3
+ */
+template <class T>
+struct PoseWithDistance {
+  /* variables ------------------------------------------------ */
+  /* ---------------------------------------------------------- */
+  T pose; // ex. gtsam::Pose3
+  double distance;
+
+  /* default constructor -------------------------------------- */
+  PoseWithDistance() {
+    pose =  T();
+    distance = 0;
+  }
+
+  /* basic constructor ---------------------------------------- */
+  PoseWithDistance(T pose_in, double dist_in) {
+    pose = pose_in;
+    distance = dist_in;
+  }
+
+  /* construct from gtsam prior factor ------------------------ */
+  PoseWithDistance(const gtsam::PriorFactor<T>& prior_factor) {
+    T value = prior_factor.prior();
+    pose = value;
+    distance = 0.0;
+  }
+
+  /* construct from gtsam between factor  --------------------- */
+  PoseWithDistance(const gtsam::BetweenFactor<T>& between_factor) {
+    pose = between_factor.measured();
+    distance = between_factor.measured.translation().norm();
+  }
+
+  /* method to combine two poses (along with their covariances) */
+  /* ---------------------------------------------------------- */
+  PoseWithDistance compose(const PoseWithDistance& other) const {
+    PoseWithDistance<T> out;
+
+    out.pose = pose.compose(other.pose);
+    out.distance = distance + other.pose.translation().norm();
+    return out;
+  }
+
+  /* method to invert a pose along with its covariance -------- */
+  /* ---------------------------------------------------------- */
+  PoseWithDistance inverse() const {
+    PoseWithDistance<T> out;
+
+    out.pose = pose.inverse();
+    out.distance = distance;
+    return out;
+  }
+
+  /* method to find the transform between two poses ------------ */
+  /* ----------------------------------------------------------- */
+  PoseWithDistance between(const PoseWithDistance& other) const {
+    PoseWithDistance<T> out;
+    out.pose = pose.between(other.pose); // returns between in a frame
+
+    out.distance = abs(other.distance - distance);
+    return out;
+  }
+
+  double norm() const {
+    // calculate mahalanobis norm
+    gtsam::Vector log = T::Logmap(pose);
+    return std::sqrt(log.transpose() * log) / distance;
   }
 };
 
@@ -204,15 +277,6 @@ template <class T>
 struct Trajectory {
     gtsam::Key start_id, end_id;
     std::map<gtsam::Key, TrajectoryPose<T>> trajectory_poses;
-};
-
-/** \struct DistTrajectoryPose
- *  \brief Pose and distance traveled
- */
-template <class T>
-struct PoseWithDistance {
-    T pose;
-    double distance;
 };
 
 /** \struct DistTrajectory

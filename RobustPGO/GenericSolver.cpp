@@ -17,7 +17,7 @@ GenericSolver::GenericSolver(Solver solvertype,
   debug_(true), 
   save_g2o_(false) {}
 
-bool GenericSolver::specialSymbol(char symb) {
+bool GenericSolver::isSpecialSymbol(char symb) {
   for (size_t i = 0; i < special_symbols_.size(); i++) {
     if (special_symbols_[i] == symb) return true;
   }
@@ -49,7 +49,7 @@ void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
 
   if (do_optimize) {
     // optimize
-    if (solver_type_ == LM) {
+    if (solver_type_ == Solver::LM) {
       gtsam::LevenbergMarquardtParams params;
       if (debug_) {
         params.setVerbosityLM("SUMMARY");
@@ -57,7 +57,7 @@ void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
       }
       params.diagonalDamping = true; 
       values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
-    }else if (solver_type_ == GN) {
+    }else if (solver_type_ == Solver::GN) {
       gtsam::GaussNewtonParams params;
       if (debug_){
         params.setVerbosity("ERROR");

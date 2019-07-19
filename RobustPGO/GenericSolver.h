@@ -33,7 +33,7 @@ namespace RobustPGO {
 
 class GenericSolver {
 public:
-  GenericSolver(Solver solvertype=LM, 
+  GenericSolver(Solver solvertype=Solver::LM, 
                 std::vector<char> special_symbols=std::vector<char>()); 
   // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton
   // special symbols denote non odometry factors - perhaps semantics 
@@ -82,7 +82,7 @@ public:
   }
 
 protected:
-  bool specialSymbol(char symb);
+  bool isSpecialSymbol(char symb);
   gtsam::Values values_;
   gtsam::NonlinearFactorGraph nfg_;
   Solver solver_type_;

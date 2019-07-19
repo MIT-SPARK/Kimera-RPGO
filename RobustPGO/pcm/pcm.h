@@ -26,17 +26,20 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/slam/InitializePose3.h>
 #include <gtsam/nonlinear/NonlinearConjugateGradientOptimizer.h>
 #include <gtsam/inference/Symbol.h>
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/geometry/Pose2.h>
 
-#include "RobustPGO/graph_utils/graph_utils.h" 
+#include "RobustPGO/utils/geometry_utils.h" 
+#include "RobustPGO/utils/graph_utils.h" 
 #include "RobustPGO/logger.h"
 #include "RobustPGO/OutlierRemoval.h"
 
 namespace RobustPGO {
 
 template<class T>
-class PCM : public OutlierRemoval{
+class Pcm : public OutlierRemoval{
 public:
-  PCM(double odom_threshold, double pc_threshold, 
+  Pcm(double odom_threshold, double pc_threshold, 
     const std::vector<char>& special_symbols=std::vector<char>()):
     OutlierRemoval(),
     odom_threshold_(odom_threshold), 
@@ -45,7 +48,7 @@ public:
   // check if templated value valid
   BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<T>));
 }
-  ~PCM() = default;
+  ~Pcm() = default;
   // initialize with odometry detect threshold and pairwise consistency threshold
 
 protected:
@@ -583,6 +586,9 @@ protected:
     }
   }
 };
+
+typedef Pcm<gtsam::Pose2> Pcm2D;
+typedef Pcm<gtsam::Pose3> Pcm3D;
 
 }
 

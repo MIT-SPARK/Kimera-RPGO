@@ -1,12 +1,11 @@
 // Authors: Pierre-Yves Lajoie, Yun Chang
 
-#ifndef GRAPH_UTILS_TYPES_H
-#define GRAPH_UTILS_TYPES_H
+#ifndef GEOM_UTILS_TYPES_H
+#define GEOM_UTILS_TYPES_H
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Rot3.h>
 
-#include "RobustPGO/max_clique_finder/findClique.h"
 #include "RobustPGO/logger.h"
 
 #include <map>
@@ -138,24 +137,6 @@ struct DistTrajectory {
     gtsam::Key start_id, end_id;
     std::map<gtsam::Key, PoseWithDistance<T>> trajectory_poses;
 };
-
-int findMaxClique(const Eigen::MatrixXd adjMatrix, std::vector<int>& max_clique) {
-  // Compute maximum clique
-  FMC::CGraphIO gio;
-  gio.ReadEigenAdjacencyMatrix(adjMatrix, 0.0);
-  int max_clique_size = 0;
-  max_clique_size = FMC::maxClique(gio, max_clique_size, max_clique);
-  return max_clique_size;
-}
-
-int findMaxCliqueHeu(const Eigen::MatrixXd adjMatrix, std::vector<int>& max_clique) {
-  // Compute maximum clique (heuristic inexact version)
-  FMC::CGraphIO gio;
-  gio.ReadEigenAdjacencyMatrix(adjMatrix, 0.0);
-  int max_clique_size = 0;
-  max_clique_size = FMC::maxCliqueHeu(gio, max_clique);
-  return max_clique_size;
-}
 
 template<class T>
 static const size_t getRotationDim() {

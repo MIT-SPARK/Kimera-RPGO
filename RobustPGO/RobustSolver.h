@@ -23,7 +23,8 @@ author: Yun Chang, Luca Carlone
 #include "RobustPGO/GenericSolver.h"
 #include "RobustPGO/logger.h"
 #include "RobustPGO/OutlierRemoval.h"
-#include "RobustPGO/RobustSolverParams.h"
+#include "RobustPGO/SolverParams.h"
+#include "RobustPGO/pcm/pcm.h"
 
 namespace RobustPGO {
 
@@ -107,7 +108,7 @@ private:
     for (size_t i = 0; i < factors.size(); i++) { 
       if (factors[i] != NULL){
         gtsam::Symbol symb(factors[i]->back());
-        if (specialSymbol(symb.chr())) {
+        if (isSpecialSymbol(symb.chr())) {
           gtsam::Values new_values;
           gtsam::NonlinearFactorGraph new_factors; 
           new_values.insert(factors[i]->back(), values.at<T>(factors[i]->back()));

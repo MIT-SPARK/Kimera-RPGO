@@ -4,35 +4,62 @@ author: Yun Chang, Luca Carlone
 */
 
 #include "RobustPGO/RobustSolver.h"
-#include "RobustPGO/pcm/pcm.h"
 
 namespace RobustPGO {
 
-RobustSolver::RobustSolver(const RobustSolverParams& params,
-    const std::shared_ptr<OutlierRemoval>& outlier_remover) :
+RobustSolver::RobustSolver(const RobustSolverParams& params) :
     GenericSolver(params.solver, params.specialSymbols) {
-  switch (params.OutlierRemovalMethod) {
-    case PCM :
+  switch (params.outlierRemovalMethod) {
+    case OutlierRemovalMethod::PCM2D :
     {
-      outlier_removal_ = std::make_shared<PCM<T>>(
+      outlier_removal_ = std::make_shared<Pcm2D>(
           params.pcm_odomThreshold, params.pcm_lcThreshold, params.specialSymbols);
     }
-    break; 
-    case PCM_Distance:
+    break;
+    case OutlierRemovalMethod::PCM3D :
+    {
+      outlier_removal_ = std::make_shared<Pcm3D>(
+          params.pcm_odomThreshold, params.pcm_lcThreshold, params.specialSymbols);
+    }
+    break;
+    case OutlierRemovalMethod::PCM_Distance2D:
     {
       // outlier_removal_ = std::make_shared<PCM_Distance<T>>()
     }
-    break; 
+    break;
+    case OutlierRemovalMethod::PCM_Distance3D:
+    {
+      // outlier_removal_ = std::make_shared<PCM_Distance<T>>()
+    }
+    break;
     default: 
     {
       log<WARNING>("Undefined outlier removal method");
       exit (EXIT_FAILURE);
     }
   }
+
+  // toggle verbosity
+  switch (params.verbosity) {
+    case Verbosity::UPDATE :
+    {
+      outlier_removal_->setQuiet();
+    }
+    break;
+    case Verbosity::QUIET :
+    {
+      outlier_removal_->setQuiet(); // set outlier removal quiet
+      setQuiet(); // set solver quiet
+    }
+    break;
+    {
+      log<INFO>("Verbosity not QUIET or UPDATE, printing all messages to console");
+    }
+  }
 }
 
 void RobustSolver::optimize() {
-  if (solver_type_ == 1) {
+  if (solver_type_ == Solver::LM) {
     gtsam::LevenbergMarquardtParams params;
     if (debug_){
       params.setVerbosityLM("SUMMARY");
@@ -40,15 +67,16 @@ void RobustSolver::optimize() {
     }
     params.diagonalDamping = true; 
     values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
-  }else if (solver_type_ == 2) {
+  }else if (solver_type_ == Solver::GN) {
     gtsam::GaussNewtonParams params;
     if (debug_) {
       params.setVerbosity("ERROR");
       log<INFO>("Running GN");
     }
     values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, params).optimize();
-  }else if (solver_type_ == 3) {
-    // something
+  }else {
+      log<WARNING>("Unsupported Solver");
+      exit (EXIT_FAILURE);
   }
   
   // save result

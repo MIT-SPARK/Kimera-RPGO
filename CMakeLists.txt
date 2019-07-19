@@ -23,6 +23,10 @@ if(NOT TARGET Boost::boost)
 endif()
 
 ###########################################################################
+# # Find Eigen (This seens to be needed for some versions of gtsam)
+# find_package(Eigen3 REQUIRED)
+
+###########################################################################
 # Compile
 add_library(RobustPGO SHARED
   RobustPGO/logger.h
@@ -48,6 +52,7 @@ target_link_libraries(RobustPGO
 target_include_directories(RobustPGO
   PUBLIC
     ${GTSAM_INCLUDE_DIR}
+    # ${EIGEN3_INCLUDE_DIRS} # needed for some versions of gtsam
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     $<INSTALL_INTERFACE:src>
 )

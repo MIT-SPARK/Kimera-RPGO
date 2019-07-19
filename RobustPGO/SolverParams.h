@@ -1,5 +1,5 @@
-/* 
-Robust Solver Params class 
+/*
+Robust Solver Params class
 author: Yun Chang
 */
 
@@ -18,9 +18,9 @@ enum class OutlierRemovalMethod {
 };
 
 enum class Verbosity {
-	UPDATE, 
+	UPDATE,
 	QUIET,
-	ERROR
+	VERBOSE
 };
 
 struct RobustSolverParams {
@@ -33,7 +33,7 @@ public:
 			pcm_odomThreshold(10.0),
 			pcm_lcThreshold(5.0) {}
 
-	void setPcm2DParams(double odomThreshold, 
+	void setPcm2DParams(double odomThreshold,
 			double lcThreshold, Verbosity verbos=Verbosity::UPDATE) {
 		outlierRemovalMethod = OutlierRemovalMethod::PCM2D;
 		pcm_odomThreshold = odomThreshold;
@@ -41,7 +41,7 @@ public:
 		verbosity = verbos;
 	}
 
-	void setPcm3DParams(double odomThreshold, 
+	void setPcm3DParams(double odomThreshold,
 			double lcThreshold, Verbosity verbos=Verbosity::UPDATE) {
 		outlierRemovalMethod = OutlierRemovalMethod::PCM3D;
 		pcm_odomThreshold = odomThreshold;
@@ -49,7 +49,7 @@ public:
 		verbosity = verbos;
 	}
 
-	void setPcmDist2DParams(double transThreshold, 
+	void setPcmDist2DParams(double transThreshold,
 			double rotThreshold, Verbosity verbos=Verbosity::UPDATE) {
 		outlierRemovalMethod = OutlierRemovalMethod::PCM_Distance2D;
 		pcmDist_transThreshold = transThreshold;
@@ -57,7 +57,7 @@ public:
 		verbosity = verbos;
 	}
 
-	void setPcmDist3DParams(double transThreshold, 
+	void setPcmDist3DParams(double transThreshold,
 			double rotThreshold, Verbosity verbos=Verbosity::UPDATE) {
 		outlierRemovalMethod = OutlierRemovalMethod::PCM_Distance3D;
 		pcmDist_transThreshold = transThreshold;
@@ -73,7 +73,7 @@ public:
 
 	// for PCM
 	double pcm_odomThreshold;
-	double pcm_lcThreshold; 
+	double pcm_lcThreshold;
 
 	// for PCM_Distance
 	double pcmDist_transThreshold;

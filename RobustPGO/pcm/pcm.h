@@ -72,8 +72,8 @@ protected:
 
 public:
 
-  virtual bool process(gtsam::NonlinearFactorGraph new_factors,
-               gtsam::Values new_values,
+  virtual bool process(const gtsam::NonlinearFactorGraph& new_factors,
+               const gtsam::Values& new_values,
                gtsam::NonlinearFactorGraph& output_nfg,
                gtsam::Values& output_values) override{
     bool odometry = false;
@@ -233,8 +233,8 @@ public:
   }
 
   virtual bool processForcedLoopclosure(
-      gtsam::NonlinearFactorGraph new_factors,
-      gtsam::Values new_values,
+      const gtsam::NonlinearFactorGraph& new_factors,
+      const gtsam::Values& new_values,
       gtsam::NonlinearFactorGraph& output_nfg,
       gtsam::Values& output_values) override{
     // force loop closure (without outlier rejection)

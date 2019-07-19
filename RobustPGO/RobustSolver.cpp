@@ -1,5 +1,5 @@
-/* 
-Generic solver class 
+/*
+Generic solver class
 author: Yun Chang, Luca Carlone
 */
 
@@ -34,7 +34,7 @@ RobustSolver::RobustSolver(const RobustSolverParams& params) :
       //     params.pcmDist_transThreshold, params.pcmDist_rotThreshold);
     }
     break;
-    default: 
+    default:
     {
       log<WARNING>("Undefined outlier removal method");
       exit (EXIT_FAILURE);
@@ -54,9 +54,9 @@ RobustSolver::RobustSolver(const RobustSolverParams& params) :
       setQuiet(); // set solver quiet
     }
     break;
-    case Verbosity::ERROR :
+    case Verbosity::VERBOSE :
     {
-      log<INFO>("Printing all messages to console");
+      log<INFO>("Starting RobustSolver.");
     }
     break;
     default:
@@ -71,9 +71,9 @@ void RobustSolver::optimize() {
     gtsam::LevenbergMarquardtParams params;
     if (debug_){
       params.setVerbosityLM("SUMMARY");
-      log<INFO>("Running LM"); 
+      log<INFO>("Running LM");
     }
-    params.diagonalDamping = true; 
+    params.diagonalDamping = true;
     values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
   }else if (solver_type_ == Solver::GN) {
     gtsam::GaussNewtonParams params;
@@ -93,8 +93,8 @@ void RobustSolver::force_optimize() {
   optimize();
 }
 
-void RobustSolver::update(const gtsam::NonlinearFactorGraph& nfg, 
-                       const gtsam::Values& values, 
+void RobustSolver::update(const gtsam::NonlinearFactorGraph& nfg,
+                       const gtsam::Values& values,
                        const gtsam::FactorIndices& factorsToRemove) {
   // remove factors
   for (size_t index : factorsToRemove) {
@@ -108,8 +108,8 @@ void RobustSolver::update(const gtsam::NonlinearFactorGraph& nfg,
   }
 }
 
-void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg, 
-                       const gtsam::Values& values, 
+void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,
+                       const gtsam::Values& values,
                        const gtsam::FactorIndices& factorsToRemove) {
   // remove factors
   for (size_t index : factorsToRemove) {

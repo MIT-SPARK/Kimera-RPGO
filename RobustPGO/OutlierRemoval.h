@@ -1,6 +1,6 @@
-/* 
-Outlier removal class 
-Provide a set of outlier removal methods 
+/*
+Outlier removal class
+Provide a set of outlier removal methods
 along with interface to robustPGO
 author: Yun Chang
 */
@@ -13,14 +13,14 @@ namespace RobustPGO {
 class OutlierRemoval {
 public:
 	virtual ~OutlierRemoval() = default;
-	virtual bool process(gtsam::NonlinearFactorGraph new_factors,
-				               gtsam::Values new_values,
+	virtual bool process(const gtsam::NonlinearFactorGraph& new_factors,
+				               const gtsam::Values& new_values,
 				               gtsam::NonlinearFactorGraph& nfg,
 				               gtsam::Values& values) = 0;
 
 	virtual bool processForcedLoopclosure(
-			gtsam::NonlinearFactorGraph new_factors,
-			gtsam::Values new_values,
+			const gtsam::NonlinearFactorGraph& new_factors,
+			const gtsam::Values& new_values,
 			gtsam::NonlinearFactorGraph& nfg,
 			gtsam::Values& values) = 0; // force a loop closure
 

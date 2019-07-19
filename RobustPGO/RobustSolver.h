@@ -25,6 +25,7 @@ author: Yun Chang, Luca Carlone
 #include "RobustPGO/OutlierRemoval.h"
 #include "RobustPGO/SolverParams.h"
 #include "RobustPGO/pcm/pcm.h"
+// #include "RobustPGO/pcm/pcmDistance.h"
 
 namespace RobustPGO {
 

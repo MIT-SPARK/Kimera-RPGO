@@ -49,7 +49,21 @@ public:
 		verbosity = verbos;
 	}
 
-	// TODO make below private or protected 
+	void setPcmDist2DParams(double transThreshold, 
+			double rotThreshold, Verbosity verbos=Verbosity::UPDATE) {
+		outlierRemovalMethod = OutlierRemovalMethod::PCM_Distance2D;
+		pcmDist_transThreshold = transThreshold;
+		pcmDist_rotThreshold = rotThreshold;
+		verbosity = verbos;
+	}
+
+	void setPcmDist3DParams(double transThreshold, 
+			double rotThreshold, Verbosity verbos=Verbosity::UPDATE) {
+		outlierRemovalMethod = OutlierRemovalMethod::PCM_Distance3D;
+		pcmDist_transThreshold = transThreshold;
+		pcmDist_rotThreshold = rotThreshold;
+		verbosity = verbos;
+	}
 
 	// General
 	Solver solver;

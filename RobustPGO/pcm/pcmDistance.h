@@ -1,8 +1,8 @@
 /*
-Pairwise Consistency Maximization Simple (PCM_Distance)
+Pairwise Consistency Maximization Simple (PcmDistance)
 Differs from PCM in that it does not use covariances
 Backend solver class (Robust Pose Graph Optimizer)
-author: Yun Chang, Luca Carlone
+author: Yun Chang
 */
 
 #ifndef PCM_DIST_H
@@ -13,11 +13,12 @@ author: Yun Chang, Luca Carlone
 namespace RobustPGO {
 
 template<class T>
-class PCM_Distance : public PCM<T>{
+class PcmDistance : public Pcm<T>{
 public:
-  PCM_Distance(double trans_threshold, double rot_threshold):
-    trans_threshold_(trans_threshold), 
-    rot_threshold_(rot_threshold) {
+  PcmDistance(double trans_threshold, double rot_threshold):
+      OutlierRemoval(),
+      trans_threshold_(trans_threshold), 
+      rot_threshold_(rot_threshold) {
   // check if templated value valid
   BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<T>));
 }
@@ -274,6 +275,9 @@ private:
     }
   }
 };
+
+typedef PcmDistance<gtsam::Pose2> PcmDistance2D;
+typedef PcmDistance<gtsam::Pose3> PcmDistance3D;
 
 }
 

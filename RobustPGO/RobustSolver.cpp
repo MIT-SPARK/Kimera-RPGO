@@ -22,14 +22,16 @@ RobustSolver::RobustSolver(const RobustSolverParams& params) :
           params.pcm_odomThreshold, params.pcm_lcThreshold, params.specialSymbols);
     }
     break;
-    case OutlierRemovalMethod::PCM_Distance2D:
+    case OutlierRemovalMethod::PCM_Distance2D://TODO
     {
-      // outlier_removal_ = std::make_unique<PCM_Distance<T>>()
+      // outlier_removal_ = std::make_unique<PcmDistance2D>(
+      //     params.pcmDist_transThreshold, params.pcmDist_rotThreshold);
     }
     break;
-    case OutlierRemovalMethod::PCM_Distance3D:
+    case OutlierRemovalMethod::PCM_Distance3D://TODO
     {
-      // outlier_removal_ = std::make_unique<PCM_Distance<T>>()
+      // outlier_removal_ = std::make_unique<PcmDistance3D>(
+      //     params.pcmDist_transThreshold, params.pcmDist_rotThreshold);
     }
     break;
     default: 
@@ -52,8 +54,14 @@ RobustSolver::RobustSolver(const RobustSolverParams& params) :
       setQuiet(); // set solver quiet
     }
     break;
+    case Verbosity::ERROR :
     {
-      log<INFO>("Verbosity not QUIET or UPDATE, printing all messages to console");
+      log<INFO>("Printing all messages to console");
+    }
+    break;
+    default:
+    {
+      log<WARNING>("Unrecognized verbosity. Automatically setting to UPDATE. ");
     }
   }
 }

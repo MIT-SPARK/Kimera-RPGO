@@ -1,5 +1,5 @@
 /**
- * @file    testPCM.cpp
+ * @file    testPcm.cpp
  * @brief   Unit test for pcm
  * @author  Yun Chang
  */

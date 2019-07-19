@@ -26,7 +26,7 @@ void Simulate(gtsam::GraphAndValues gv,
   gtsam::NonlinearFactorGraph nfg = *gv.first;
   gtsam::Values values = *gv.second;
 
-  std::shared_ptr<RobustSolver> pgo = std::make_shared<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
   pgo->saveG2oResult(output_folder); // tell pgo to save g2o result
 
   size_t dim = getDim<T>();

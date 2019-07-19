@@ -12,24 +12,24 @@ RobustSolver::RobustSolver(const RobustSolverParams& params) :
   switch (params.outlierRemovalMethod) {
     case OutlierRemovalMethod::PCM2D :
     {
-      outlier_removal_ = std::make_shared<Pcm2D>(
+      outlier_removal_ = std::make_unique<Pcm2D>(
           params.pcm_odomThreshold, params.pcm_lcThreshold, params.specialSymbols);
     }
     break;
     case OutlierRemovalMethod::PCM3D :
     {
-      outlier_removal_ = std::make_shared<Pcm3D>(
+      outlier_removal_ = std::make_unique<Pcm3D>(
           params.pcm_odomThreshold, params.pcm_lcThreshold, params.specialSymbols);
     }
     break;
     case OutlierRemovalMethod::PCM_Distance2D:
     {
-      // outlier_removal_ = std::make_shared<PCM_Distance<T>>()
+      // outlier_removal_ = std::make_unique<PCM_Distance<T>>()
     }
     break;
     case OutlierRemovalMethod::PCM_Distance3D:
     {
-      // outlier_removal_ = std::make_shared<PCM_Distance<T>>()
+      // outlier_removal_ = std::make_unique<PCM_Distance<T>>()
     }
     break;
     default: 

@@ -136,7 +136,7 @@ private:
   }
 
 private:
-  std::shared_ptr<OutlierRemoval> outlier_removal_; // outlier removal method; 
+  std::unique_ptr<OutlierRemoval> outlier_removal_; // outlier removal method; 
 
   void optimize(); 
 };

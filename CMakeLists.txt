@@ -1,7 +1,8 @@
 cmake_minimum_required (VERSION 3.5)
 project(RobustPGO)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC")
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 
 option(UNIT_TESTS "Enable/Disable including unit tests." ON)
 
@@ -31,7 +32,7 @@ find_package(Boost 1.58 COMPONENTS filesystem program_options timer REQUIRED)
 include_directories(
   ${GTSAM_INCLUDE_DIR}
   ${Boost_INCLUDE_DIR}
-  ${PROJECT_SOURCE_DIR} 
+  ${PROJECT_SOURCE_DIR}
   ${PROJECT_BINARY_DIR}
   ${EIGEN3_INCLUDE_DIRS}
 )

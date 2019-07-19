@@ -1,15 +1,15 @@
 RobustPGO
 ======================================
+This is a work in progress repository for robust backend optimization. Many features are still under developing and changing on a daily basis. 
 
 ## Dependencies
 
-*[GTSAM](https://bitbucket.org/gtborg/gtsam)*
-(Note that a github version has also been released, but for the github version the flag `GTSAM_BUILD_WITH_MARCH_NATIVE` sometimes causes problems )
+*[GTSAM](https://github.com/borglab/gtsam)*
+*Note* the BUILD_WITH_MARCH_NATIVE flag caused me some problems on a particular machine. 
 
-Clone GTSAM:   
+Clone GTSAM to your preferred location:   
 ```bash
-cd
-git clone git@bitbucket.org:gtborg/gtsam.git
+git clone git@github.com:borglab/gtsam.git
 ```
 
 Build
@@ -39,20 +39,20 @@ If GTSAM Unittests give you trouble, you can do `cmake .. -DUNIT_TESTS=OFF`
 This repository can be used as an optimization backend. A sample setup looks something like below. The default solver is `SOLVER=1` which uses LM for optimization. 
 ```cpp
 // Set up 
-std::shared_ptr<OutlierRemoval> pcm = std::make_shared<PCM<gtsam::Pose3>>(odom_threshold, pw_threshold, special_symbs);
-pcm->setQuiet(); // optional: to turn off print messages for pcm
+// set up RobustPGO solver
+RobustSolverParams params;
+params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET); 
+// Verbosity levels are QUIET, UPDATE, and, ERROR in order of increasing number of messages (the default is UPDATE)
+// For 2D params.setPcm2DParams(0.0, 10.0); Have been tested 
 
-std::shared_ptr<RobustPGO> optimizer = std::make_shared<RobustPGO>(pcm, SOLVER, special_symbs);
-pgo->setQuiet(); // optional: turn off print messages
+std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
 //...
 //...
 
 // Run 
-optimizer_->update(new_factor, new_values);
+pgo->update(new_factor, new_values);
 ```
 This can also be used as a standalone experimental tool. A read g2o function can be found in examples.
-You can create a `log` folder inside the `build` folder.
-The results (distance matrix and clique size data) from running the following script in the build folder will be saved to the `log` folder
 ```
 # for 2D: 
 ./RpgoReadG2o 2d <g2o-file> <odom-check-threshold> <pcm-threshold> <optional:folder-to-save-g2o> <optional:v to toggle verbosity>

@@ -7,7 +7,9 @@
 #include <CppUnitLite/TestHarness.h>
 #include <random>
 
-#include "RobustPGO/graph_utils/graph_utils.h" 
+#include "RobustPGO/utils/geometry_utils.h" 
+
+using namespace RobustPGO;
 
 struct normal_rv {
   normal_rv(Eigen::MatrixXd const& covar) {
@@ -35,20 +37,20 @@ TEST(PoseWithCovariance, Trajectory)
   gtsam::Matrix init_covar = Eigen::MatrixXd::Zero(6,6); // initialize as zero
 
   // construct initial pose with covar 
-  graph_utils::PoseWithCovariance<gtsam::Pose3> initial_pose; 
+  PoseWithCovariance<gtsam::Pose3> initial_pose; 
   initial_pose.pose = gtsam::Pose3();
   initial_pose.covariance_matrix = init_covar; 
 
   // populate
-  graph_utils::Trajectory<gtsam::Pose3> test_traj;
+  Trajectory<gtsam::Pose3> test_traj;
   test_traj.trajectory_poses[start_id].pose = initial_pose;
   test_traj.start_id = start_id;
   test_traj.end_id = end_id;
 
-  graph_utils::PoseWithCovariance<gtsam::Pose3> current_pose = initial_pose;
+  PoseWithCovariance<gtsam::Pose3> current_pose = initial_pose;
   for (gtsam::Key i = start_id; i < end_id; i++) {
     // rotation and translation 
-    graph_utils::PoseWithCovariance<gtsam::Pose3> odom;
+    PoseWithCovariance<gtsam::Pose3> odom;
     gtsam::Pose3 tf(gtsam::Rot3(1,0,0,0), gtsam::Point3(1,1,0));
     odom.pose = tf;
     odom.covariance_matrix = 0.0001 * Eigen::MatrixXd::Identity(6,6);
@@ -58,19 +60,19 @@ TEST(PoseWithCovariance, Trajectory)
   }
 
   // Now check the between of 2 and 99 
-  graph_utils::PoseWithCovariance<gtsam::Pose3> between_pose = 
+  PoseWithCovariance<gtsam::Pose3> between_pose = 
       test_traj.trajectory_poses[2].pose.between(
       test_traj.trajectory_poses[99].pose);
 
   // Now compare this to both the stiched together result 
   // and monte carlo result 
-  graph_utils::PoseWithCovariance<gtsam::Pose3> between_rebuild;
+  PoseWithCovariance<gtsam::Pose3> between_rebuild;
   between_rebuild.pose = gtsam::Pose3();
   between_rebuild.covariance_matrix = Eigen::MatrixXd::Zero(6,6);
 
   for (gtsam::Key i = 2; i < 99; i++) {
     // rotation and translation 
-    graph_utils::PoseWithCovariance<gtsam::Pose3> odom;
+    PoseWithCovariance<gtsam::Pose3> odom;
     gtsam::Pose3 tf(gtsam::Rot3(1,0,0,0), gtsam::Point3(1,1,0));
     odom.pose = tf;
     odom.covariance_matrix = 0.0001 * Eigen::MatrixXd::Identity(6,6);
@@ -85,7 +87,7 @@ TEST(PoseWithCovariance, Trajectory)
     
     for (gtsam::Key i = 2; i < 99; i++) {
       // rotation and translation 
-      graph_utils::PoseWithCovariance<gtsam::Pose3> odom;
+      PoseWithCovariance<gtsam::Pose3> odom;
       gtsam::Pose3 tf(gtsam::Rot3(1,0,0,0), gtsam::Point3(1,1,0));
       odom.pose = tf;
       odom.covariance_matrix = 0.0001 * Eigen::MatrixXd::Identity(6,6);

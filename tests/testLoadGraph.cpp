@@ -196,8 +196,8 @@ TEST(RobustSolver, Load1NoPrior)
   EXPECT(gtsam::assert_equal(values_out.size(), size_t(50)));
 }
 
-/* ************************************************************************* *
-TEST(GenericSolver, Load)
+/* ************************************************************************* */
+TEST(RobustSolver, NoRejectLoad)
 {
   // load graph
   // read g2o file for robot a
@@ -205,8 +205,11 @@ TEST(GenericSolver, Load)
   gtsam::Values::shared_ptr values;
   boost::tie(nfg, values) = gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up GenericSolver
-  std::unique_ptr<GenericSolver> pgo = std::make_unique<GenericSolver>();
+  // set up RobustPGO solver
+  RobustSolverParams params;
+  params.setNoRejection(Verbosity::QUIET);
+
+  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel& noise =
@@ -226,16 +229,19 @@ TEST(GenericSolver, Load)
   EXPECT(values_out.size()==size_t(50));
 }
 
-/* ************************************************************************* *
-TEST(GenericSolver, Add)
+/* ************************************************************************* */
+TEST(RobustSolver, NoRejectAdd)
 {
   // load graph for robot a (same as above)
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
   gtsam::Values::shared_ptr values;
   boost::tie(nfg, values) = gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up GenericSolver
-  std::unique_ptr<GenericSolver> pgo = std::make_unique<GenericSolver>();
+  // set up RobustPGO solver
+  RobustSolverParams params;
+  params.setNoRejection(Verbosity::QUIET);
+
+  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
@@ -265,6 +271,7 @@ TEST(GenericSolver, Add)
   EXPECT(nfg_out.size()==size_t(97));
   EXPECT(values_out.size()==size_t(92));
 }
+
 /* ************************************************************************* */
   int main() { TestResult tr; return TestRegistry::runAllTests(tr);}
 /* ************************************************************************* */

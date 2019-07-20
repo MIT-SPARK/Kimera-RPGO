@@ -34,6 +34,11 @@ public:
 			pcm_odomThreshold(10.0),
 			pcm_lcThreshold(5.0) {}
 
+	void setNoRejection(Verbosity verbos=Verbosity::UPDATE) {
+		outlierRemovalMethod = OutlierRemovalMethod::NONE;
+		verbosity = verbos;
+	}
+	
 	void setPcm2DParams(double odomThreshold,
 			double lcThreshold, Verbosity verbos=Verbosity::UPDATE) {
 		outlierRemovalMethod = OutlierRemovalMethod::PCM2D;

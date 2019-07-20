@@ -202,7 +202,7 @@ struct PoseWithDistance {
   /* construct from gtsam between factor  --------------------- */
   PoseWithDistance(const gtsam::BetweenFactor<T>& between_factor) {
     pose = between_factor.measured();
-    distance = between_factor.measured.translation().norm();
+    distance = between_factor.measured().translation().norm();
   }
 
   /* method to combine two poses (along with their covariances) */

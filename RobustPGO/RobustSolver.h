@@ -50,7 +50,12 @@ public:
     gtsam::Values prior_values;
     prior_factor.add(prior);
     prior_values.insert(prior.key(), prior.prior());
-    outlier_removal_->process(prior_factor, prior_values, nfg_, values_);
+
+    if (outlier_removal_) {
+      outlier_removal_->process(prior_factor, prior_values, nfg_, values_);
+    } else {
+      process(prior_factor, prior_values);
+    }
 
     connectGraph<T>(factors, values, prior.key());
   }
@@ -59,8 +64,12 @@ public:
   void loadGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values, gtsam::Key key0=0) {
     gtsam::Values prior_values; 
     prior_values.insert(key0, values.at<T>(key0));
-    outlier_removal_->process(gtsam::NonlinearFactorGraph(), prior_values, nfg_, values_);
 
+    if (outlier_removal_) {
+      outlier_removal_->process(gtsam::NonlinearFactorGraph(), prior_values, nfg_, values_);
+    } else {
+      process(gtsam::NonlinearFactorGraph(), prior_values);
+    }
     connectGraph<T>(factors, values, key0);
   }
 
@@ -74,7 +83,12 @@ public:
     gtsam::Values connect_values;
     connect_factor.add(connector);
     connect_values.insert(key0, values.at<T>(key0));
-    outlier_removal_->process(connect_factor, connect_values, nfg_, values_);
+
+    if (outlier_removal_) {
+      outlier_removal_->process(connect_factor, connect_values, nfg_, values_);
+    } else {
+      process(connect_factor, connect_values);
+    }
 
     connectGraph<T>(factors, values, key0);
   }
@@ -110,7 +124,13 @@ private:
           gtsam::NonlinearFactorGraph new_factors;
           new_values.insert(current_key + 1, values.at<T>(current_key + 1));
           new_factors.add(factors[i]);
-          outlier_removal_->process(new_factors, new_values, nfg_, values_);
+
+          if (outlier_removal_) {
+            outlier_removal_->process(new_factors, new_values, nfg_, values_);
+          } else {
+            process(new_factors, new_values);
+          }
+
           current_key = current_key + 1;
           factors[i].reset();
           break;
@@ -129,7 +149,12 @@ private:
           new_values.insert(factors[i]->back(), values.at<T>(factors[i]->back()));
           new_factors.add(factors[i]);
 
-          outlier_removal_->process(new_factors, new_values, nfg_, values_);
+          if (outlier_removal_) {
+            outlier_removal_->process(new_factors, new_values, nfg_, values_);
+          } else {
+            process(new_factors, new_values);
+          }
+
           factors[i].reset();
           break;
         }
@@ -146,7 +171,13 @@ private:
         new_factors.add(factors[i]);
       }
     }
-    outlier_removal_->process(new_factors, gtsam::Values(), nfg_, values_);
+
+    if (outlier_removal_) {
+      outlier_removal_->process(new_factors, gtsam::Values(), nfg_, values_);
+    } else {
+      process(new_factors, gtsam::Values());
+    }
+
     optimize();
   }
 

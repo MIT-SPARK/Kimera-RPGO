@@ -23,30 +23,36 @@ bool GenericSolver::isSpecialSymbol(char symb) const {
   return false; 
 }
 
-void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg, 
-                           const gtsam::Values& values, 
-                           const gtsam::FactorIndices& factorsToRemove) {
-  // remove factors
-  for (size_t index : factorsToRemove) {
-    nfg_[index].reset();
-  }
-
+bool GenericSolver::process(const gtsam::NonlinearFactorGraph& nfg,
+      const gtsam::Values& values) {
   // add new values and factors
   nfg_.add(nfg);
   values_.insert(values);
   bool do_optimize = true; 
 
   // Do not optimize for just odometry additions 
-  // odometry values would not have prefix 'l' unlike artifact values
-  if (nfg.size() == 1 && values.size() == 1) {do_optimize = false;}
+  // odometry
+  if (nfg.size() == 1 && values.size() == 1) {return false;}
 
   // nothing added so no optimization 
-  if (nfg.size() == 0 && values.size() == 0) {do_optimize = false;}
+  if (nfg.size() == 0 && values.size() == 0) {return false;}
+  
+  return true;
+}
 
-  if (factorsToRemove.size() > 0) 
-    do_optimize = true;
+void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg, 
+                           const gtsam::Values& values, 
+                           const gtsam::FactorIndices& factorsToRemove) {
+  // remove factors
+  bool remove_factors = false;
+  if (factorsToRemove.size() > 0) {remove_factors = true;}
+  for (size_t index : factorsToRemove) {
+    nfg_[index].reset();
+  }
 
-  if (do_optimize) {
+  bool process_lc = process(nfg, values);
+
+  if (process_lc || remove_factors) {
     // optimize
     if (solver_type_ == Solver::LM) {
       gtsam::LevenbergMarquardtParams params;

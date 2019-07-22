@@ -448,8 +448,8 @@ protected:
           double threshold = lc_distance_matrix_(i,j);
           Eigen::MatrixXd adj_matrix = (lc_distance_matrix_.array() < threshold).template cast<double>();
           std::vector<int> max_clique_data;
-          int max_clique_size = findMaxClique(adj_matrix, max_clique_data);
-          cfile << threshold << " " << max_clique_size << std::endl;
+          int max_clique_size = findMaxCliqueHeu(adj_matrix, max_clique_data);
+          cfile << threshold << " " << max_clique_data.size() << std::endl;
         }
       }
     }
@@ -457,8 +457,10 @@ protected:
 
   void saveDistanceMatrix(std::string folder_path) {
     log<INFO>("Saving distance matrix");
-    std::string filename = folder_path + "/pcm_dist_matrix.txt";
-    std::ofstream file(filename);
+    std::stringstream filename;
+    filename << folder_path << "/dst_matrix" << std::setfill('0')
+        << std::setw(3) << lc_distance_matrix_.rows() << ".txt";
+    std::ofstream file(filename.str());
     if (file.is_open()) {
       file << lc_distance_matrix_;
     }

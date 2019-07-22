@@ -27,11 +27,10 @@ namespace FMC {
 int maxDegree, maxClq;
 
 /* Algorithm 2: MaxCliqueHeu: A heuristic to find maximum clique */
-int maxCliqueHeu(CGraphIO& gio)
+int maxCliqueHeu(CGraphIO& gio, vector<int>& max_clique_data )
 {
 	vector <int>* p_v_i_Vertices = gio.GetVerticesPtr();
 	vector <int>* p_v_i_Edges = gio.GetEdgesPtr();
-
 	//srand(time(NULL));
 
 	maxDegree = gio.GetMaximumVertexDegree();
@@ -106,10 +105,12 @@ int maxCliqueHeu(CGraphIO& gio)
 			imdv = imdv1;
 			imd = imd1;			
 		}
-	
+		
 		if(maxClq < icc)
+		{
+			max_clique_data = v_i_S;
 			maxClq = icc;
-			
+		}
 	}
 
 	return maxClq;

@@ -309,7 +309,7 @@ protected:
   }
 
   bool isOdomConsistent(const gtsam::BetweenFactor<poseT>& lc_factor,
-                        double& mahalanobis_dist) {
+                        double& dist) {
     // assume loop is between pose i and j
     // extract the keys
     gtsam::Key key_i = lc_factor.front();
@@ -331,10 +331,10 @@ protected:
     result = pij_odom.compose(pji_lc);
     // if (debug_) result.pose.print("odom consistency check: ");
 
-    mahalanobis_dist = result.norm();
+    dist = result.norm(); // mahalanobis dist for PoseWithCovariance
 
-    // if (debug_) log<INFO>("odometry consistency distance: %1%") % mahalanobis_dist;
-    if (mahalanobis_dist < odom_threshold_) {
+    if (debug_) log<INFO>("odometry consistency distance: %1%") % dist;
+    if (dist < odom_threshold_) {
       return true;
     }
 
@@ -343,7 +343,7 @@ protected:
 
   bool areLoopsConsistent(const gtsam::BetweenFactor<poseT>& lc_1,
                           const gtsam::BetweenFactor<poseT>& lc_2,
-                          double& mahalanobis_dist) {
+                          double& dist) {
     // check if two loop closures are consistent
     gtsam::Key key1a = lc_1.front();
     gtsam::Key key1b = lc_1.back();
@@ -372,10 +372,10 @@ protected:
     p1a1b = p1a2b.compose(p2b1b_odom);
     result = p1a1b.compose(p1_lc_inv);
 
-    mahalanobis_dist = result.norm();
+    dist = result.norm(); // mahalanobis dist for PoseWithCovariance
 
-    // if (debug_) log<INFO>("loop consistency distance: %1%") % mahalanobis_dist;
-    if (mahalanobis_dist < lc_threshold_) {
+    if (debug_) log<INFO>("loop consistency distance: %1%") % dist;
+    if (dist < lc_threshold_) {
       return true;
     }
 

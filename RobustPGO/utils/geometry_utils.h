@@ -238,7 +238,8 @@ struct PoseWithDistance {
   double norm() const {
     // calculate mahalanobis norm
     gtsam::Vector log = T::Logmap(pose);
-    return std::sqrt(log.transpose() * log) / distance;
+    const int t_dim =  getTranslationDim<T>();
+    return std::sqrt(log.tail(t_dim).transpose() * log.tail(t_dim)) / distance;
   }
 };
 

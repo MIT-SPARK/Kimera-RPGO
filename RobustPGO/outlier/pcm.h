@@ -459,7 +459,6 @@ protected:
         T<poseT> pil, result;
         pil = pij_odom.compose(pjl);
         result = pil.compose(pil_inv);
-        result.pose.print("res");
 
         double dist = result.norm(); // mahalanobis dist for PoseWithCovariance
         new_dst_matrix(num_lc-1, i) = dist;
@@ -476,25 +475,24 @@ protected:
 
   void findInliers() {
     if (debug_) log<INFO>("total loop closures registered: %1%") % nfg_lc_.size();
-    if (nfg_lc_.size() == 0) return;
-
-    nfg_good_lc_ = gtsam::NonlinearFactorGraph(); // reset
-    std::vector<int> max_clique_data;
-    size_t max_clique_size = findMaxCliqueHeu(lc_adjacency_matrix_, max_clique_data);
-    if (debug_) log<INFO>("number of inliers: %1%") % max_clique_size;
-    for (size_t i = 0; i < max_clique_size; i++) {
-      // std::cout << max_clique_data[i] << " ";
-      nfg_good_lc_.add(nfg_lc_[max_clique_data[i]]);
+    if (nfg_lc_.size() != 0) {
+      nfg_good_lc_ = gtsam::NonlinearFactorGraph(); // reset
+      std::vector<int> max_clique_data;
+      size_t max_clique_size = findMaxCliqueHeu(lc_adjacency_matrix_, max_clique_data);
+      if (debug_) log<INFO>("number of inliers: %1%") % max_clique_size;
+      for (size_t i = 0; i < max_clique_size; i++) {
+        // std::cout << max_clique_data[i] << " ";
+        nfg_good_lc_.add(nfg_lc_[max_clique_data[i]]);
+      }
     }
 
-    // iterate through landmarks and do the same 
+    // iterate through landmarks and find inliers
     std::unordered_map<gtsam::Key, LandmarkMeasurements>::iterator it = landmarks_.begin();
     while(it != landmarks_.end()) {
       std::vector<int> inliers_idx;
       it->second.consistent_factors = gtsam::NonlinearFactorGraph(); // reset
       // find max clique
       size_t num_inliers = findMaxCliqueHeu(it->second.adj_matrix, inliers_idx);
-      std::cout << "num landmark inliers: " << num_inliers << std::endl;
       // update inliers, or consistent factors, according to max clique result
       for (size_t i = 0; i < num_inliers; i++) {
         it->second.consistent_factors.add(it->second.factors[inliers_idx[i]]);

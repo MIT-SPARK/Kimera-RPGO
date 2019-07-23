@@ -32,6 +32,8 @@ public:
    */
 	virtual void saveData(std::string folder_path) {}
 
+	/*! \brief Supressing the print messages to console
+   */
 	void setQuiet() { debug_ = false; }
 
 protected:

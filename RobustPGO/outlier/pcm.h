@@ -74,6 +74,14 @@ private:
 
 public:
 
+  /*! \brief Process new measurements and reject outliers
+   *  process the new measurements and update the "good set" of measurements
+   *  - new_factors: factors from the new measurements
+   *  - new_values: linearization point of the new measurements
+   *  - nfg: the factors after processing new measurements and outlier removal
+   *  - values: the values after processing new measurements and outlier removal
+   *  - returns: boolean of if optimization should be called or not
+   */
   virtual bool removeOutliers(const gtsam::NonlinearFactorGraph& new_factors,
                const gtsam::Values& new_values,
                gtsam::NonlinearFactorGraph& output_nfg,
@@ -232,6 +240,10 @@ public:
     return true;
   }
 
+  /*! \brief save the PCM data
+   *  saves the distance matrix (final) and also the clique size info
+   *  - folder_path: path to directory to save results in
+   */
   virtual void saveData(std::string folder_path) override{
     saveDistanceMatrix(folder_path);
     // saveCliqueSizeData(folder_path);
@@ -239,6 +251,7 @@ public:
 
 protected:
 
+  // check if a character is a special symbol as defined in constructor
   bool specialSymbol(char symb) {
     for (size_t i = 0; i < special_symbols_.size(); i++) {
       if (special_symbols_[i] == symb) return true;
@@ -246,6 +259,7 @@ protected:
     return false;
   }
 
+  // initialize PCM with a prior factor
   void initializeWithPrior(const gtsam::PriorFactor<poseT>& prior_factor) {
 
     gtsam::Key initial_key = prior_factor.front();
@@ -258,6 +272,7 @@ protected:
     nfg_odom_.add(prior_factor); // add to initial odometry
   }
 
+  // initialize PCM without a prior factor
   void initialize(gtsam::Key initial_key) {
 
     T<poseT> initial_pose;
@@ -266,6 +281,7 @@ protected:
     trajectory_odom_[initial_key] = initial_pose;
   }
 
+  // update the odometry: add new measurements to odometry trajectory tree
   void updateOdom(const gtsam::BetweenFactor<poseT>& odom_factor) {
 
     // update trajectory_odom_ (compose last value with new odom value)
@@ -291,6 +307,7 @@ protected:
     trajectory_odom_[new_key] = new_pose;
   }
 
+  // check if loop closure is consistent with the odometry easurements
   bool isOdomConsistent(const gtsam::BetweenFactor<poseT>& lc_factor,
                         double& dist) {
     // assume loop is between pose i and j
@@ -324,6 +341,7 @@ protected:
     return false;
   }
 
+  // Main PCM function: Check if a pair of loop closures is consistent in measurement
   bool areLoopsConsistent(const gtsam::BetweenFactor<poseT>& lc_1,
                           const gtsam::BetweenFactor<poseT>& lc_2,
                           double& dist) {
@@ -365,6 +383,7 @@ protected:
     return false;
   }
 
+  // increment the adjacency matrix for the main loop closures
   void incrementAdjMatrix() {
     // * pairwise consistency check (will also compare other loops - if loop fails we still store it, but not include in the optimization)
     // -- add 1 row and 1 column to lc_adjacency_matrix_;
@@ -403,6 +422,7 @@ protected:
     lc_distance_matrix_ = new_dst_matrix;
   }
 
+  // increment adjacency matrix for a landmark
   void incrementLandmarkAdjMatrix(const gtsam::Key& ldmk_key) {
     // pairwise consistency check for landmarks
     size_t num_lc = landmarks_[ldmk_key].factors.size(); // number measurements
@@ -460,6 +480,7 @@ protected:
     landmarks_[ldmk_key].dist_matrix = new_dst_matrix;
   }
 
+  // Based on adjacency matrices, call maxclique to extract inliers
   void findInliers() {
     if (debug_) log<INFO>("total loop closures registered: %1%") % nfg_lc_.size();
     if (nfg_lc_.size() != 0) {
@@ -488,6 +509,7 @@ protected:
     }
   }
 
+  // update the set of inliers to be outputted
   gtsam::NonlinearFactorGraph updateOutputGraph() {
     gtsam::NonlinearFactorGraph output_nfg; // reset
     output_nfg.add(nfg_odom_);

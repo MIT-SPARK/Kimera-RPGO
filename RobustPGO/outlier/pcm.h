@@ -132,7 +132,9 @@ public:
       gtsam::Symbol symb(new_values.keys()[0]);
       if (specialSymbol(symb.chr())) {
         // landmark measurement, initialize 
+        log<INFO>("New landmark observed");
         LandmarkMeasurements newMeasurement(new_factors); 
+        landmarks_[symb] = newMeasurement;
       } else {
         // update trajectory_odom_;
         // extract between factor
@@ -145,16 +147,8 @@ public:
 
       // - store latest pose in values_ (note: values_ is the optimized estimate, while trajectory is the odom estimate)
       output_values.insert(new_values);
-      output_nfg = gtsam::NonlinearFactorGraph(); // reset
-      output_nfg.add(nfg_odom_);
-      output_nfg.add(nfg_good_lc_);
-      // add the good loop closures associated with landmarks
-      std::unordered_map<gtsam::Key, LandmarkMeasurements>::iterator it = landmarks_.begin();
-      while(it != landmarks_.end()) {
-        output_nfg.add(it->second.consistent_factors);
-        it++;
-      }
-      output_nfg.add(nfg_special_); // still need to update the class overall factorgraph
+      output_nfg = updateOutputGraph();
+      
       return false; // no need to optimize just for odometry
     }
 
@@ -183,6 +177,11 @@ public:
             // it is landmark loop closure 
             gtsam::Key landmark_key = (specialSymbol(symbfrnt.chr()) ? 
                 nfg_factor.front() : nfg_factor.back());
+
+            log<INFO>("loop closing with landmark %1%") % 
+                gtsam::DefaultKeyFormatter(landmark_key);
+
+            landmarks_[landmark_key].factors.add(nfg_factor);
             // grow adj matrix
             incrementLandmarkAdjMatrix(landmark_key);
           } else {
@@ -206,13 +205,9 @@ public:
         }
       }
       // Find inliers with Pairwise consistent measurement set maximization
-      nfg_good_lc_ = gtsam::NonlinearFactorGraph(); // reset
-      findInliers(nfg_good_lc_); // update nfg_good_lc_
+      findInliers(); // update inliers
 
-      output_nfg = gtsam::NonlinearFactorGraph(); // reset
-      output_nfg.add(nfg_odom_);
-      output_nfg.add(nfg_good_lc_);
-      output_nfg.add(nfg_special_); // still need to update the class overall factorgraph
+      output_nfg = updateOutputGraph();
       return true;
     }
 
@@ -220,10 +215,7 @@ public:
       nfg_special_.add(new_factors);
       output_values.insert(new_values);
       // reset graph
-      output_nfg = gtsam::NonlinearFactorGraph(); // reset
-      output_nfg.add(nfg_odom_);
-      output_nfg.add(nfg_good_lc_);
-      output_nfg.add(nfg_special_); // still need to update the class overall factorgraph
+      output_nfg = updateOutputGraph();
       return false;
     }
 
@@ -236,10 +228,7 @@ public:
     }
 
     // reset graph
-    output_nfg = gtsam::NonlinearFactorGraph(); // reset
-    output_nfg.add(nfg_odom_);
-    output_nfg.add(nfg_good_lc_);
-    output_nfg.add(nfg_special_); // still need to update the class overall factorgraph
+    output_nfg = updateOutputGraph();
     return true;
   }
 
@@ -252,10 +241,7 @@ public:
     nfg_special_.add(new_factors);
     output_values.insert(new_values);
     // reset graph
-    output_nfg = gtsam::NonlinearFactorGraph(); // reset
-    output_nfg.add(nfg_odom_);
-    output_nfg.add(nfg_good_lc_);
-    output_nfg.add(nfg_special_); // still need to update the class overall factorgraph
+    output_nfg = updateOutputGraph();
     return true;
   }
 
@@ -430,7 +416,7 @@ protected:
     lc_distance_matrix_ = new_dst_matrix;
   }
 
-  void incrementLandmarkAdjMatrix(gtsam::Key ldmk_key) {
+  void incrementLandmarkAdjMatrix(const gtsam::Key& ldmk_key) {
     // pairwise consistency check for landmarks
     size_t num_lc = landmarks_[ldmk_key].factors.size(); // number measurements 
     Eigen::MatrixXd new_adj_matrix = Eigen::MatrixXd::Zero(num_lc, num_lc);
@@ -444,9 +430,11 @@ protected:
       // of consistency matrix
       for (size_t i = 0; i < num_lc - 1; i++) {
         gtsam::BetweenFactor<poseT> factor_i =
-              *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(nfg_lc_[i]);
+              *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(
+              landmarks_[ldmk_key].factors[i]);
         gtsam::BetweenFactor<poseT> factor_j =
-              *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(nfg_lc_[num_lc-1]);
+              *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(
+              landmarks_[ldmk_key].factors[num_lc-1]);
 
         // check consistency
         gtsam::Key keyi = factor_i.front();
@@ -471,6 +459,7 @@ protected:
         T<poseT> pil, result;
         pil = pij_odom.compose(pjl);
         result = pil.compose(pil_inv);
+        result.pose.print("res");
 
         double dist = result.norm(); // mahalanobis dist for PoseWithCovariance
         new_dst_matrix(num_lc-1, i) = dist;
@@ -485,16 +474,47 @@ protected:
     landmarks_[ldmk_key].dist_matrix = new_dst_matrix;
   }
 
-  void findInliers(gtsam::NonlinearFactorGraph &inliers) {
+  void findInliers() {
     if (debug_) log<INFO>("total loop closures registered: %1%") % nfg_lc_.size();
     if (nfg_lc_.size() == 0) return;
+
+    nfg_good_lc_ = gtsam::NonlinearFactorGraph(); // reset
     std::vector<int> max_clique_data;
     size_t max_clique_size = findMaxCliqueHeu(lc_adjacency_matrix_, max_clique_data);
     if (debug_) log<INFO>("number of inliers: %1%") % max_clique_size;
     for (size_t i = 0; i < max_clique_size; i++) {
       // std::cout << max_clique_data[i] << " ";
-      inliers.add(nfg_lc_[max_clique_data[i]]);
+      nfg_good_lc_.add(nfg_lc_[max_clique_data[i]]);
     }
+
+    // iterate through landmarks and do the same 
+    std::unordered_map<gtsam::Key, LandmarkMeasurements>::iterator it = landmarks_.begin();
+    while(it != landmarks_.end()) {
+      std::vector<int> inliers_idx;
+      it->second.consistent_factors = gtsam::NonlinearFactorGraph(); // reset
+      // find max clique
+      size_t num_inliers = findMaxCliqueHeu(it->second.adj_matrix, inliers_idx);
+      std::cout << "num landmark inliers: " << num_inliers << std::endl;
+      // update inliers, or consistent factors, according to max clique result
+      for (size_t i = 0; i < num_inliers; i++) {
+        it->second.consistent_factors.add(it->second.factors[inliers_idx[i]]);
+      }
+      it++;
+    }
+  }
+
+  gtsam::NonlinearFactorGraph updateOutputGraph() {
+    gtsam::NonlinearFactorGraph output_nfg; // reset
+    output_nfg.add(nfg_odom_);
+    output_nfg.add(nfg_good_lc_);
+    // add the good loop closures associated with landmarks
+    std::unordered_map<gtsam::Key, LandmarkMeasurements>::iterator it = landmarks_.begin();
+    while(it != landmarks_.end()) {
+      output_nfg.add(it->second.consistent_factors);
+      it++;
+    }
+    output_nfg.add(nfg_special_); // still need to update the class overall factorgraph
+    return output_nfg;
   }
 
   void saveCliqueSizeData(std::string folder_path) {

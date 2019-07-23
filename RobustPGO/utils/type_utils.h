@@ -17,13 +17,11 @@ struct LandmarkMeasurements {
 	gtsam::Matrix dist_matrix;
 
 	LandmarkMeasurements(gtsam::NonlinearFactorGraph new_factors=gtsam::NonlinearFactorGraph()) :
-			factors(),
-			consistent_factors() {
+			factors(new_factors),
+			consistent_factors(new_factors) {
 		if (new_factors.size() > 1) {
 			log<WARNING>("Unexpected behavior: initializing landmark with more than one factor.");
 		}
-		factors.add(new_factors);
-		consistent_factors.add(new_factors);
 		adj_matrix = Eigen::MatrixXd::Zero(1,1);
 		dist_matrix = Eigen::MatrixXd::Zero(1,1);
 	}

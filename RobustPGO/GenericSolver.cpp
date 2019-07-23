@@ -1,6 +1,6 @@
-/* 
-Generic solver class 
-No outlier removal in this class 
+/*
+Generic solver class
+No outlier removal in this class
 author: Yun Chang, Luca Carlone
 */
 
@@ -8,8 +8,8 @@ author: Yun Chang, Luca Carlone
 
 namespace RobustPGO {
 
-GenericSolver::GenericSolver(Solver solvertype, 
-                             std::vector<char> special_symbols): 
+GenericSolver::GenericSolver(Solver solvertype,
+                             std::vector<char> special_symbols):
   nfg_(gtsam::NonlinearFactorGraph()),
   values_(gtsam::Values()),
   solver_type_(solvertype),
@@ -20,28 +20,28 @@ bool GenericSolver::isSpecialSymbol(char symb) const {
   for (size_t i = 0; i < special_symbols_.size(); i++) {
     if (special_symbols_[i] == symb) return true;
   }
-  return false; 
+  return false;
 }
 
-bool GenericSolver::process(const gtsam::NonlinearFactorGraph& nfg,
+bool GenericSolver::addAndCheckIfOptimize(const gtsam::NonlinearFactorGraph& nfg,
       const gtsam::Values& values) {
   // add new values and factors
   nfg_.add(nfg);
   values_.insert(values);
-  bool do_optimize = true; 
+  bool do_optimize = true;
 
-  // Do not optimize for just odometry additions 
+  // Do not optimize for just odometry additions
   // odometry
   if (nfg.size() == 1 && values.size() == 1) {return false;}
 
-  // nothing added so no optimization 
+  // nothing added so no optimization
   if (nfg.size() == 0 && values.size() == 0) {return false;}
-  
+
   return true;
 }
 
-void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg, 
-                           const gtsam::Values& values, 
+void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
+                           const gtsam::Values& values,
                            const gtsam::FactorIndices& factorsToRemove) {
   // remove factors
   bool remove_factors = false;
@@ -50,7 +50,7 @@ void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
     nfg_[index].reset();
   }
 
-  bool process_lc = process(nfg, values);
+  bool process_lc = addAndCheckIfOptimize(nfg, values);
 
   if (process_lc || remove_factors) {
     // optimize
@@ -58,9 +58,9 @@ void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
       gtsam::LevenbergMarquardtParams params;
       if (debug_) {
         params.setVerbosityLM("SUMMARY");
-        log<INFO>("Running LM"); 
+        log<INFO>("Running LM");
       }
-      params.diagonalDamping = true; 
+      params.diagonalDamping = true;
       values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
     }else if (solver_type_ == Solver::GN) {
       gtsam::GaussNewtonParams params;

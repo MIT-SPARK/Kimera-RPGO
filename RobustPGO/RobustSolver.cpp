@@ -101,7 +101,7 @@ void RobustSolver::update(const gtsam::NonlinearFactorGraph& nfg,
   if (outlier_removal_) {
     process_lc = outlier_removal_->removeOutliers(nfg, values, nfg_, values_);
   } else {
-    process_lc = process(nfg, values); // use default process
+    process_lc = addAndCheckIfOptimize(nfg, values); // use default process
   }
 
   // optimize
@@ -116,10 +116,19 @@ void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,
   if (outlier_removal_) {
     outlier_removal_->removeOutliers(nfg, values, nfg_, values_);
   } else {
-    process(nfg, values);
+    addAndCheckIfOptimize(nfg, values);
   }
   // optimize
   optimize();
+}
+
+void RobustSolver::addOdometry(const gtsam::NonlinearFactorGraph& odom_factor, const gtsam::Values& odom_values) {
+  // TODO add warning if more tha one factor / value
+  if (outlier_removal_) {
+    outlier_removal_->removeOutliers(odom_factor, odom_values, nfg_, values_);
+  } else {
+    addAndCheckIfOptimize(odom_factor, odom_values);
+  }
 }
 
 }

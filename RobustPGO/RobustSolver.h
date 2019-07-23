@@ -59,6 +59,11 @@ public:
    *  - values: linearization point for the loaded variables
    *  - prior: the prior factor anchoring the graph, associated with the first value (lowest key ex. 0, or a0, etc. )
    */
+
+  /*! \brief add an odometry edge
+   */
+  void addOdometry(const gtsam::NonlinearFactorGraph& odom_factor, const gtsam::Values& odom_values);
+
   template<class T>
   void loadGraph(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values,
       const gtsam::PriorFactor<T>& prior) {
@@ -67,15 +72,8 @@ public:
     prior_factor.add(prior);
     prior_values.insert(prior.key(), prior.prior());
 
-    if (outlier_removal_) {
-      outlier_removal_->removeOutliers(prior_factor, prior_values, nfg_, values_);
-    } else {
-      process(prior_factor, prior_values);
-    }
-
-    connectGraph<T>(factors, values, prior.key());
-
-    optimize(); // optimize once after loading
+    addOdometry(prior_factor, prior_values);
+    updateBatch<T>(factors, values, prior.key());
   }
 
   /*! \brief Load a factor graph without a prior
@@ -89,15 +87,8 @@ public:
     gtsam::Values prior_values;
     prior_values.insert(key0, values.at<T>(key0));
 
-    if (outlier_removal_) {
-      outlier_removal_->removeOutliers(gtsam::NonlinearFactorGraph(), prior_values, nfg_, values_);
-    } else {
-      process(gtsam::NonlinearFactorGraph(), prior_values);
-    }
-
-    connectGraph<T>(factors, values, key0);
-
-    optimize(); // optimize once after loading
+    addOdometry(gtsam::NonlinearFactorGraph(), prior_values);
+    updateBatch<T>(factors, values, key0);
   }
 
   /*! \brief Add a factor graph to solver with a between factor for connection
@@ -111,23 +102,14 @@ public:
   template<class T>
   void addGraph(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values,
       const gtsam::BetweenFactor<T>& connector) {
-
     gtsam::Key key0 = connector.back();
-
     gtsam::NonlinearFactorGraph connect_factor;
     gtsam::Values connect_values;
     connect_factor.add(connector);
     connect_values.insert(key0, values.at<T>(key0));
 
-    if (outlier_removal_) {
-      outlier_removal_->removeOutliers(connect_factor, connect_values, nfg_, values_);
-    } else {
-      process(connect_factor, connect_values);
-    }
-
-    connectGraph<T>(factors, values, key0);
-
-    optimize(); // optimize once after loading
+    addOdometry(connect_factor, connect_values);
+    updateBatch<T>(factors, values, key0);
   }
 
   /*! \brief Save results from Solver
@@ -143,13 +125,13 @@ public:
 private:
   /*! \brief Used with Add and Load to connect factor graph to between or prior factor
    *  Sorts through the factors, separate out the odometry, the landmark measurements,
-   *  and loop closures, then process with outlier rejection
+   *  and loop closures, then addAndCheckIfOptimize with outlier rejection
    *  - factors: the factors of the graph to be added
    *  - values: linearization point of graph to be connected
    *  - key0: Lowest key of the graph to be connected (root of odometry)
    */
   template<class T>
-  void connectGraph(gtsam::NonlinearFactorGraph factors,
+  void updateBatch(gtsam::NonlinearFactorGraph factors,
       const gtsam::Values& values, const gtsam::Key& key0) {
 
     // load graph assumes that the previous graph has been cleared
@@ -162,7 +144,7 @@ private:
       bool end_of_odom = true;
       for (size_t i = 0; i < factors.size(); i++) {
         // search through
-        if (factors[i] != NULL &&
+        if (factors[i] != NULL &&// TODO faotrs[i].keys().size() == 2
             factors[i]->front() == current_key && factors[i]->back() == current_key + 1) {
           end_of_odom = false;
           // if (debug_) {
@@ -174,10 +156,11 @@ private:
           new_values.insert(current_key + 1, values.at<T>(current_key + 1));
           new_factors.add(factors[i]);
 
+          // TODO add odometry
           if (outlier_removal_) {
             outlier_removal_->removeOutliers(new_factors, new_values, nfg_, values_);
           } else {
-            process(new_factors, new_values);
+            addAndCheckIfOptimize(new_factors, new_values);
           }
 
           current_key = current_key + 1;
@@ -201,7 +184,7 @@ private:
           if (outlier_removal_) {
             outlier_removal_->removeOutliers(new_factors, new_values, nfg_, values_);
           } else {
-            process(new_factors, new_values);
+            addAndCheckIfOptimize(new_factors, new_values);
           }
 
           factors[i].reset();
@@ -224,10 +207,10 @@ private:
     if (outlier_removal_) {
       outlier_removal_->removeOutliers(new_factors, gtsam::Values(), nfg_, values_);
     } else {
-      process(new_factors, gtsam::Values());
+      addAndCheckIfOptimize(new_factors, gtsam::Values());
     }
 
-    optimize();
+    optimize(); // optimize once after loading
   }
 
 private:

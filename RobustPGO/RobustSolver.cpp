@@ -7,9 +7,6 @@ author: Yun Chang, Luca Carlone
 
 namespace RobustPGO {
 
-/*
- * TODO(Luca): typically header comments (like this one at the beginning of the function) are in .h: only need to comment here if this was not commented in .h
- */
 RobustSolver::RobustSolver(const RobustSolverParams& params) :
     GenericSolver(params.solver, params.specialSymbols) {
   switch (params.outlierRemovalMethod) {
@@ -96,14 +93,6 @@ void RobustSolver::optimize() {
   }
 }
 
-/*
- * force_optimize seems to just call optimize..
- */
-void RobustSolver::force_optimize() {
-  if (debug_) log<WARNING>("Forcing optimization, typically should only use update method. ");
-  optimize();
-}
-
 void RobustSolver::update(const gtsam::NonlinearFactorGraph& nfg,
                        const gtsam::Values& values,
                        const gtsam::FactorIndices& factorsToRemove) {
@@ -114,7 +103,7 @@ void RobustSolver::update(const gtsam::NonlinearFactorGraph& nfg,
     nfg_[index].reset();
   }
 
-  // loop closures/outlier rejection 
+  // loop closures/outlier rejection
   bool process_lc;
   if (outlier_removal_) {
     process_lc = outlier_removal_->process(nfg, values, nfg_, values_);

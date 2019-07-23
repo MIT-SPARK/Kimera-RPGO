@@ -27,20 +27,6 @@ public:
 				               gtsam::NonlinearFactorGraph& nfg,
 				               gtsam::Values& values) = 0;
 
-	/*! \brief Process new measurements while bypassing reject outliers
-   *  add the new measurements and assume all the new measurements are inliers
-   *  - new_factors: factors from the new measurements
-   *  - new_values: linearization point of the new measurements
-   *	- nfg: the factors after adding new measurements
-   * 	- values: the values after adding  new measurements
-   *  - returns: boolean of if optimization should be called or not
-   */
-	virtual bool addMeasurements(
-			const gtsam::NonlinearFactorGraph& new_factors,
-			const gtsam::Values& new_values,
-			gtsam::NonlinearFactorGraph& nfg,
-			gtsam::Values& values) = 0; // force a loop closure
-
 	/*! \brief Save any data in the outlier removal process
    *  - folder_path: path to directory to save results in
    */

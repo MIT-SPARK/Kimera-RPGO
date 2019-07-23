@@ -232,19 +232,6 @@ public:
     return true;
   }
 
-  virtual bool addMeasurements(
-      const gtsam::NonlinearFactorGraph& new_factors,
-      const gtsam::Values& new_values,
-      gtsam::NonlinearFactorGraph& output_nfg,
-      gtsam::Values& output_values) override{
-    log<WARNING>("Warning: Adding measurements and bypassing outlier rejection.");
-    nfg_special_.add(new_factors);
-    output_values.insert(new_values);
-    // reset graph
-    output_nfg = updateOutputGraph();
-    return true;
-  }
-
   virtual void saveData(std::string folder_path) override{
     saveDistanceMatrix(folder_path);
     // saveCliqueSizeData(folder_path);

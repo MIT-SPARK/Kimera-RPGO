@@ -7,13 +7,15 @@ author: Yun Chang, Luca Carlone
 
 namespace RobustPGO {
 
+/*
+ * TODO(Luca): typically header comments (like this one at the beginning of the function) are in .h: only need to comment here if this was not commented in .h
+ */
 RobustSolver::RobustSolver(const RobustSolverParams& params) :
     GenericSolver(params.solver, params.specialSymbols) {
   switch (params.outlierRemovalMethod) {
     case OutlierRemovalMethod::NONE :
     {
-      outlier_removal_ = nullptr;
-      // only returns optimize true or optimize false
+      outlier_removal_ = nullptr; // only returns optimize true or optimize false
     }
     break;
     case OutlierRemovalMethod::PCM2D :
@@ -56,8 +58,7 @@ RobustSolver::RobustSolver(const RobustSolverParams& params) :
     break;
     case Verbosity::QUIET :
     {
-      if (outlier_removal_) outlier_removal_->setQuiet(); 
-      // set outlier removal quiet
+      if (outlier_removal_) outlier_removal_->setQuiet(); // set outlier removal quiet
       setQuiet(); // set solver quiet
     }
     break;
@@ -95,6 +96,9 @@ void RobustSolver::optimize() {
   }
 }
 
+/*
+ * force_optimize seems to just call optimize..
+ */
 void RobustSolver::force_optimize() {
   if (debug_) log<WARNING>("Forcing optimization, typically should only use update method. ");
   optimize();

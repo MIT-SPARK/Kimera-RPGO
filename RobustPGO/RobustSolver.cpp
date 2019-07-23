@@ -12,8 +12,7 @@ RobustSolver::RobustSolver(const RobustSolverParams& params) :
   switch (params.outlierRemovalMethod) {
     case OutlierRemovalMethod::NONE :
     {
-      outlier_removal_ = nullptr;
-      // only returns optimize true or optimize false
+      outlier_removal_ = nullptr; // only returns optimize true or optimize false
     }
     break;
     case OutlierRemovalMethod::PCM2D :
@@ -28,16 +27,16 @@ RobustSolver::RobustSolver(const RobustSolverParams& params) :
           params.pcm_odomThreshold, params.pcm_lcThreshold, params.specialSymbols);
     }
     break;
-    case OutlierRemovalMethod::PCM_Distance2D:
+    case OutlierRemovalMethod::PCM_Simple2D:
     {
-      outlier_removal_ = std::make_unique<PcmDistance2D>(
-          params.pcmDist_transThreshold, params.pcmDist_rotThreshold);
+      outlier_removal_ = std::make_unique<PcmSimple2D>(
+          params.pcmDist_transThreshold, params.pcmDist_rotThreshold, params.specialSymbols);
     }
     break;
-    case OutlierRemovalMethod::PCM_Distance3D:
+    case OutlierRemovalMethod::PCM_Simple3D:
     {
-      outlier_removal_ = std::make_unique<PcmDistance3D>(
-          params.pcmDist_transThreshold, params.pcmDist_rotThreshold);
+      outlier_removal_ = std::make_unique<PcmSimple3D>(
+          params.pcmDist_transThreshold, params.pcmDist_rotThreshold, params.specialSymbols);
     }
     break;
     default:
@@ -56,8 +55,7 @@ RobustSolver::RobustSolver(const RobustSolverParams& params) :
     break;
     case Verbosity::QUIET :
     {
-      if (outlier_removal_) outlier_removal_->setQuiet(); 
-      // set outlier removal quiet
+      if (outlier_removal_) outlier_removal_->setQuiet(); // set outlier removal quiet
       setQuiet(); // set solver quiet
     }
     break;
@@ -95,50 +93,42 @@ void RobustSolver::optimize() {
   }
 }
 
-void RobustSolver::force_optimize() {
-  if (debug_) log<WARNING>("Forcing optimization, typically should only use update method. ");
-  optimize();
-}
-
 void RobustSolver::update(const gtsam::NonlinearFactorGraph& nfg,
-                       const gtsam::Values& values,
-                       const gtsam::FactorIndices& factorsToRemove) {
-  // remove factors
-  bool remove_factors = false;
-  if (factorsToRemove.size() > 0) {remove_factors = true;}
-  for (size_t index : factorsToRemove) {
-    nfg_[index].reset();
-  }
+                       const gtsam::Values& values) {
 
-  // loop closures/outlier rejection 
+  // loop closures/outlier rejection
   bool process_lc;
   if (outlier_removal_) {
-    process_lc = outlier_removal_->process(nfg, values, nfg_, values_);
+    process_lc = outlier_removal_->removeOutliers(nfg, values, nfg_, values_);
   } else {
-    process_lc = process(nfg, values); // use default process
+    process_lc = addAndCheckIfOptimize(nfg, values); // use default process
   }
 
   // optimize
-  if (remove_factors || process_lc) {
+  if (process_lc) {
     optimize();
   }
 }
 
 void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,
-                       const gtsam::Values& values,
-                       const gtsam::FactorIndices& factorsToRemove) {
-  // remove factors
-  for (size_t index : factorsToRemove) {
-    nfg_[index].reset();
-  }
+                       const gtsam::Values& values) {
 
   if (outlier_removal_) {
-    outlier_removal_->processForcedLoopclosure(nfg, values, nfg_, values_);
+    outlier_removal_->removeOutliers(nfg, values, nfg_, values_);
   } else {
-    process(nfg, values);
+    addAndCheckIfOptimize(nfg, values);
   }
   // optimize
   optimize();
+}
+
+void RobustSolver::addOdometry(const gtsam::NonlinearFactorGraph& odom_factor, const gtsam::Values& odom_values) {
+  // TODO add warning if more tha one factor / value
+  if (outlier_removal_) {
+    outlier_removal_->removeOutliers(odom_factor, odom_values, nfg_, values_);
+  } else {
+    addAndCheckIfOptimize(odom_factor, odom_values);
+  }
 }
 
 }

@@ -57,7 +57,7 @@ public:
   void setQuiet() { debug_ = false; }
 
 protected:
-  bool process(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(),
+  bool addAndCheckIfOptimize(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(),
       const gtsam::Values& values=gtsam::Values());
 
 protected:

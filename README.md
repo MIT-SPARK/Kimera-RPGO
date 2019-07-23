@@ -63,3 +63,31 @@ This can also be used as a standalone experimental tool. A read g2o function can
 ```
 
 Example, do `./RpgoReadG2o 3d /home/user/Desktop/in.g2o 1.0 1.0 /home/user/Desktop/out.g2o v`
+
+## Example
+```cpp
+// set up RobustPGO solver
+RobustSolverParams params;
+params.setPcm3DParams(<translation_threshold>, <rotation_threshold>);
+std::vector<char> special_symbs{'l', 'u'}; // for landmarks
+params.specialSymbols = special_symbs;
+
+std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params); // initiate pgo solver
+
+// When using it normally
+pgo->update(new_factor, new_values);
+
+// load a graph (assuming pgo has been reset)
+pgo->loadGraph(nfg, values, prior_factor);
+pgo->loadGraph(nfg, values, key0); // can just load the first key
+
+// add a graph (ex. already have graph or robot a and adding graph of robot b)
+pgo->addGraph(nfg, values, between_factor);
+
+
+/////// To not use outlier rejection, set up like
+RobustSolverParams params;
+params.setNoRejection();
+
+std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params); // initiate pgo solver
+```

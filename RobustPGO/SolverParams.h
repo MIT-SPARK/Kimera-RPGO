@@ -10,12 +10,13 @@ namespace RobustPGO {
 
 enum class Solver { LM, GN };
 
+// TODO(Luca): OutlierRemoval should not care about 2D or 3D
 enum class OutlierRemovalMethod {
 	NONE, // no outlier rejection
 	PCM2D,
 	PCM3D,
-	PCM_Distance2D,
-	PCM_Distance3D
+	PCM_Simple2D,
+	PCM_Simple3D
 };
 
 enum class Verbosity {
@@ -27,18 +28,21 @@ enum class Verbosity {
 struct RobustSolverParams {
 public:
 	RobustSolverParams():
-			solver(Solver::LM),
+			solver(Solver::LM), // TODO(Luca): default should be GN (faster, but we can keep LM for subt)
 			outlierRemovalMethod(OutlierRemovalMethod::PCM3D),
 			specialSymbols(),
 			verbosity(Verbosity::UPDATE),
 			pcm_odomThreshold(10.0),
-			pcm_lcThreshold(5.0) {}
+			pcm_lcThreshold(5.0),
+			pcmDist_transThreshold(0.05), // 5cm
+			pcmDist_rotThreshold(0.005){} // <0.5degrees
 
 	void setNoRejection(Verbosity verbos=Verbosity::UPDATE) {
 		outlierRemovalMethod = OutlierRemovalMethod::NONE;
 		verbosity = verbos;
 	}
-	
+
+	// TODO(Luca): no 2D & 3D version
 	void setPcm2DParams(double odomThreshold,
 			double lcThreshold, Verbosity verbos=Verbosity::UPDATE) {
 		outlierRemovalMethod = OutlierRemovalMethod::PCM2D;
@@ -55,17 +59,18 @@ public:
 		verbosity = verbos;
 	}
 
-	void setPcmDist2DParams(double transThreshold,
+	// TODO(Luca): no 2D & 3D version
+	void setPcmSimple2DParams(double transThreshold,
 			double rotThreshold, Verbosity verbos=Verbosity::UPDATE) {
-		outlierRemovalMethod = OutlierRemovalMethod::PCM_Distance2D;
+		outlierRemovalMethod = OutlierRemovalMethod::PCM_Simple2D;
 		pcmDist_transThreshold = transThreshold;
 		pcmDist_rotThreshold = rotThreshold;
 		verbosity = verbos;
 	}
 
-	void setPcmDist3DParams(double transThreshold,
+	void setPcmSimple3DParams(double transThreshold,
 			double rotThreshold, Verbosity verbos=Verbosity::UPDATE) {
-		outlierRemovalMethod = OutlierRemovalMethod::PCM_Distance3D;
+		outlierRemovalMethod = OutlierRemovalMethod::PCM_Simple3D;
 		pcmDist_transThreshold = transThreshold;
 		pcmDist_rotThreshold = rotThreshold;
 		verbosity = verbos;

@@ -90,6 +90,21 @@ TEST(RobustSolver, Add1)
   // Since odom check threshold is 0, should only have the odom edges + prior + between (no lc should have passed)
   EXPECT(nfg_out.size()==size_t(92));
   EXPECT(values_out.size()==size_t(92));
+
+  // Try add another loop closuer 
+  // create the between factor for connection
+  gtsam::Key key_b1 = gtsam::Symbol('b', 1);
+  gtsam::Key key_a1 = gtsam::Symbol('a', 1);
+  gtsam::Pose3 a1b1 = gtsam::Pose3();
+  gtsam::BetweenFactor<gtsam::Pose3> a1tob1(key_a1, key_b1, a1b1, noise);
+
+  gtsam::NonlinearFactorGraph newfactors;
+  newfactors.add(a1tob1);
+  gtsam::Values newvalues;
+  pgo->update(newfactors, newvalues);
+
+  EXPECT(nfg_out.size()==size_t(92));
+  EXPECT(values_out.size()==size_t(92));
 }
 
 /* ************************************************************************* */
@@ -104,6 +119,8 @@ TEST(RobustSolver, Load2)
   // set up RobustPGO solver
   RobustSolverParams params;
   params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET);
+  std::vector<char> special_symbs{'l', 'u'}; // for landmarks
+  params.specialSymbols = special_symbs;
 
   std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
 
@@ -165,6 +182,24 @@ TEST(RobustSolver, Add2)
 
   // Since thresholds are high, should have all the edges
   EXPECT(nfg_out.size()==size_t(97));
+  EXPECT(values_out.size()==size_t(92));
+
+  // Try add another loop closuer 
+  // create the between factor for connection
+  gtsam::Key key_b1 = gtsam::Symbol('b', 1);
+  gtsam::Key key_a1 = gtsam::Symbol('a', 1);
+  gtsam::Pose3 a1b1 = gtsam::Pose3();
+  gtsam::BetweenFactor<gtsam::Pose3> a1tob1(key_a1, key_b1, a1b1, noise);
+
+  gtsam::NonlinearFactorGraph newfactors;
+  newfactors.add(a1tob1);
+  gtsam::Values newvalues;
+  pgo->update(newfactors, newvalues);
+
+  nfg_out = pgo->getFactorsUnsafe();
+  values_out = pgo->calculateEstimate();
+
+  EXPECT(nfg_out.size()==size_t(98));
   EXPECT(values_out.size()==size_t(92));
 }
 
@@ -270,6 +305,24 @@ TEST(RobustSolver, NoRejectAdd)
   // Since thresholds are high, should have all the edges
   EXPECT(nfg_out.size()==size_t(97));
   EXPECT(values_out.size()==size_t(92));
+
+  // Try add another loop closuer 
+  // create the between factor for connection
+  gtsam::Key key_b1 = gtsam::Symbol('b', 1);
+  gtsam::Key key_a1 = gtsam::Symbol('a', 1);
+  gtsam::Pose3 a1b1 = gtsam::Pose3();
+  gtsam::BetweenFactor<gtsam::Pose3> a1tob1(key_a1, key_b1, a1b1, noise);
+
+  gtsam::NonlinearFactorGraph newfactors;
+  newfactors.add(a1tob1);
+  gtsam::Values newvalues;
+  pgo->update(newfactors, newvalues);
+
+  nfg_out = pgo->getFactorsUnsafe();
+  values_out = pgo->calculateEstimate();
+  
+  EXPECT(nfg_out.size()==size_t(98));
+  EXPECT(values_out.size()==size_t(92));
 }
 
 /* ************************************************************************* */
@@ -347,6 +400,24 @@ TEST(RobustSolver, Add1PcmSimple)
   // Thresholds are close to 0, should only have the odom edges + prior + between (no lc should have passed)
   EXPECT(nfg_out.size()==size_t(92));
   EXPECT(values_out.size()==size_t(92));
+
+  // Try add another loop closuer 
+  // create the between factor for connection
+  gtsam::Key key_b1 = gtsam::Symbol('b', 1);
+  gtsam::Key key_a1 = gtsam::Symbol('a', 1);
+  gtsam::Pose3 a1b1 = gtsam::Pose3();
+  gtsam::BetweenFactor<gtsam::Pose3> a1tob1(key_a1, key_b1, a1b1, noise);
+
+  gtsam::NonlinearFactorGraph newfactors;
+  newfactors.add(a1tob1);
+  gtsam::Values newvalues;
+  pgo->update(newfactors, newvalues);
+
+  nfg_out = pgo->getFactorsUnsafe();
+  values_out = pgo->calculateEstimate();
+  
+  EXPECT(nfg_out.size()==size_t(92));
+  EXPECT(values_out.size()==size_t(92));
 }
 
 /* ************************************************************************* */
@@ -422,6 +493,24 @@ TEST(RobustSolver, Add2PcmSimple)
 
   // Since thresholds are high, should have all the edges
   EXPECT(nfg_out.size()==size_t(97));
+  EXPECT(values_out.size()==size_t(92));
+
+  // Try add another loop closuer 
+  // create the between factor for connection
+  gtsam::Key key_b1 = gtsam::Symbol('b', 1);
+  gtsam::Key key_a1 = gtsam::Symbol('a', 1);
+  gtsam::Pose3 a1b1 = gtsam::Pose3();
+  gtsam::BetweenFactor<gtsam::Pose3> a1tob1(key_a1, key_b1, a1b1, noise);
+
+  gtsam::NonlinearFactorGraph newfactors;
+  newfactors.add(a1tob1);
+  gtsam::Values newvalues;
+  pgo->update(newfactors, newvalues);
+
+  nfg_out = pgo->getFactorsUnsafe();
+  values_out = pgo->calculateEstimate();
+  
+  EXPECT(nfg_out.size()==size_t(98));
   EXPECT(values_out.size()==size_t(92));
 }
 

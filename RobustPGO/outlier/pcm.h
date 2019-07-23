@@ -67,7 +67,7 @@ private:
   gtsam::Matrix lc_adjacency_matrix_;
   gtsam::Matrix lc_distance_matrix_;
 
-  std::unordered_map< gtsam::Key, T<poseT> > trajectory_odom_;
+  Trajectory<poseT, T> trajectory_odom_;
 
   std::vector<char> special_symbols_; // these should denote landmarks
   std::unordered_map< gtsam::Key, LandmarkMeasurements> landmarks_;
@@ -95,7 +95,7 @@ public:
     // specials are those that are not handled: the rangefactors for example (uwb)
 
     // initialize if pose is enoty: requrires either a single value or a prior factor
-    if (trajectory_odom_.size() == 0) {
+    if (trajectory_odom_.poses.size() == 0) {
       // single value no prior case
       if (new_values.size() == 1 && new_factors.size() == 0) {
         if (debug_) log<INFO>("Initializing without prior");
@@ -268,7 +268,7 @@ protected:
     T<poseT> initial_pose(prior_factor);
 
     // populate trajectory_odom_
-    trajectory_odom_[initial_key] = initial_pose;
+    trajectory_odom_.poses[initial_key] = initial_pose;
     nfg_odom_.add(prior_factor); // add to initial odometry
   }
 
@@ -278,7 +278,7 @@ protected:
     T<poseT> initial_pose;
 
     // populate trajectory_odom_
-    trajectory_odom_[initial_key] = initial_pose;
+    trajectory_odom_.poses[initial_key] = initial_pose;
   }
 
   // update the odometry: add new measurements to odometry trajectory tree
@@ -295,7 +295,7 @@ protected:
     T<poseT> prev_pose;
     try {
       prev_pose =
-        trajectory_odom_[prev_key];
+        trajectory_odom_.poses[prev_key];
     } catch (...) {
       log<WARNING>("Attempted to add odom to non-existing key. ");
     }
@@ -304,7 +304,7 @@ protected:
     T<poseT> new_pose = prev_pose.compose(odom_delta);
 
     // add to trajectory
-    trajectory_odom_[new_key] = new_pose;
+    trajectory_odom_.poses[new_key] = new_pose;
   }
 
   bool checkOdomConsistent(const PoseWithCovariance<poseT>& result,
@@ -342,12 +342,7 @@ protected:
 
     T<poseT> pij_odom, pji_lc, result;
 
-    // access (T_i,Cov_i) and (T_j, Cov_j) from trajectory_
-    T<poseT> pi_odom, pj_odom;
-    pi_odom = trajectory_odom_[key_i];
-    pj_odom = trajectory_odom_[key_j];
-
-    pij_odom = pi_odom.between(pj_odom);
+    pij_odom = trajectory_odom_.getBetween(key_i, key_j);
 
     // get pij_lc = (Tij_lc, Covij_lc) from factor
     pji_lc = T<poseT>(lc_factor).inverse();
@@ -395,16 +390,10 @@ protected:
     p2_lc = T<poseT>(lc_2);
 
     // find odometry from 1a to 2a
-    T<poseT> p1a_odom, p2a_odom, p1a2a_odom;
-    p1a_odom = trajectory_odom_[key1a];
-    p2a_odom = trajectory_odom_[key2a];
-    p1a2a_odom = p1a_odom.between(p2a_odom);
+    T<poseT> p1a2a_odom = trajectory_odom_.getBetween(key1a, key2a);
 
     // find odometry from 2b to 1b
-    T<poseT> p1b_odom, p2b_odom, p2b1b_odom;
-    p1b_odom = trajectory_odom_[key1b];
-    p2b_odom = trajectory_odom_[key2b];
-    p2b1b_odom = p2b_odom.between(p1b_odom);
+    T<poseT> p2b1b_odom = trajectory_odom_.getBetween(key2b, key1b);
 
     // check that lc_1 pose is consistent with pose from 1a to 1b
     T<poseT> p1a2b, p1a1b, result;
@@ -489,10 +478,7 @@ protected:
         pjl = T<poseT>(factor_j);
 
         // find odometry from 1a to 2a
-        T<poseT> pij_odom, pi_odom, pj_odom;
-        pi_odom = trajectory_odom_[keyi];
-        pj_odom = trajectory_odom_[keyj];
-        pij_odom = pi_odom.between(pj_odom);
+        T<poseT> pij_odom = trajectory_odom_.getBetween(keyi, keyj);
 
         // check that lc_1 pose is consistent with pose from 1a to 1b
         T<poseT> pil, result;

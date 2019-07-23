@@ -250,52 +250,6 @@ struct PoseWithNode {
   }
 };
 
-/** \struct Transform
- *  \brief Structure defining a transformation between two poses
- */
-template <class T>
-struct Transform {
-    gtsam::Key i, j;
-    PoseWithCovariance<T> pose;
-    bool is_separator;
-};
-
-/** \struct Transforms
- *  \brief Structure defining a std::map of transformations
- */
-template <class T>
-struct Transforms {
-    gtsam::Key start_id, end_id;
-    std::map<std::pair<gtsam::Key,gtsam::Key>, Transform<T>> transforms;
-};
-
-/** \struct TrajectoryPose
- *  \brief Structure defining a pose in a robot trajectory
- */
-template <class T>
-struct TrajectoryPose {
-    gtsam::Key id;
-    PoseWithCovariance<T> pose;
-};
-
-/** \struct Trajectory
- *  \brief Structure defining a robot trajectory
- */
-template <class T>
-struct Trajectory {
-    gtsam::Key start_id, end_id;
-    std::map<gtsam::Key, TrajectoryPose<T>> trajectory_poses;
-};
-
-/** \struct DistTrajectory
- *  \brief Same as Trajectory but instead of covariance tracks distance
- */
-template <class T>
-struct DistTrajectory {
-    gtsam::Key start_id, end_id;
-    std::map<gtsam::Key, PoseWithNode<T>> trajectory_poses;
-};
-
 }
 
 #endif

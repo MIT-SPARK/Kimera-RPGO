@@ -60,7 +60,7 @@ public:
 	}
 
 	// TODO(Luca): no 2D & 3D version
-	void setPcmSimp2DParams(double transThreshold,
+	void setPcmSimple2DParams(double transThreshold,
 			double rotThreshold, Verbosity verbos=Verbosity::UPDATE) {
 		outlierRemovalMethod = OutlierRemovalMethod::PCM_Simple2D;
 		pcmDist_transThreshold = transThreshold;
@@ -68,7 +68,7 @@ public:
 		verbosity = verbos;
 	}
 
-	void setPcmSimp3DParams(double transThreshold,
+	void setPcmSimple3DParams(double transThreshold,
 			double rotThreshold, Verbosity verbos=Verbosity::UPDATE) {
 		outlierRemovalMethod = OutlierRemovalMethod::PCM_Simple3D;
 		pcmDist_transThreshold = transThreshold;

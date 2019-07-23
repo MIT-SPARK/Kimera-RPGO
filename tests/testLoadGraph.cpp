@@ -192,8 +192,8 @@ TEST(RobustSolver, Load1NoPrior)
   gtsam::Values values_out = pgo->calculateEstimate();
 
   // Since odom check threshold is 0, should only have the odom edges
-  EXPECT(gtsam::assert_equal(nfg_out.size(), size_t(49)));
-  EXPECT(gtsam::assert_equal(values_out.size(), size_t(50)));
+  EXPECT(nfg_out.size()==size_t(49));
+  EXPECT(values_out.size()==size_t(50));
 }
 
 /* ************************************************************************* */

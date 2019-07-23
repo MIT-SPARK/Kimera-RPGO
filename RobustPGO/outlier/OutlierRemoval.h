@@ -13,11 +13,13 @@ namespace RobustPGO {
 class OutlierRemoval {
 public:
 	virtual ~OutlierRemoval() = default;
+	// TODO(Luca): this must be called removeOutliers
 	virtual bool process(const gtsam::NonlinearFactorGraph& new_factors,
 				               const gtsam::Values& new_values,
 				               gtsam::NonlinearFactorGraph& nfg,
 				               gtsam::Values& values) = 0;
 
+	// need comments here
 	virtual bool processForcedLoopclosure(
 			const gtsam::NonlinearFactorGraph& new_factors,
 			const gtsam::Values& new_values,

@@ -31,18 +31,34 @@ namespace RobustPGO {
 class RobustSolver : public GenericSolver{
 public:
   RobustSolver(const RobustSolverParams& params);
-      // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton
+      // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton // TODO(Luca): this seems an old comment
 
+  // TODO(Luca): add comments: what are the inputs, what are the outputs, what is this function doing?
+  /*
+   * add new factors and values and optimize, possibly after rejecting outliers.
+   * - nfg: new factors
+   * - values: linearization point for new variables
+   * - factorsToRemove: TODO(Luca): what is this?
+   */
   void update(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(),
               const gtsam::Values& values=gtsam::Values(),
               const gtsam::FactorIndices& factorsToRemove=gtsam::FactorIndices());
 
+  /*
+   * TODO(Luca): add comments
+   */
   void forceUpdate(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(),
               const gtsam::Values& values=gtsam::Values(),
               const gtsam::FactorIndices& factorsToRemove=gtsam::FactorIndices());
 
-  void force_optimize();
+  /*
+   * TODO(Luca): add comments
+   */
+  void force_optimize(); //TODO: naming conventions: is either force_update or forceOptimize (above): decide which naming convention and stick to it
 
+  /*
+   * TODO(Luca): add comments
+   */
   template<class T>
   void loadGraph(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values,
       const gtsam::PriorFactor<T>& prior) {
@@ -60,6 +76,9 @@ public:
     connectGraph<T>(factors, values, prior.key());
   }
 
+  /*
+   * TODO(Luca): add comments
+   */
   template<class T>
   void loadGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values, gtsam::Key key0=0) {
     gtsam::Values prior_values; 
@@ -70,9 +89,13 @@ public:
     } else {
       process(gtsam::NonlinearFactorGraph(), prior_values);
     }
+    // TODO(Luca): optimize is included  in connectGraph? not a great interface
     connectGraph<T>(factors, values, key0);
   }
 
+  /*
+   * TODO(Luca): add comments
+   */
   template<class T>
   void addGraph(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values,
       const gtsam::BetweenFactor<T>& connector) {
@@ -89,10 +112,13 @@ public:
     } else {
       process(connect_factor, connect_values);
     }
-
+    // TODO(Luca): optimize is included  in connectGraph? not a great interface
     connectGraph<T>(factors, values, key0);
   }
 
+  /*
+   * TODO(Luca): add comments
+   */
   void saveData(std::string folder_path) const {
     std::string g2o_file_path = folder_path + "/result.g2o";
     gtsam::writeG2o(nfg_, values_, g2o_file_path);
@@ -100,6 +126,9 @@ public:
   }
 
 private:
+  /*
+   * TODO(Luca): add comments
+   */
   template<class T>
   void connectGraph(gtsam::NonlinearFactorGraph factors,
       const gtsam::Values& values, const gtsam::Key& key0) {
@@ -122,6 +151,7 @@ private:
           // }
           gtsam::Values new_values;
           gtsam::NonlinearFactorGraph new_factors;
+          // TODO(Luca): why renaming the keys?
           new_values.insert(current_key + 1, values.at<T>(current_key + 1));
           new_factors.add(factors[i]);
 

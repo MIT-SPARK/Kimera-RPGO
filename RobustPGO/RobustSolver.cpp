@@ -94,39 +94,27 @@ void RobustSolver::optimize() {
 }
 
 void RobustSolver::update(const gtsam::NonlinearFactorGraph& nfg,
-                       const gtsam::Values& values,
-                       const gtsam::FactorIndices& factorsToRemove) {
-  // remove factors
-  bool remove_factors = false;
-  if (factorsToRemove.size() > 0) {remove_factors = true;}
-  for (size_t index : factorsToRemove) {
-    nfg_[index].reset();
-  }
+                       const gtsam::Values& values) {
 
   // loop closures/outlier rejection
   bool process_lc;
   if (outlier_removal_) {
-    process_lc = outlier_removal_->process(nfg, values, nfg_, values_);
+    process_lc = outlier_removal_->removeOutliers(nfg, values, nfg_, values_);
   } else {
     process_lc = process(nfg, values); // use default process
   }
 
   // optimize
-  if (remove_factors || process_lc) {
+  if (process_lc) {
     optimize();
   }
 }
 
 void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,
-                       const gtsam::Values& values,
-                       const gtsam::FactorIndices& factorsToRemove) {
-  // remove factors
-  for (size_t index : factorsToRemove) {
-    nfg_[index].reset();
-  }
+                       const gtsam::Values& values) {
 
   if (outlier_removal_) {
-    outlier_removal_->processForcedLoopclosure(nfg, values, nfg_, values_);
+    outlier_removal_->removeOutliers(nfg, values, nfg_, values_);
   } else {
     process(nfg, values);
   }

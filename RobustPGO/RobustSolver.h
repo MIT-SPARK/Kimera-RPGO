@@ -68,7 +68,7 @@ public:
     prior_values.insert(prior.key(), prior.prior());
 
     if (outlier_removal_) {
-      outlier_removal_->process(prior_factor, prior_values, nfg_, values_);
+      outlier_removal_->removeOutliers(prior_factor, prior_values, nfg_, values_);
     } else {
       process(prior_factor, prior_values);
     }
@@ -90,7 +90,7 @@ public:
     prior_values.insert(key0, values.at<T>(key0));
 
     if (outlier_removal_) {
-      outlier_removal_->process(gtsam::NonlinearFactorGraph(), prior_values, nfg_, values_);
+      outlier_removal_->removeOutliers(gtsam::NonlinearFactorGraph(), prior_values, nfg_, values_);
     } else {
       process(gtsam::NonlinearFactorGraph(), prior_values);
     }
@@ -120,7 +120,7 @@ public:
     connect_values.insert(key0, values.at<T>(key0));
 
     if (outlier_removal_) {
-      outlier_removal_->process(connect_factor, connect_values, nfg_, values_);
+      outlier_removal_->removeOutliers(connect_factor, connect_values, nfg_, values_);
     } else {
       process(connect_factor, connect_values);
     }
@@ -175,7 +175,7 @@ private:
           new_factors.add(factors[i]);
 
           if (outlier_removal_) {
-            outlier_removal_->process(new_factors, new_values, nfg_, values_);
+            outlier_removal_->removeOutliers(new_factors, new_values, nfg_, values_);
           } else {
             process(new_factors, new_values);
           }
@@ -199,7 +199,7 @@ private:
           new_factors.add(factors[i]);
 
           if (outlier_removal_) {
-            outlier_removal_->process(new_factors, new_values, nfg_, values_);
+            outlier_removal_->removeOutliers(new_factors, new_values, nfg_, values_);
           } else {
             process(new_factors, new_values);
           }
@@ -222,7 +222,7 @@ private:
     }
 
     if (outlier_removal_) {
-      outlier_removal_->process(new_factors, gtsam::Values(), nfg_, values_);
+      outlier_removal_->removeOutliers(new_factors, gtsam::Values(), nfg_, values_);
     } else {
       process(new_factors, gtsam::Values());
     }

@@ -74,7 +74,7 @@ private:
 
 public:
 
-  virtual bool process(const gtsam::NonlinearFactorGraph& new_factors,
+  virtual bool removeOutliers(const gtsam::NonlinearFactorGraph& new_factors,
                const gtsam::Values& new_values,
                gtsam::NonlinearFactorGraph& output_nfg,
                gtsam::Values& output_values) override{
@@ -128,12 +128,12 @@ public:
     // other cases will just be put through the special loop closures (which needs to be carefully considered)
 
     if (odometry) {
-      // check if it is a landmark measurement 
+      // check if it is a landmark measurement
       gtsam::Symbol symb(new_values.keys()[0]);
       if (specialSymbol(symb.chr())) {
-        // landmark measurement, initialize 
+        // landmark measurement, initialize
         log<INFO>("New landmark observed");
-        LandmarkMeasurements newMeasurement(new_factors); 
+        LandmarkMeasurements newMeasurement(new_factors);
         landmarks_[symb] = newMeasurement;
       } else {
         // update trajectory_odom_;
@@ -148,7 +148,7 @@ public:
       // - store latest pose in values_ (note: values_ is the optimized estimate, while trajectory is the odom estimate)
       output_values.insert(new_values);
       output_nfg = updateOutputGraph();
-      
+
       return false; // no need to optimize just for odometry
     }
 
@@ -170,15 +170,15 @@ public:
             continue;
           }
 
-          // check if it is a landmark measurement loop closure 
+          // check if it is a landmark measurement loop closure
           gtsam::Symbol symbfrnt(nfg_factor.front());
           gtsam::Symbol symbback(nfg_factor.back());
           if (specialSymbol(symbfrnt.chr()) || specialSymbol(symbback.chr())) {
-            // it is landmark loop closure 
-            gtsam::Key landmark_key = (specialSymbol(symbfrnt.chr()) ? 
+            // it is landmark loop closure
+            gtsam::Key landmark_key = (specialSymbol(symbfrnt.chr()) ?
                 nfg_factor.front() : nfg_factor.back());
 
-            log<INFO>("loop closing with landmark %1%") % 
+            log<INFO>("loop closing with landmark %1%") %
                 gtsam::DefaultKeyFormatter(landmark_key);
 
             landmarks_[landmark_key].factors.add(nfg_factor);
@@ -232,12 +232,12 @@ public:
     return true;
   }
 
-  virtual bool processForcedLoopclosure(
+  virtual bool addMeasurements(
       const gtsam::NonlinearFactorGraph& new_factors,
       const gtsam::Values& new_values,
       gtsam::NonlinearFactorGraph& output_nfg,
       gtsam::Values& output_values) override{
-    // force loop closure (without outlier rejection)
+    log<WARNING>("Warning: Adding measurements and bypassing outlier rejection.");
     nfg_special_.add(new_factors);
     output_values.insert(new_values);
     // reset graph
@@ -418,7 +418,7 @@ protected:
 
   void incrementLandmarkAdjMatrix(const gtsam::Key& ldmk_key) {
     // pairwise consistency check for landmarks
-    size_t num_lc = landmarks_[ldmk_key].factors.size(); // number measurements 
+    size_t num_lc = landmarks_[ldmk_key].factors.size(); // number measurements
     Eigen::MatrixXd new_adj_matrix = Eigen::MatrixXd::Zero(num_lc, num_lc);
     Eigen::MatrixXd new_dst_matrix = Eigen::MatrixXd::Zero(num_lc, num_lc);
     if (num_lc > 1) {

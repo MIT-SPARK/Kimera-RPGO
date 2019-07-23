@@ -162,84 +162,91 @@ struct PoseWithCovariance {
     return out;
   }
 
-  double norm() const {
+  double mahalanobis_norm() const {
     // calculate mahalanobis norm
     gtsam::Vector log = T::Logmap(pose);
     return std::sqrt(log.transpose() * gtsam::inverse(covariance_matrix) * log);
   }
 };
 
-/** \struct PoseWithDistance
- *  \brief Structure to store a pose and its distance from start
+/** \struct PoseWithNode
+ *  \brief Structure to store a pose and its distance (number of nodes) from start
  *  \currently supports gtsam::Pose2 and gtsam::Pose3
  */
 template <class T>
-struct PoseWithDistance {
+struct PoseWithNode {
   /* variables ------------------------------------------------ */
   /* ---------------------------------------------------------- */
   T pose; // ex. gtsam::Pose3
-  double distance;
+  int node; // node away from prior
 
   /* default constructor -------------------------------------- */
-  PoseWithDistance() {
-    pose =  T();
-    distance = 0;
+  PoseWithNode() {
+    pose = T();
+    node = 0;
   }
 
   /* basic constructor ---------------------------------------- */
-  PoseWithDistance(T pose_in, double dist_in) {
+  PoseWithNode(T pose_in, int node_in) {
     pose = pose_in;
-    distance = dist_in;
+    node = node_in;
   }
 
   /* construct from gtsam prior factor ------------------------ */
-  PoseWithDistance(const gtsam::PriorFactor<T>& prior_factor) {
+  PoseWithNode(const gtsam::PriorFactor<T>& prior_factor) {
     T value = prior_factor.prior();
     pose = value;
-    distance = 0.0;
+    node = 0;
   }
 
   /* construct from gtsam between factor  --------------------- */
-  PoseWithDistance(const gtsam::BetweenFactor<T>& between_factor) {
+  PoseWithNode(const gtsam::BetweenFactor<T>& between_factor) {
     pose = between_factor.measured();
-    distance = between_factor.measured().translation().norm();
+    node = 1;
   }
 
-  /* method to combine two poses (along with their covariances) */
+  /* method to combine two poses (along with their node numbers) */
   /* ---------------------------------------------------------- */
-  PoseWithDistance compose(const PoseWithDistance& other) const {
-    PoseWithDistance<T> out;
+  PoseWithNode compose(const PoseWithNode& other) const {
+    PoseWithNode<T> out;
 
     out.pose = pose.compose(other.pose);
-    out.distance = distance + other.pose.translation().norm();
+    out.node = node + other.node;
     return out;
   }
 
   /* method to invert a pose along with its covariance -------- */
   /* ---------------------------------------------------------- */
-  PoseWithDistance inverse() const {
-    PoseWithDistance<T> out;
+  PoseWithNode inverse() const {
+    PoseWithNode<T> out;
 
     out.pose = pose.inverse();
-    out.distance = distance;
+    out.node = node;
     return out;
   }
 
   /* method to find the transform between two poses ------------ */
   /* ----------------------------------------------------------- */
-  PoseWithDistance between(const PoseWithDistance& other) const {
-    PoseWithDistance<T> out;
+  PoseWithNode between(const PoseWithNode& other) const {
+    PoseWithNode<T> out;
     out.pose = pose.between(other.pose); // returns between in a frame
 
-    out.distance = abs(other.distance - distance);
+    out.node = abs(other.node - node);
     return out;
   }
 
-  double norm() const {
+  double trans_norm() const {
     // calculate mahalanobis norm
     gtsam::Vector log = T::Logmap(pose);
     const int t_dim =  getTranslationDim<T>();
-    return std::sqrt(log.tail(t_dim).transpose() * log.tail(t_dim)) / distance;
+    return std::sqrt(log.tail(t_dim).transpose() * log.tail(t_dim)) / node;
+  }
+
+  double rot_norm() const {
+    // calculate mahalanobis norm
+    gtsam::Vector log = T::Logmap(pose);
+    const int r_dim =  getRotationDim<T>();
+    return std::sqrt(log.head(r_dim).transpose() * log.head(r_dim)) / node;
   }
 };
 
@@ -286,7 +293,7 @@ struct Trajectory {
 template <class T>
 struct DistTrajectory {
     gtsam::Key start_id, end_id;
-    std::map<gtsam::Key, PoseWithDistance<T>> trajectory_poses;
+    std::map<gtsam::Key, PoseWithNode<T>> trajectory_poses;
 };
 
 }

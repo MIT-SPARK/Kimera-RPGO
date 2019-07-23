@@ -47,8 +47,8 @@ public:
   Pcm(double odom_threshold, double lc_threshold,
     const std::vector<char>& special_symbols=std::vector<char>()):
     OutlierRemoval(),
-    odom_threshold_(odom_threshold),
-    lc_threshold_(lc_threshold),
+    threshold1_(odom_threshold),
+    threshold2_(lc_threshold),
     special_symbols_(special_symbols) {
   // check if templated value valid
   BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<poseT>));
@@ -57,8 +57,8 @@ public:
   // initialize with odometry detect threshold and pairwise consistency threshold
 
 private:
-  double odom_threshold_;
-  double lc_threshold_;
+  double threshold1_;
+  double threshold2_;
 
   gtsam::NonlinearFactorGraph nfg_odom_;
   gtsam::NonlinearFactorGraph nfg_special_;
@@ -307,6 +307,31 @@ protected:
     trajectory_odom_[new_key] = new_pose;
   }
 
+  bool checkOdomConsistent(const PoseWithCovariance<poseT>& result,
+        double& dist) {
+    // For Pcm
+    dist = result.mahalanobis_norm();
+    if (debug_) log<INFO>("odometry consistency distance: %1%") % dist;
+    if (dist < threshold1_) {
+      return true;
+    }
+    return false;
+  }
+
+  bool checkOdomConsistent(const PoseWithNode<poseT>& result,
+        double& dist) {
+    // For PcmSimple
+    dist = result.trans_norm();
+    double rot_dist = result.rot_norm();
+
+    if (debug_) log<INFO>("odometry consistency translation distance: %1%") % dist;
+    if (debug_) log<INFO>("odometry consistency rotation distance: %1%") % rot_dist;
+    if (dist < threshold1_ && rot_dist < threshold2_) {
+      return true;
+    }
+    return false;
+  }
+
   // check if loop closure is consistent with the odometry easurements
   bool isOdomConsistent(const gtsam::BetweenFactor<poseT>& lc_factor,
                         double& dist) {
@@ -331,13 +356,27 @@ protected:
     result = pij_odom.compose(pji_lc);
     // if (debug_) result.pose.print("odom consistency check: ");
 
-    dist = result.norm(); // mahalanobis dist for PoseWithCovariance
+    return checkOdomConsistent(result, dist);
+  }
 
-    if (debug_) log<INFO>("odometry consistency distance: %1%") % dist;
-    if (dist < odom_threshold_) {
+  bool checkLoopConsistent(const PoseWithCovariance<poseT>& result,
+        double& dist) {
+    // For Pcm
+    dist = result.mahalanobis_norm();
+    if (dist < threshold2_) {
       return true;
     }
+    return false;
+  }
 
+  bool checkLoopConsistent(const PoseWithNode<poseT>& result,
+        double& dist) {
+    // For PcmSimple
+    dist = result.trans_norm();
+    double rot_dist = result.rot_norm();
+    if (dist < threshold1_ && rot_dist < threshold2_) {
+      return true;
+    }
     return false;
   }
 
@@ -373,14 +412,7 @@ protected:
     p1a1b = p1a2b.compose(p2b1b_odom);
     result = p1a1b.compose(p1_lc_inv);
 
-    dist = result.norm(); // mahalanobis dist for PoseWithCovariance
-
-    if (debug_) log<INFO>("loop consistency distance: %1%") % dist;
-    if (dist < lc_threshold_) {
-      return true;
-    }
-
-    return false;
+    return checkLoopConsistent(result, dist);
   }
 
   // increment the adjacency matrix for the main loop closures
@@ -467,10 +499,12 @@ protected:
         pil = pij_odom.compose(pjl);
         result = pil.compose(pil_inv);
 
-        double dist = result.norm(); // mahalanobis dist for PoseWithCovariance
+        double dist;
+        bool consistent = checkLoopConsistent(result, dist);
+
         new_dst_matrix(num_lc-1, i) = dist;
         new_dst_matrix(i, num_lc-1) = dist;
-        if (dist < lc_threshold_) {
+        if (consistent) {
           new_adj_matrix(num_lc-1, i) = 1;
           new_adj_matrix(i, num_lc-1) = 1;
         }
@@ -561,8 +595,8 @@ protected:
 
 typedef Pcm<gtsam::Pose2, PoseWithCovariance> Pcm2D;
 typedef Pcm<gtsam::Pose3, PoseWithCovariance> Pcm3D;
-typedef Pcm<gtsam::Pose2, PoseWithDistance> PcmDistance2D;
-typedef Pcm<gtsam::Pose3, PoseWithDistance> PcmDistance3D;
+typedef Pcm<gtsam::Pose2, PoseWithNode> PcmSimple2D;
+typedef Pcm<gtsam::Pose3, PoseWithNode> PcmSimple3D;
 
 }
 

@@ -15,8 +15,8 @@ enum class OutlierRemovalMethod {
 	NONE, // no outlier rejection
 	PCM2D,
 	PCM3D,
-	PCM_Distance2D,
-	PCM_Distance3D
+	PCM_Simple2D,
+	PCM_Simple3D
 };
 
 enum class Verbosity {
@@ -41,7 +41,7 @@ public:
 		outlierRemovalMethod = OutlierRemovalMethod::NONE;
 		verbosity = verbos;
 	}
-	
+
 	// TODO(Luca): no 2D & 3D version
 	void setPcm2DParams(double odomThreshold,
 			double lcThreshold, Verbosity verbos=Verbosity::UPDATE) {
@@ -60,17 +60,17 @@ public:
 	}
 
 	// TODO(Luca): no 2D & 3D version
-	void setPcmDist2DParams(double transThreshold,
+	void setPcmSimp2DParams(double transThreshold,
 			double rotThreshold, Verbosity verbos=Verbosity::UPDATE) {
-		outlierRemovalMethod = OutlierRemovalMethod::PCM_Distance2D;
+		outlierRemovalMethod = OutlierRemovalMethod::PCM_Simple2D;
 		pcmDist_transThreshold = transThreshold;
 		pcmDist_rotThreshold = rotThreshold;
 		verbosity = verbos;
 	}
 
-	void setPcmDist3DParams(double transThreshold,
+	void setPcmSimp3DParams(double transThreshold,
 			double rotThreshold, Verbosity verbos=Verbosity::UPDATE) {
-		outlierRemovalMethod = OutlierRemovalMethod::PCM_Distance3D;
+		outlierRemovalMethod = OutlierRemovalMethod::PCM_Simple3D;
 		pcmDist_transThreshold = transThreshold;
 		pcmDist_rotThreshold = rotThreshold;
 		verbosity = verbos;

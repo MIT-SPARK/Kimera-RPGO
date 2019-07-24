@@ -41,10 +41,10 @@ namespace RobustPGO {
 // Defines the behaviour of this backend.
 enum class FactorType {
   UNCLASSIFIED = 0,
-      ODOMETRY = 1, //
-      FIRST_LANDMARK_OBSERVATION = 2,
-      LOOP_CLOSURES = 3, // both between poses and landmark re-observations (may be more than 1)
-      NONBETWEEN_FACTORS = 4, // not handled by PCM (may be more than 1)
+  ODOMETRY = 1, //
+  FIRST_LANDMARK_OBSERVATION = 2,
+  LOOP_CLOSURES = 3, // both between poses and landmark re-observations (may be more than 1)
+  NONBETWEEN_FACTORS = 4, // not handled by PCM (may be more than 1)
 };
 
 // poseT can be gtsam::Pose2 or Pose3 for 3D vs 3D
@@ -54,11 +54,11 @@ enum class FactorType {
 template<class poseT, template <class> class T>
 class Pcm : public OutlierRemoval{
 public:
-  Pcm(double odom_threshold, double lc_threshold,
+  Pcm(double threshold1, double threshold2,
       const std::vector<char>& special_symbols=std::vector<char>()):
         OutlierRemoval(),
-        threshold1_(odom_threshold),  // TODO(Luca): threshold1 and 2 seem too generic as names
-        threshold2_(lc_threshold),
+        threshold1_(threshold1),  // TODO(Luca): threshold1 and 2 seem too generic as names
+        threshold2_(threshold2),
         special_symbols_(special_symbols) {
     // check if templated value valid
     BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<poseT>));
@@ -70,14 +70,14 @@ private:
   double threshold1_;
   double threshold2_;
 
-  gtsam::NonlinearFactorGraph nfg_odom_; // TODO(Luca): comment on each one
-  gtsam::NonlinearFactorGraph nfg_special_; // TODO(Luca): without a comment this is pure magic..
-  gtsam::NonlinearFactorGraph nfg_lc_;
-  gtsam::NonlinearFactorGraph nfg_good_lc_;
-  gtsam::Matrix lc_adjacency_matrix_;
-  gtsam::Matrix lc_distance_matrix_;
+  gtsam::NonlinearFactorGraph nfg_odom_; // NonlinearFactorGraph storing all odometry factors
+  gtsam::NonlinearFactorGraph nfg_special_; // NonlinearFactorGraph storing all NonBetweenFactors
+  gtsam::NonlinearFactorGraph nfg_lc_; // NonlinearFactorGraph storing all loop closure measurements
+  gtsam::NonlinearFactorGraph nfg_good_lc_; // NonlinearFactorGraph storing the inliers found at last max clique query
+  gtsam::Matrix lc_adjacency_matrix_; // adjacency matrix storing the consistency of each pair of loop closures
+  gtsam::Matrix lc_distance_matrix_; // matrix storing distances between each pairs of loop closures
 
-  Trajectory<poseT, T> trajectory_odom_;
+  Trajectory<poseT, T> trajectory_odom_; // trajectory storing keys and poses
 
   std::vector<char> special_symbols_; // these are the symbols corresponding to landmarks
   std::unordered_map< gtsam::Key, LandmarkMeasurements> landmarks_;

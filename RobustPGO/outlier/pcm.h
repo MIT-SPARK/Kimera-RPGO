@@ -37,6 +37,16 @@ author: Yun Chang, Luca Carlone
 
 namespace RobustPGO {
 
+/* ------------------------------------------------------------------------ */
+// Defines the behaviour of this backend.
+enum class FactorType {
+  UNCLASSIFIED = 0,
+  ODOMETRY = 1, //
+  FIRST_LANDMARK_OBSERVATION = 2,
+  LOOP_CLOSURES = 3, // both between poses and landmark re-observations (may be more than 1)
+  NONBETWEEN_FACTORS = 4, // not handled by PCM (may be more than 1)
+};
+
 // poseT can be gtsam::Pose2 or Pose3 for 3D vs 3D
 // T can be PoseWithCovariance or PoseWithDistance based on
 // If using Pcm or PcmDistance
@@ -47,7 +57,7 @@ public:
   Pcm(double odom_threshold, double lc_threshold,
     const std::vector<char>& special_symbols=std::vector<char>()):
     OutlierRemoval(),
-    threshold1_(odom_threshold),
+    threshold1_(odom_threshold),  // TODO(Luca): threshold1 and 2 seem too generic as names
     threshold2_(lc_threshold),
     special_symbols_(special_symbols) {
   // check if templated value valid
@@ -60,8 +70,8 @@ private:
   double threshold1_;
   double threshold2_;
 
-  gtsam::NonlinearFactorGraph nfg_odom_;
-  gtsam::NonlinearFactorGraph nfg_special_;
+  gtsam::NonlinearFactorGraph nfg_odom_; // TODO(Luca): comment on each one
+  gtsam::NonlinearFactorGraph nfg_special_; // TODO(Luca): without a comment this is pure magic..
   gtsam::NonlinearFactorGraph nfg_lc_;
   gtsam::NonlinearFactorGraph nfg_good_lc_;
   gtsam::Matrix lc_adjacency_matrix_;
@@ -69,7 +79,7 @@ private:
 
   Trajectory<poseT, T> trajectory_odom_;
 
-  std::vector<char> special_symbols_; // these should denote landmarks
+  std::vector<char> special_symbols_; // these are the symbols corresponding to landmarks
   std::unordered_map< gtsam::Key, LandmarkMeasurements> landmarks_;
 
 public:
@@ -86,24 +96,33 @@ public:
                const gtsam::Values& new_values,
                gtsam::NonlinearFactorGraph& output_nfg,
                gtsam::Values& output_values) override{
+    // we first classify the current factors into the following categories:
+    FactorType type = FactorType::UNCLASSIFIED;
+
+//        ODOMETRY = 0, //
+//          FIRST_LANDMARK_OBSERVATION = 1,
+//          LOOP_CLOSURES = 2, // both between poses and landmark re-observations (may be more than 1)
+//          NONBETWEEN_FACTORS
+//
+//          UNCLASSIFIED
+
     bool odometry = false;
     bool loop_closures = false;
-    bool special_odometry = false;
+    bool first_landmark_observation = false;
+    bool special_odometry = false; // TODO: this is currently very confusing: maybe call "unhandled_factors" or "special_factors"?
 
     // current logic: odometry and loop_closure are for those handled by outlier rej
     // mostly the betweenFactors and the PriorFactors
     // specials are those that are not handled: the rangefactors for example (uwb)
 
-    // initialize if pose is enoty: requrires either a single value or a prior factor
+    // initialize trajectory for PCM if empty: requires either a single value or a prior factor
     if (trajectory_odom_.poses.size() == 0) {
-      // single value no prior case
-      if (new_values.size() == 1 && new_factors.size() == 0) {
+      if (new_values.size() == 1 && new_factors.size() == 0) { // single value no prior case
         if (debug_) log<INFO>("Initializing without prior");
         initialize(new_values.keys()[0]);
         output_values.insert(new_values);
         return false; // nothing to optimize yet
-      // prior factor case
-      } else if (boost::dynamic_pointer_cast<gtsam::PriorFactor<poseT> >(new_factors[0])) {
+      } else if (boost::dynamic_pointer_cast<gtsam::PriorFactor<poseT> >(new_factors[0])) { // prior factor case
         if (debug_) log<INFO>("Initializing with prior");
         gtsam::PriorFactor<poseT> prior_factor =
             *boost::dynamic_pointer_cast<gtsam::PriorFactor<poseT> >(new_factors[0]);
@@ -111,53 +130,55 @@ public:
         output_values.insert(new_values);
         output_nfg.add(new_factors); // assumption is that there is only one factor in new_factors
         return false; // noothing to optimize yet
-      // unknow case, fail
-      } else {
-        log<WARNING> ("Unhandled initialization case.");
+      } else { // unknow case, fail
+        log<WARNING> ("Unhandled initialization: first time PCM is called, it needs a particular input");
         return false;
       }
       if (debug_) log<INFO>("Initialized trajectory");
     }
 
-    // now if the value size is one, should be an odometry
-    // (could also have a loop closure if factor size > 1)
-    if (new_values.size() == 1 && new_factors.size() == 1) {
+    // now if the value size is one, should be an odometry // (could also have a loop closure if factor size > 1)
+    if (new_factors.size() == 1 && new_factors[0]->keys().size() == 2 && new_values.size() == 1) {
       if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[0])) {
         // specifically what outlier rejection handles
-        odometry = true;
+        gtsam::Symbol symb(new_values.keys()[0]);
+        if (isSpecialSymbol(symb.chr())) { // is it a landmark?
+          first_landmark_observation = true;
+        }else{
+          odometry = true; // just regular odometry
+        }
       } else {
-        special_odometry = true;
+        special_odometry = true; // unrecognized factor, not checked for outlier rejection
       }
-
     } else if (new_factors.size() > 0 && new_values.size() == 0) {
-      loop_closures = true;
+      loop_closures = true; // both between poses and landmarks
     }
 
     // other cases will just be put through the special loop closures (which needs to be carefully considered)
 
-    if (odometry) {
-      // check if it is a landmark measurement
-      gtsam::Symbol symb(new_values.keys()[0]);
-      if (specialSymbol(symb.chr())) {
-        // landmark measurement, initialize
-        log<INFO>("New landmark observed");
-        LandmarkMeasurements newMeasurement(new_factors);
-        landmarks_[symb] = newMeasurement;
-      } else {
-        // update trajectory_odom_;
-        // extract between factor
-        gtsam::BetweenFactor<poseT> odom_factor =
-            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[0]);
-        updateOdom(odom_factor);
-        // - store factor in nfg_odom_
-        nfg_odom_.add(odom_factor);
+    if (odometry || first_landmark_observation) {
+
+      if (odometry) {
+      // update trajectory_odom_; extract between factor
+      gtsam::BetweenFactor<poseT> odom_factor =
+          *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[0]);
+      updateOdom(odom_factor);
+      // - store factor in nfg_odom_
+      nfg_odom_.add(odom_factor);
       }
 
-      // - store latest pose in values_ (note: values_ is the optimized estimate, while trajectory is the odom estimate)
-      output_values.insert(new_values);
-      output_nfg = updateOutputGraph();
+    if (first_landmark_observation) { // landmark measurement, initialize
+      log<INFO>("New landmark observed");
+      LandmarkMeasurements newMeasurement(new_factors);
+      gtsam::Symbol symb(new_values.keys()[0]);
+      landmarks_[symb] = newMeasurement;
+    }
 
-      return false; // no need to optimize just for odometry
+    // - store latest pose in values_ (note: values_ is the optimized estimate, while trajectory is the odom estimate)
+    output_values.insert(new_values);
+    output_nfg = updateOutputGraph();
+
+    return false; // no need to optimize just for odometry
     }
 
     if (loop_closures) {
@@ -181,9 +202,9 @@ public:
           // check if it is a landmark measurement loop closure
           gtsam::Symbol symbfrnt(nfg_factor.front());
           gtsam::Symbol symbback(nfg_factor.back());
-          if (specialSymbol(symbfrnt.chr()) || specialSymbol(symbback.chr())) {
+          if (isSpecialSymbol(symbfrnt.chr()) || isSpecialSymbol(symbback.chr())) {
             // it is landmark loop closure
-            gtsam::Key landmark_key = (specialSymbol(symbfrnt.chr()) ?
+            gtsam::Key landmark_key = (isSpecialSymbol(symbfrnt.chr()) ?
                 nfg_factor.front() : nfg_factor.back());
 
             log<INFO>("loop closing with landmark %1%") %
@@ -252,7 +273,7 @@ public:
 protected:
 
   // check if a character is a special symbol as defined in constructor
-  bool specialSymbol(char symb) {
+  bool isSpecialSymbol(char symb) {
     for (size_t i = 0; i < special_symbols_.size(); i++) {
       if (special_symbols_[i] == symb) return true;
     }

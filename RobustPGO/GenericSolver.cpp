@@ -30,9 +30,8 @@ bool GenericSolver::addAndCheckIfOptimize(const gtsam::NonlinearFactorGraph& nfg
   values_.insert(values);
   bool do_optimize = true;
 
-  // Do not optimize for just odometry additions
-  // odometry
-  if (nfg.size() == 1 && values.size() == 1) {return false;}
+  // Do not optimize for just odometry (between) additions
+  if (nfg.size() == 1 && nfg[0]->keys().size() == 2 && values.size() == 1) {return false;}
 
   // nothing added so no optimization
   if (nfg.size() == 0 && values.size() == 0) {return false;}

@@ -123,10 +123,9 @@ struct PoseWithCovariance {
   /* method to invert a pose along with its covariance -------- */
   /* ---------------------------------------------------------- */
   PoseWithCovariance inverse() const {
-    gtsam::Matrix Ha;
     PoseWithCovariance<T> out;
-    out.pose = pose.inverse(Ha);
-    out.covariance_matrix = Ha * covariance_matrix * Ha.transpose();
+    out.pose = pose.inverse();
+    out.covariance_matrix = covariance_matrix;
 
     return out;
   }

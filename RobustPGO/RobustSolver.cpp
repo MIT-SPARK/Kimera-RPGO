@@ -123,7 +123,9 @@ void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,
 }
 
 void RobustSolver::addOdometry(const gtsam::NonlinearFactorGraph& odom_factor, const gtsam::Values& odom_values) {
-  // TODO add warning if more tha one factor / value
+  if (odom_factor.size() != 1 || odom_values.size() > 1) {
+    log<WARNING>("RobustSolver::addOdometry expects single factor and single value.");
+  }
   if (outlier_removal_) {
     outlier_removal_->removeOutliers(odom_factor, odom_values, nfg_, values_);
   } else {

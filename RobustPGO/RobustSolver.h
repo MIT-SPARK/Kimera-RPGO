@@ -53,76 +53,12 @@ public:
   void forceUpdate(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(),
               const gtsam::Values& values=gtsam::Values());
 
-  /*! \brief Load a factor graph with a prior
-   *  Assuming a newly initialized RobustSolver. Use load graph to load a whole factor graph
-   *  - factors: the nonlinear factor graph to be loaded
-   *  - values: linearization point for the loaded variables
-   *  - prior: the prior factor anchoring the graph, associated with the first value (lowest key ex. 0, or a0, etc. )
-   */
-
   /*! \brief add an odometry edge
+   * odom_factor: a gtsam::NonlinearFactorGraph with a single factor
+   * odom_values: a gtsam::Values with a single value
    */
   void addOdometry(const gtsam::NonlinearFactorGraph& odom_factor, const gtsam::Values& odom_values);
 
-  template<class T>
-  void loadGraph(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values,
-      const gtsam::PriorFactor<T>& prior) {
-    gtsam::NonlinearFactorGraph prior_factor;
-    gtsam::Values prior_values;
-    prior_factor.add(prior);
-    prior_values.insert(prior.key(), prior.prior());
-
-    addOdometry(prior_factor, prior_values);
-    updateBatch<T>(factors, values, prior.key());
-  }
-
-  /*! \brief Load a factor graph without a prior
-   *  Assuming a newly initialized RobustSolver. Use load graph to load a whole factor graph
-   *  - factors: the nonlinear factor graph to be loaded
-   *  - values: linearization point for the loaded variables
-   *  - key0: the key associated with the first value (lowest key ex. 0, or a0, etc. )
-   */
-  template<class T>
-  void loadGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values, gtsam::Key key0=0) {
-    gtsam::Values prior_values;
-    prior_values.insert(key0, values.at<T>(key0));
-
-    addOdometry(gtsam::NonlinearFactorGraph(), prior_values);
-    updateBatch<T>(factors, values, key0);
-  }
-
-  /*! \brief Add a factor graph to solver with a between factor for connection
-   *  Assuming a RobustSolver that already has some existing information. Use add graph to
-   *  add another whole factor graph to the existing.
-   *  - factors: the nonlinear factor graph to be added
-   *  - values: linearization point for the added variables
-   *  - connector: the BetweenFactor associated that attaches the new graph to some point
-   *    in the exisitng graph.
-   */
-  template<class T>
-  void addGraph(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values,
-      const gtsam::BetweenFactor<T>& connector) {
-    gtsam::Key key0 = connector.back();
-    gtsam::NonlinearFactorGraph connect_factor;
-    gtsam::Values connect_values;
-    connect_factor.add(connector);
-    connect_values.insert(key0, values.at<T>(key0));
-
-    addOdometry(connect_factor, connect_values);
-    updateBatch<T>(factors, values, key0);
-  }
-
-  /*! \brief Save results from Solver
-   *  Saves the resulting g2o file and also the data saved in the outlier removal method.
-   *  - folder_path: the directory to save the results.
-   */
-  void saveData(std::string folder_path) const {
-    std::string g2o_file_path = folder_path + "/result.g2o";
-    gtsam::writeG2o(nfg_, values_, g2o_file_path);
-    outlier_removal_->saveData(folder_path);
-  }
-
-private:
   /*! \brief Used with Add and Load to connect factor graph to between or prior factor
    *  Sorts through the factors, separate out the odometry, the landmark measurements,
    *  and loop closures, then addAndCheckIfOptimize with outlier rejection
@@ -144,7 +80,7 @@ private:
       bool end_of_odom = true;
       for (size_t i = 0; i < factors.size(); i++) {
         // search through
-        if (factors[i] != NULL &&// TODO faotrs[i].keys().size() == 2
+        if (factors[i] != NULL && factors[i]->keys().size() == 2 &&
             factors[i]->front() == current_key && factors[i]->back() == current_key + 1) {
           end_of_odom = false;
 
@@ -154,12 +90,8 @@ private:
           new_values.insert(current_key + 1, values.at<T>(current_key + 1));
           new_factors.add(factors[i]);
 
-          // TODO(Luca) add odometry
-          if (outlier_removal_) {
-            outlier_removal_->removeOutliers(new_factors, new_values, nfg_, values_);
-          } else {
-            addAndCheckIfOptimize(new_factors, new_values);
-          }
+          addOdometry(new_factors, new_values);
+
           current_key = current_key + 1;
           factors[i].reset(); // delete factor from graph
           break;
@@ -178,6 +110,8 @@ private:
           new_values.insert(factors[i]->back(), values.at<T>(factors[i]->back()));
           new_factors.add(factors[i]);
 
+          // This is essentially addOdometry, but let's not call it that here?
+          // Since what's happening in outlier_removal_ is different
           if (outlier_removal_) {
             outlier_removal_->removeOutliers(new_factors, new_values, nfg_, values_);
           } else {
@@ -218,6 +152,76 @@ private:
    *  Solver based on what was set in RobustSolverParams
    */
   void optimize();
+
+public:
+
+  /*! \brief Save results from Solver
+   *  Saves the resulting g2o file and also the data saved in the outlier removal method.
+   *  - folder_path: the directory to save the results.
+   */
+  void saveData(std::string folder_path) const {
+    std::string g2o_file_path = folder_path + "/result.g2o";
+    gtsam::writeG2o(nfg_, values_, g2o_file_path);
+    outlier_removal_->saveData(folder_path);
+  }
+
+  /*! \brief Load a factor graph with a prior
+   *  NOTE: PROJECT SPECIFIC MAY INCLUDED SPECIFIC ASSUMPTIONS
+   *  Assuming a newly initialized RobustSolver. Use load graph to load a whole factor graph
+   *  - factors: the nonlinear factor graph to be loaded
+   *  - values: linearization point for the loaded variables
+   *  - prior: the prior factor anchoring the graph, associated with the first value (lowest key ex. 0, or a0, etc. )
+   */
+  template<class T>
+  void loadGraph(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values,
+      const gtsam::PriorFactor<T>& prior) {
+    gtsam::NonlinearFactorGraph prior_factor;
+    gtsam::Values prior_values;
+    prior_factor.add(prior);
+    prior_values.insert(prior.key(), prior.prior());
+
+    addOdometry(prior_factor, prior_values);
+    updateBatch<T>(factors, values, prior.key());
+  }
+
+  /*! \brief Load a factor graph without a prior
+   *  NOTE: PROJECT SPECIFIC MAY INCLUDED SPECIFIC ASSUMPTIONS
+   *  Assuming a newly initialized RobustSolver. Use load graph to load a whole factor graph
+   *  - factors: the nonlinear factor graph to be loaded
+   *  - values: linearization point for the loaded variables
+   *  - key0: the key associated with the first value (lowest key ex. 0, or a0, etc. )
+   */
+  template<class T>
+  void loadGraph(gtsam::NonlinearFactorGraph factors, gtsam::Values values, gtsam::Key key0=0) {
+    gtsam::Values prior_values;
+    prior_values.insert(key0, values.at<T>(key0));
+
+    addOdometry(gtsam::NonlinearFactorGraph(), prior_values);
+    updateBatch<T>(factors, values, key0);
+  }
+
+  /*! \brief Add a factor graph to solver with a between factor for connection
+   *  NOTE: PROJECT SPECIFIC MAY INCLUDED SPECIFIC ASSUMPTIONS
+   *  Assuming a RobustSolver that already has some existing information. Use add graph to
+   *  add another whole factor graph to the existing.
+   *  - factors: the nonlinear factor graph to be added
+   *  - values: linearization point for the added variables
+   *  - connector: the BetweenFactor associated that attaches the new graph to some point
+   *    in the exisitng graph.
+   */
+  template<class T>
+  void addGraph(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values,
+      const gtsam::BetweenFactor<T>& connector) {
+    gtsam::Key key0 = connector.back();
+    gtsam::NonlinearFactorGraph connect_factor;
+    gtsam::Values connect_values;
+    connect_factor.add(connector);
+    connect_values.insert(key0, values.at<T>(key0));
+
+    addOdometry(connect_factor, connect_values);
+    updateBatch<T>(factors, values, key0);
+  }
+
 };
 
 }

@@ -239,7 +239,7 @@ protected:
           // grow adj matrix
           incrementLandmarkAdjMatrix(landmark_key);
         } else {
-          // TODO: add comments: this should be a proper loop closure, right?
+          // It is a proper loop closures
           double odom_dist;
           if (isOdomConsistent(nfg_factor, odom_dist)) {
             nfg_lc_.add(new_factors[i]); // add factor to nfg_lc_
@@ -420,7 +420,7 @@ protected:
     // -- populate extra row and column by testing pairwise consistency of new lc against all previous ones
     // -- compute max clique
     // -- add loops in max clique to a local variable nfg_good_lc
-    // NOTE: this will require a map from rowId (size_t, in adjacency matrix) to slot id (size_t, id of that lc in nfg_lc)
+    // Using correspondence rowId (size_t, in adjacency matrix) to slot id (size_t, id of that lc in nfg_lc)
     size_t num_lc = nfg_lc_.size(); // number of loop closures so far
     Eigen::MatrixXd new_adj_matrix = Eigen::MatrixXd::Zero(num_lc, num_lc);
     Eigen::MatrixXd new_dst_matrix = Eigen::MatrixXd::Zero(num_lc, num_lc);

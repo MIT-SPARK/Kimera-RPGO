@@ -102,6 +102,7 @@ public:
     // mostly the betweenFactors and the PriorFactors
     // specials are those that are not handled: the rangefactors for example (uwb)
 
+    // ==============================================================================
     // initialize trajectory for PCM if empty: requires either a single value or a prior factor
     if (trajectory_odom_.poses.size() == 0) {
       if (new_values.size() == 1 && new_factors.size() == 0) { // single value no prior case
@@ -124,6 +125,7 @@ public:
       if (debug_) log<INFO>("Initialized trajectory");
     }
 
+    // ==============================================================================
     // now if the value size is one, should be an odometry // (could also have a loop closure if factor size > 1)
     if (new_factors.size() == 1 && new_factors[0]->keys().size() == 2 && new_values.size() == 1) {
       if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[0])) {
@@ -139,35 +141,34 @@ public:
       }
     } else if (new_factors.size() > 0 && new_values.size() == 0) {
       type = FactorType::LOOP_CLOSURES; // both between poses and landmarks
+    } else{
+      // remains UNCLASSIFIED
     }
 
-    // other cases will just be put through the special loop closures (which needs to be carefully considered)
-    if (type == FactorType::ODOMETRY || type == FactorType::FIRST_LANDMARK_OBSERVATION) {
-
-      if (type == FactorType::ODOMETRY) {
-      // update trajectory_odom_; extract between factor
-      gtsam::BetweenFactor<poseT> odom_factor =
-          *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[0]);
+    // ==============================================================================
+    // handle differently depending on type
+    bool doOptimize = false;
+    switch (type) {
+    case FactorType::ODOMETRY : // odometry, do not optimize
+    {
+      gtsam::BetweenFactor<poseT> odom_factor = *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[0]); // TODO: move this inside updateOdom (cleaner)
       updateOdom(odom_factor);
-      // - store factor in nfg_odom_
-      nfg_odom_.add(odom_factor);
-      }
-
-    if (type == FactorType::FIRST_LANDMARK_OBSERVATION) { // landmark measurement, initialize
+      nfg_odom_.add(odom_factor); // - store factor in nfg_odom_
+      output_values.insert(new_values); // - store latest pose in values_ (note: values_ is the optimized estimate, while trajectory is the odom estimate)
+      doOptimize = false; // no need to optimize just for odometry
+    } break;
+    case FactorType::FIRST_LANDMARK_OBSERVATION : // landmark measurement, initialize
+    {
       log<INFO>("New landmark observed");
       LandmarkMeasurements newMeasurement(new_factors);
       gtsam::Symbol symb(new_values.keys()[0]);
       landmarks_[symb] = newMeasurement;
-    }
-
-    // - store latest pose in values_ (note: values_ is the optimized estimate, while trajectory is the odom estimate)
-    output_values.insert(new_values);
-    output_nfg = updateOutputGraph();
-
-    return false; // no need to optimize just for odometry
-    }
-
-    if (type == FactorType::LOOP_CLOSURES) {
+      output_values.insert(new_values); // - store latest pose in values_ (note: values_ is the optimized estimate, while trajectory is the odom estimate)
+      doOptimize = false; // no need to optimize just for odometry
+    } break;
+    case FactorType::LOOP_CLOSURES :
+    {
+//      parseLoopClosures(new_factors);
       for (size_t i = 0; i < new_factors.size(); i++) {
         // iterate through the factors
         if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[i])) {
@@ -221,31 +222,28 @@ public:
       }
       // Find inliers with Pairwise consistent measurement set maximization
       findInliers(); // update inliers
-
-      output_nfg = updateOutputGraph();
-      return true;
-    }
-
-    if (type == FactorType::NONBETWEEN_FACTORS) {
+      doOptimize = true;
+    } break;
+    case FactorType::NONBETWEEN_FACTORS :
+    {
       nfg_special_.add(new_factors);
       output_values.insert(new_values);
-      // reset graph
-      output_nfg = updateOutputGraph();
-      return false;
+      doOptimize = false;
+    } break;
+    default: // the remainders are specical loop closure cases, includes the "UNCLASSIFIED" case
+    {
+      nfg_special_.add(new_factors);
+      output_values.insert(new_values);
+      if (new_factors.size() == 0) { // nothing added so no optimization
+        doOptimize = false;
+      }
+      doOptimize = true;
     }
+    }  // end switch
 
-    // the remainders are speical loop closure cases
-    nfg_special_.add(new_factors);
-    output_values.insert(new_values);
-    // nothing added  so no optimization
-    if (new_factors.size() == 0) {
-      return false; // nothing to optimize
-    }
-
-    // reset graph
     output_nfg = updateOutputGraph();
-    return true;
-  }
+    return doOptimize;
+  } // end reject outliers
 
   /*! \brief save the PCM data
    *  saves the distance matrix (final) and also the clique size info

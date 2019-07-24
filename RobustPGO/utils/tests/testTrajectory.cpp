@@ -148,7 +148,7 @@ TEST(Trajectory, PoseWithCovarianceBetween)
   test_traj.poses[b1] = pose_b1;
 
   gtsam::Pose3 expected_between = gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(2,-1,0));
-  // Eigen::MatrixXd expected_covar = Eigen::MatrixXd::Zero(6,6); // TODO double check this
+  // Eigen::MatrixXd expected_covar = Eigen::MatrixXd::Zero(6,6); // TODO (Yun) fix this
   // expected_covar.row(0) << 0.41, -0.1, 0, 0, 0, 0.1;
   // expected_covar.row(1) << -0.1, 0.42, 0, 0, 0, -0.11;
   // expected_covar.row(2) << 0, 0, 0.52, -0.1, 0.11, 0;

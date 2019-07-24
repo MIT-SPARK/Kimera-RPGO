@@ -30,12 +30,12 @@ namespace RobustPGO {
 
 /*! \brief RobustSolver type.
    *  Main backend solver that can do outlier rejection
-   *  - params: RobustSolverPrams, accounts for the outlier rejection method, etc.
+   *  - params: RobustSolverParams, accounts for the outlier rejection method, etc.
+   *  (see SolverParams.h for details on RobustSolverParams)
    */
 class RobustSolver : public GenericSolver{
 public:
   RobustSolver(const RobustSolverParams& params);
-  // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton // TODO(Luca): this seems an old comment
 
   /*! \brief Normal update call for Robust Solver
    *  add new factors and values and optimize, possibly after rejecting outliers.
@@ -66,7 +66,6 @@ public:
    *  - values: linearization point of graph to be connected
    *  - key0: Lowest key of the graph to be connected (root of odometry)
    */
-  template<class T>
   void updateBatch(gtsam::NonlinearFactorGraph factors,
       const gtsam::Values& values, const gtsam::Key& key0) {
 
@@ -87,7 +86,7 @@ public:
           gtsam::Values new_values;
           gtsam::NonlinearFactorGraph new_factors;
           // assumes key0 is already in the graph/values
-          new_values.insert(current_key + 1, values.at<T>(current_key + 1));
+          new_values.insert(current_key + 1, values.at(current_key + 1));
           new_factors.add(factors[i]);
 
           addOdometry(new_factors, new_values);
@@ -107,7 +106,7 @@ public:
         if (isSpecialSymbol(symb.chr())) {
           gtsam::Values new_values;
           gtsam::NonlinearFactorGraph new_factors;
-          new_values.insert(factors[i]->back(), values.at<T>(factors[i]->back()));
+          new_values.insert(factors[i]->back(), values.at(factors[i]->back()));
           new_factors.add(factors[i]);
 
           // This is essentially addOdometry, but let's not call it that here?
@@ -181,7 +180,7 @@ public:
     prior_values.insert(prior.key(), prior.prior());
 
     addOdometry(prior_factor, prior_values);
-    updateBatch<T>(factors, values, prior.key());
+    updateBatch(factors, values, prior.key());
   }
 
   /*! \brief Load a factor graph without a prior
@@ -197,7 +196,7 @@ public:
     prior_values.insert(key0, values.at<T>(key0));
 
     addOdometry(gtsam::NonlinearFactorGraph(), prior_values);
-    updateBatch<T>(factors, values, key0);
+    updateBatch(factors, values, key0);
   }
 
   /*! \brief Add a factor graph to solver with a between factor for connection
@@ -219,7 +218,7 @@ public:
     connect_values.insert(key0, values.at<T>(key0));
 
     addOdometry(connect_factor, connect_values);
-    updateBatch<T>(factors, values, key0);
+    updateBatch(factors, values, key0);
   }
 
 };

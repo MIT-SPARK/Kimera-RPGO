@@ -98,19 +98,6 @@ public:
                gtsam::Values& output_values) override{
     // we first classify the current factors into the following categories:
     FactorType type = FactorType::UNCLASSIFIED;
-
-//        ODOMETRY = 0, //
-//          FIRST_LANDMARK_OBSERVATION = 1,
-//          LOOP_CLOSURES = 2, // both between poses and landmark re-observations (may be more than 1)
-//          NONBETWEEN_FACTORS
-//
-//          UNCLASSIFIED
-
-    bool odometry = false;
-    bool loop_closures = false;
-    bool first_landmark_observation = false;
-    bool special_odometry = false; // TODO: this is currently very confusing: maybe call "unhandled_factors" or "special_factors"?
-
     // current logic: odometry and loop_closure are for those handled by outlier rej
     // mostly the betweenFactors and the PriorFactors
     // specials are those that are not handled: the rangefactors for example (uwb)
@@ -143,22 +130,21 @@ public:
         // specifically what outlier rejection handles
         gtsam::Symbol symb(new_values.keys()[0]);
         if (isSpecialSymbol(symb.chr())) { // is it a landmark?
-          first_landmark_observation = true;
+          type = FactorType::FIRST_LANDMARK_OBSERVATION;
         }else{
-          odometry = true; // just regular odometry
+          type = FactorType::ODOMETRY; // just regular odometry
         }
       } else {
-        special_odometry = true; // unrecognized factor, not checked for outlier rejection
+        type = FactorType::NONBETWEEN_FACTORS; // unrecognized factor, not checked for outlier rejection
       }
     } else if (new_factors.size() > 0 && new_values.size() == 0) {
-      loop_closures = true; // both between poses and landmarks
+      type = FactorType::LOOP_CLOSURES; // both between poses and landmarks
     }
 
     // other cases will just be put through the special loop closures (which needs to be carefully considered)
+    if (type == FactorType::ODOMETRY || type == FactorType::FIRST_LANDMARK_OBSERVATION) {
 
-    if (odometry || first_landmark_observation) {
-
-      if (odometry) {
+      if (type == FactorType::ODOMETRY) {
       // update trajectory_odom_; extract between factor
       gtsam::BetweenFactor<poseT> odom_factor =
           *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[0]);
@@ -167,7 +153,7 @@ public:
       nfg_odom_.add(odom_factor);
       }
 
-    if (first_landmark_observation) { // landmark measurement, initialize
+    if (type == FactorType::FIRST_LANDMARK_OBSERVATION) { // landmark measurement, initialize
       log<INFO>("New landmark observed");
       LandmarkMeasurements newMeasurement(new_factors);
       gtsam::Symbol symb(new_values.keys()[0]);
@@ -181,7 +167,7 @@ public:
     return false; // no need to optimize just for odometry
     }
 
-    if (loop_closures) {
+    if (type == FactorType::LOOP_CLOSURES) {
       for (size_t i = 0; i < new_factors.size(); i++) {
         // iterate through the factors
         if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[i])) {
@@ -240,7 +226,7 @@ public:
       return true;
     }
 
-    if (special_odometry) {
+    if (type == FactorType::NONBETWEEN_FACTORS) {
       nfg_special_.add(new_factors);
       output_values.insert(new_values);
       // reset graph

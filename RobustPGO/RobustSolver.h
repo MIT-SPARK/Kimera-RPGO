@@ -147,24 +147,21 @@ private:
         if (factors[i] != NULL &&// TODO faotrs[i].keys().size() == 2
             factors[i]->front() == current_key && factors[i]->back() == current_key + 1) {
           end_of_odom = false;
-          // if (debug_) {
-          //     std::cout << "odometry: " << current_key << ">" << current_key + 1 << std::endl;
-          // }
+
           gtsam::Values new_values;
           gtsam::NonlinearFactorGraph new_factors;
-          // TODO(Luca): why renaming the keys?
+          // assumes key0 is already in the graph/values
           new_values.insert(current_key + 1, values.at<T>(current_key + 1));
           new_factors.add(factors[i]);
 
-          // TODO add odometry
+          // TODO(Luca) add odometry
           if (outlier_removal_) {
             outlier_removal_->removeOutliers(new_factors, new_values, nfg_, values_);
           } else {
             addAndCheckIfOptimize(new_factors, new_values);
           }
-
           current_key = current_key + 1;
-          factors[i].reset();
+          factors[i].reset(); // delete factor from graph
           break;
         }
       }

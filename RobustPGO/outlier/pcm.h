@@ -410,18 +410,15 @@ protected:
     a_lc_b = T<poseT>(a_lcBetween_b);
     c_lc_d = T<poseT>(c_lcBetween_d);
 
-    // find odometry from 1a to 2a
+    // find odometry from a to c
     T<poseT> a_odom_c = trajectory_odom_.getBetween(key_a, key_c);
-
-    // find odometry from 2b to 1b
-    T<poseT> d_odom_b = trajectory_odom_.getBetween(key_d, key_b);
-
-    // check that lc_1 pose is consistent with pose from 1a to 1b
-    T<poseT> a_path_d, b_path_d, loop;
+    // find odometry from d to b
+    T<poseT> b_odom_d = trajectory_odom_.getBetween(key_b, key_d);
+    // check that d to b pose is consistent with pose from b to d
+    T<poseT> a_path_d, d_path_b, loop;
     a_path_d = a_odom_c.compose(c_lc_d);
-    b_path_d = a_path_d.inverse().compose(a_lc_b);
-    loop = b_path_d.compose(d_odom_b);
-
+    d_path_b = a_path_d.inverse().compose(a_lc_b);
+    loop = d_path_b.compose(b_odom_d);
     return checkLoopConsistent(loop, dist);
   }
 

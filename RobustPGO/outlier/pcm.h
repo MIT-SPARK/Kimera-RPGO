@@ -500,8 +500,8 @@ protected:
         }
 
         // factors are (i,l) and (j,l) and connect poses i,j to a landmark l
-        T<poseT> l_pose_i, j_pose_l;
-        l_pose_i = T<poseT>(factor_il).inverse();
+        T<poseT> i_pose_l, j_pose_l;
+        i_pose_l = T<poseT>(factor_il);
         j_pose_l = T<poseT>(factor_jl);
 
         // find odometry from 1a to 2a
@@ -510,7 +510,7 @@ protected:
         // check that lc_1 pose is consistent with pose from 1a to 1b
         T<poseT> i_path_l, loop;
         i_path_l = i_odom_j.compose(j_pose_l);
-        loop = i_path_l.compose(l_pose_i);
+        loop = i_path_l.inverse().compose(i_pose_l);
 
         double dist;
         bool consistent = checkLoopConsistent(loop, dist);

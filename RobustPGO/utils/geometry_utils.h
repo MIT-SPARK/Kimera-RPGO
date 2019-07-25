@@ -58,6 +58,7 @@ struct PoseWithCovariance {
   /* ---------------------------------------------------------- */
   T pose; // ex. gtsam::Pose3
   gtsam::Matrix covariance_matrix;
+  bool rotation_info = true;
 
   /* default constructor -------------------------------------- */
   PoseWithCovariance() {
@@ -95,7 +96,9 @@ struct PoseWithCovariance {
     const int dim = getDim<T>();
     const int r_dim = getRotationDim<T>();
     const int t_dim = getTranslationDim<T>();
+    rotation_info = true;
     if (std::isnan(covar.block(0,0,r_dim,r_dim).trace())) {
+      rotation_info = false;
       // only keep translation part
       Eigen::MatrixXd temp = Eigen::MatrixXd::Zero(dim, dim); // TODO: I wonder if this can cause issues: ...
       // ... later you invert this matrix, which now contains a bunch of zero (it is not full rank)
@@ -116,6 +119,7 @@ struct PoseWithCovariance {
     out.covariance_matrix = Ha * covariance_matrix * Ha.transpose() +
         Hb * other.covariance_matrix * Hb.transpose();
 
+    if (!rotation_info || !other.rotation_info) out.rotation_info = false;
     return out;
   }
 
@@ -125,7 +129,7 @@ struct PoseWithCovariance {
     PoseWithCovariance<T> out;
     out.pose = pose.inverse();
     out.covariance_matrix = covariance_matrix;
-
+    if (!rotation_info) out.rotation_info = false;
     return out;
   }
 
@@ -157,12 +161,21 @@ struct PoseWithCovariance {
       //   log<WARNING>("Warning: Covariance matrix between two poses not PSD");
       // }
     }
+    if (!rotation_info || !other.rotation_info) out.rotation_info = false;
     return out;
   }
 
   double mahalanobis_norm() const {
     // calculate mahalanobis norm
     gtsam::Vector log = T::Logmap(pose);
+    if (!rotation_info) {
+      // only use translation part 
+      int t_dim = getTranslationDim<T>();
+      int r_dim = getRotationDim<T>();
+      Eigen::MatrixXd cov_block = covariance_matrix.block(r_dim, r_dim, t_dim, t_dim);
+      return std::sqrt(log.tail(t_dim).transpose() * gtsam::inverse(cov_block) * log.tail(t_dim));
+    }
+
     return std::sqrt(log.transpose() * gtsam::inverse(covariance_matrix) * log);
   }
 };
@@ -177,6 +190,7 @@ struct PoseWithNode {
   /* ---------------------------------------------------------- */
   T pose; // ex. gtsam::Pose3
   int node; // node away from prior
+  bool rotation_info = true; // to deal with no rotation info case
 
   /* default constructor -------------------------------------- */
   PoseWithNode() {
@@ -200,6 +214,17 @@ struct PoseWithNode {
   /* construct from gtsam between factor  --------------------- */
   PoseWithNode(const gtsam::BetweenFactor<T>& between_factor) {
     pose = between_factor.measured();
+    gtsam::Matrix covar = boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
+        (between_factor.get_noiseModel())->covariance();
+
+    // prevent propagation of nan values in the edge case
+    const int dim = getDim<T>();
+    const int r_dim = getRotationDim<T>();
+    const int t_dim = getTranslationDim<T>();
+    rotation_info = true;
+    if (std::isnan(covar.block(0,0,r_dim,r_dim).trace())) {
+      rotation_info = false;
+    }
     node = 1;
   }
 
@@ -210,6 +235,8 @@ struct PoseWithNode {
 
     out.pose = pose.compose(other.pose);
     out.node = node + other.node;
+
+    if (!rotation_info || !other.rotation_info) out.rotation_info = false;
     return out;
   }
 
@@ -220,6 +247,8 @@ struct PoseWithNode {
 
     out.pose = pose.inverse();
     out.node = node;
+
+    if (!rotation_info) out.rotation_info = false;
     return out;
   }
 
@@ -230,6 +259,8 @@ struct PoseWithNode {
     out.pose = pose.between(other.pose); // returns between in a frame
 
     out.node = abs(other.node - node);
+
+    if (!rotation_info || !other.rotation_info) out.rotation_info = false;
     return out;
   }
 
@@ -242,6 +273,7 @@ struct PoseWithNode {
 
   double rot_norm() const {
     // calculate mahalanobis norm
+    if (!rotation_info) return 0; 
     gtsam::Vector log = T::Logmap(pose);
     const int r_dim =  getRotationDim<T>();
     return std::sqrt(log.head(r_dim).transpose() * log.head(r_dim)) / node;

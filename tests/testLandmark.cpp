@@ -119,12 +119,8 @@ TEST(RobustSolver, LandmarkPcm)
   // add a reobservation should be consistent 
   landmark_factors = gtsam::NonlinearFactorGraph();
   landmark_values = gtsam::Values();
-  gtsam::Matrix3 R;
-  R.row(0) << 0, -1, 0;
-  R.row(1) << 1, 0, 0;
-  R.row(2) << 0, 0, 1;
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a5, l0, gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(0, -1, 0)), lmk_noise));
+      a5, l0, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0)), lmk_noise));
   pgo->update(landmark_factors, landmark_values);
 
   nfg = pgo->getFactorsUnsafe();
@@ -136,7 +132,7 @@ TEST(RobustSolver, LandmarkPcm)
   landmark_factors = gtsam::NonlinearFactorGraph();
   landmark_values = gtsam::Values();
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a4, l0, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(2, 0, 0)), lmk_noise));
+      a4, l0, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 0, 0)), lmk_noise));
   pgo->update(landmark_factors, landmark_values);
 
   nfg = pgo->getFactorsUnsafe();
@@ -150,7 +146,7 @@ TEST(RobustSolver, LandmarkPcm)
   landmark_values = gtsam::Values();
   gtsam::Key l1 = gtsam::Symbol('l',1);
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a2, l0, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0)), lmk_noise));
+      a2, l1, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0)), lmk_noise));
   landmark_values.insert(l1, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 1, 0)));
   pgo->update(landmark_factors, landmark_values);
 
@@ -163,7 +159,7 @@ TEST(RobustSolver, LandmarkPcm)
   landmark_factors = gtsam::NonlinearFactorGraph();
   landmark_values = gtsam::Values();
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a5, l1, gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(2, 0, 0)), lmk_noise));
+      a5, l1, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(2, 0, 0)), lmk_noise));
   pgo->update(landmark_factors, landmark_values);
 
   nfg = pgo->getFactorsUnsafe();
@@ -177,7 +173,7 @@ TEST(RobustSolver, LandmarkPcm)
 TEST(RobustSolver, LandmarkPcmSimple)
 {
   RobustSolverParams params;
-  params.setPcmSimple3DParams(0.25, 0.05, Verbosity::QUIET);
+  params.setPcmSimple3DParams(0.3, 0.05, Verbosity::QUIET);
   std::vector<char> special_symbs{'l'}; // for landmarks
   params.specialSymbols = special_symbs;
 
@@ -277,12 +273,8 @@ TEST(RobustSolver, LandmarkPcmSimple)
   // add a reobservation should be consistent 
   landmark_factors = gtsam::NonlinearFactorGraph();
   landmark_values = gtsam::Values();
-  gtsam::Matrix3 R;
-  R.row(0) << 0, -1, 0;
-  R.row(1) << 1, 0, 0;
-  R.row(2) << 0, 0, 1;
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a5, l0, gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(0, -1, 0)), lmk_noise));
+      a5, l0, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0)), lmk_noise));
   pgo->update(landmark_factors, landmark_values);
 
   nfg = pgo->getFactorsUnsafe();
@@ -294,7 +286,7 @@ TEST(RobustSolver, LandmarkPcmSimple)
   landmark_factors = gtsam::NonlinearFactorGraph();
   landmark_values = gtsam::Values();
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a4, l0, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(2, 0, 0)), lmk_noise));
+      a4, l0, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 0, 0)), lmk_noise));
   pgo->update(landmark_factors, landmark_values);
 
   nfg = pgo->getFactorsUnsafe();
@@ -308,7 +300,7 @@ TEST(RobustSolver, LandmarkPcmSimple)
   landmark_values = gtsam::Values();
   gtsam::Key l1 = gtsam::Symbol('l',1);
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a2, l0, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0)), lmk_noise));
+      a2, l1, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0)), lmk_noise));
   landmark_values.insert(l1, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 1, 0)));
   pgo->update(landmark_factors, landmark_values);
 
@@ -321,7 +313,7 @@ TEST(RobustSolver, LandmarkPcmSimple)
   landmark_factors = gtsam::NonlinearFactorGraph();
   landmark_values = gtsam::Values();
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a5, l1, gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(2, 0, 0)), lmk_noise));
+      a5, l1, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(2, 0, 0)), lmk_noise));
   pgo->update(landmark_factors, landmark_values);
 
   nfg = pgo->getFactorsUnsafe();

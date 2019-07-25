@@ -31,7 +31,7 @@ struct normal_rv {
 };
 
 /* ************************************************************************* */
-TEST(PoseWithCovariance, Trajectory)
+TEST(Trajectory, MonteCarlo)
 {
   gtsam::Key start_id = 0;
   gtsam::Key end_id = 100;
@@ -106,6 +106,103 @@ TEST(PoseWithCovariance, Trajectory)
   // error grows as covariance grows (as trajectory gets long)
   EXPECT(gtsam::assert_equal(between_rebuild.covariance_matrix, cov, 10));
 
+}
+
+/* ************************************************************************* */
+TEST(Trajectory, PoseWithCovarianceBetween)
+{
+  gtsam::Key a0 = gtsam::Symbol('a',0);
+  gtsam::Key b0 = gtsam::Symbol('b',0);
+  gtsam::Key a1 = gtsam::Symbol('a',1);
+  gtsam::Key b1 = gtsam::Symbol('b',2);
+
+  // define a0 and b0
+  PoseWithCovariance<gtsam::Pose3> pose_a0, pose_b0, pose_a1, pose_b1, pose_a0b0, pose_a01, pose_b01;
+  pose_a0.pose = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1,1,1));
+  pose_a0.covariance_matrix = Eigen::MatrixXd::Zero(6,6);
+
+  pose_a0b0.pose = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1,0,0));
+  pose_a0b0.covariance_matrix = 0.01 * Eigen::MatrixXd::Identity(6,6);
+  pose_b0 = pose_a0.compose(pose_a0b0);
+
+  // construct odometry to a1 and b1
+  pose_a01.pose = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0,1,0));
+  pose_a01.covariance_matrix = 0.1 * Eigen::MatrixXd::Identity(6,6);
+
+  gtsam::Matrix3 R;
+  R.row(0) << 0, -1, 0;
+  R.row(1) << 1, 0, 0;
+  R.row(2) << 0, 0, 1;
+  pose_b01.pose = gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(1,0,0));
+  pose_b01.covariance_matrix = 0.2 * Eigen::MatrixXd::Identity(6,6);
+
+  // construct a1 and b1
+  pose_a1 = pose_a0.compose(pose_a01);
+  pose_b1 = pose_b0.compose(pose_b01);
+
+  // add to trajectory
+  Trajectory<gtsam::Pose3, PoseWithCovariance> test_traj;
+  test_traj.poses[a0] = pose_a0;
+  test_traj.poses[a1] = pose_a1;
+  test_traj.poses[b0] = pose_b0;
+  test_traj.poses[b1] = pose_b1;
+
+  gtsam::Pose3 expected_between = gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(2,-1,0));
+  // Eigen::MatrixXd expected_covar = Eigen::MatrixXd::Zero(6,6); // TODO (Yun) fix this
+  // expected_covar.row(0) << 0.41, -0.1, 0, 0, 0, 0.1;
+  // expected_covar.row(1) << -0.1, 0.42, 0, 0, 0, -0.11;
+  // expected_covar.row(2) << 0, 0, 0.52, -0.1, 0.11, 0;
+  // expected_covar.row(3) << 0, 0, -0.1, 0.31, 0, 0;
+  // expected_covar.row(4) << 0, 0, 0.11, 0, 0.31, 0;
+  // expected_covar.row(5) << 0.1, -0.11, 0, 0, 0, 0.31;
+
+  EXPECT(gtsam::assert_equal(expected_between, test_traj.getBetween(a1, b1).pose));
+  // EXPECT(gtsam::assert_equal(expected_covar, test_traj.getBetween(a1,b1).covariance_matrix));
+}
+
+/* ************************************************************************* */
+TEST(Trajectory, PoseWithNodeBetween)
+{
+  gtsam::Key a0 = gtsam::Symbol('a',0);
+  gtsam::Key b0 = gtsam::Symbol('b',0);
+  gtsam::Key a1 = gtsam::Symbol('a',1);
+  gtsam::Key b1 = gtsam::Symbol('b',2);
+
+  // define a0 and b0
+  PoseWithNode<gtsam::Pose3> pose_a0, pose_b0, pose_a1, pose_b1, pose_a0b0, pose_a01, pose_b01;
+  pose_a0.pose = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1,1,1));
+  pose_a0.node = 0;
+
+  pose_a0b0.pose = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1,0,0));
+  pose_a0b0.node = 1;
+  pose_b0 = pose_a0.compose(pose_a0b0);
+
+  // construct odometry to a1 and b1
+  pose_a01.pose = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0,1,0));
+  pose_a01.node = 1;
+
+  gtsam::Matrix3 R;
+  R.row(0) << 0, -1, 0;
+  R.row(1) << 1, 0, 0;
+  R.row(2) << 0, 0, 1;
+  pose_b01.pose = gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(1,0,0));
+  pose_b01.node = 1;
+
+  // construct a1 and b1
+  pose_a1 = pose_a0.compose(pose_a01);
+  pose_b1 = pose_b0.compose(pose_b01);
+
+  // add to trajectory
+  Trajectory<gtsam::Pose3, PoseWithNode> test_traj;
+  test_traj.poses[a0] = pose_a0;
+  test_traj.poses[a1] = pose_a1;
+  test_traj.poses[b0] = pose_b0;
+  test_traj.poses[b1] = pose_b1;
+
+  gtsam::Pose3 expected_between = gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(2,-1,0));
+
+  EXPECT(gtsam::assert_equal(expected_between, test_traj.getBetween(a1, b1).pose));
+  EXPECT(3 == test_traj.getBetween(a1,b1).node);
 }
 
 

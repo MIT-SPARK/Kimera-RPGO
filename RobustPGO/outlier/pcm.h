@@ -2,7 +2,7 @@
 Pairwise Consistency Maximization (PCM)
 Backend solver class (Robust Pose Graph Optimizer)
 author: Yun Chang, Luca Carlone
-*/
+ */
 
 #ifndef PCM_H
 #define PCM_H
@@ -37,22 +37,31 @@ author: Yun Chang, Luca Carlone
 
 namespace RobustPGO {
 
+/* ------------------------------------------------------------------------ */
+// Defines the behaviour of this backend.
+enum class FactorType {
+  UNCLASSIFIED = 0,
+  ODOMETRY = 1, //
+  FIRST_LANDMARK_OBSERVATION = 2,
+  LOOP_CLOSURES = 3, // both between poses and landmark re-observations (may be more than 1)
+  NONBETWEEN_FACTORS = 4, // not handled by PCM (may be more than 1)
+};
+
 // poseT can be gtsam::Pose2 or Pose3 for 3D vs 3D
 // T can be PoseWithCovariance or PoseWithDistance based on
 // If using Pcm or PcmDistance
-
 template<class poseT, template <class> class T>
 class Pcm : public OutlierRemoval{
 public:
-  Pcm(double odom_threshold, double lc_threshold,
-    const std::vector<char>& special_symbols=std::vector<char>()):
-    OutlierRemoval(),
-    threshold1_(odom_threshold),
-    threshold2_(lc_threshold),
-    special_symbols_(special_symbols) {
-  // check if templated value valid
-  BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<poseT>));
-}
+  Pcm(double threshold1, double threshold2,
+      const std::vector<char>& special_symbols=std::vector<char>()):
+        OutlierRemoval(),
+        threshold1_(threshold1),  // TODO(Luca): threshold1 and 2 seem too generic as names
+        threshold2_(threshold2),
+        special_symbols_(special_symbols) {
+    // check if templated value valid
+    BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<poseT>));
+  }
   ~Pcm() = default;
   // initialize with odometry detect threshold and pairwise consistency threshold
 
@@ -60,16 +69,16 @@ private:
   double threshold1_;
   double threshold2_;
 
-  gtsam::NonlinearFactorGraph nfg_odom_;
-  gtsam::NonlinearFactorGraph nfg_special_;
-  gtsam::NonlinearFactorGraph nfg_lc_;
-  gtsam::NonlinearFactorGraph nfg_good_lc_;
-  gtsam::Matrix lc_adjacency_matrix_;
-  gtsam::Matrix lc_distance_matrix_;
+  gtsam::NonlinearFactorGraph nfg_odom_; // NonlinearFactorGraph storing all odometry factors
+  gtsam::NonlinearFactorGraph nfg_special_; // NonlinearFactorGraph storing all NonBetweenFactors
+  gtsam::NonlinearFactorGraph nfg_lc_; // NonlinearFactorGraph storing all loop closure measurements
+  gtsam::NonlinearFactorGraph nfg_good_lc_; // NonlinearFactorGraph storing the inliers found at last max clique query
+  gtsam::Matrix lc_adjacency_matrix_; // adjacency matrix storing the consistency of each pair of loop closures
+  gtsam::Matrix lc_distance_matrix_; // matrix storing distances between each pairs of loop closures
 
-  Trajectory<poseT, T> trajectory_odom_;
+  Trajectory<poseT, T> trajectory_odom_; // trajectory storing keys and poses
 
-  std::vector<char> special_symbols_; // these should denote landmarks
+  std::vector<char> special_symbols_; // these are the symbols corresponding to landmarks
   std::unordered_map< gtsam::Key, LandmarkMeasurements> landmarks_;
 
 public:
@@ -83,27 +92,24 @@ public:
    *  - returns: boolean of if optimization should be called or not
    */
   virtual bool removeOutliers(const gtsam::NonlinearFactorGraph& new_factors,
-               const gtsam::Values& new_values,
-               gtsam::NonlinearFactorGraph& output_nfg,
-               gtsam::Values& output_values) override{
-    bool odometry = false;
-    bool loop_closures = false;
-    bool special_odometry = false;
-
+      const gtsam::Values& new_values,
+      gtsam::NonlinearFactorGraph& output_nfg,
+      gtsam::Values& output_values) override{
+    // we first classify the current factors into the following categories:
+    FactorType type = FactorType::UNCLASSIFIED;
     // current logic: odometry and loop_closure are for those handled by outlier rej
     // mostly the betweenFactors and the PriorFactors
     // specials are those that are not handled: the rangefactors for example (uwb)
 
-    // initialize if pose is enoty: requrires either a single value or a prior factor
+    // ==============================================================================
+    // initialize trajectory for PCM if empty: requires either a single value or a prior factor
     if (trajectory_odom_.poses.size() == 0) {
-      // single value no prior case
-      if (new_values.size() == 1 && new_factors.size() == 0) {
+      if (new_values.size() == 1 && new_factors.size() == 0) { // single value no prior case
         if (debug_) log<INFO>("Initializing without prior");
         initialize(new_values.keys()[0]);
         output_values.insert(new_values);
         return false; // nothing to optimize yet
-      // prior factor case
-      } else if (boost::dynamic_pointer_cast<gtsam::PriorFactor<poseT> >(new_factors[0])) {
+      } else if (boost::dynamic_pointer_cast<gtsam::PriorFactor<poseT> >(new_factors[0])) { // prior factor case
         if (debug_) log<INFO>("Initializing with prior");
         gtsam::PriorFactor<poseT> prior_factor =
             *boost::dynamic_pointer_cast<gtsam::PriorFactor<poseT> >(new_factors[0]);
@@ -111,134 +117,77 @@ public:
         output_values.insert(new_values);
         output_nfg.add(new_factors); // assumption is that there is only one factor in new_factors
         return false; // noothing to optimize yet
-      // unknow case, fail
-      } else {
-        log<WARNING> ("Unhandled initialization case.");
+      } else { // unknow case, fail
+        log<WARNING> ("Unhandled initialization: first time PCM is called, it needs a particular input");
         return false;
       }
       if (debug_) log<INFO>("Initialized trajectory");
     }
 
-    // now if the value size is one, should be an odometry
-    // (could also have a loop closure if factor size > 1)
-    if (new_values.size() == 1 && new_factors.size() == 1) {
+    // ==============================================================================
+    // now if the value size is one, should be an odometry // (could also have a loop closure if factor size > 1)
+    if (new_factors.size() == 1 && new_factors[0]->keys().size() == 2 && new_values.size() == 1) {
       if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[0])) {
         // specifically what outlier rejection handles
-        odometry = true;
-      } else {
-        special_odometry = true;
-      }
-
-    } else if (new_factors.size() > 0 && new_values.size() == 0) {
-      loop_closures = true;
-    }
-
-    // other cases will just be put through the special loop closures (which needs to be carefully considered)
-
-    if (odometry) {
-      // check if it is a landmark measurement
-      gtsam::Symbol symb(new_values.keys()[0]);
-      if (specialSymbol(symb.chr())) {
-        // landmark measurement, initialize
-        log<INFO>("New landmark observed");
-        LandmarkMeasurements newMeasurement(new_factors);
-        landmarks_[symb] = newMeasurement;
-      } else {
-        // update trajectory_odom_;
-        // extract between factor
-        gtsam::BetweenFactor<poseT> odom_factor =
-            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[0]);
-        updateOdom(odom_factor);
-        // - store factor in nfg_odom_
-        nfg_odom_.add(odom_factor);
-      }
-
-      // - store latest pose in values_ (note: values_ is the optimized estimate, while trajectory is the odom estimate)
-      output_values.insert(new_values);
-      output_nfg = updateOutputGraph();
-
-      return false; // no need to optimize just for odometry
-    }
-
-    if (loop_closures) {
-      for (size_t i = 0; i < new_factors.size(); i++) {
-        // iterate through the factors
-        if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[i])) {
-          // regular loop closure.
-          // in this case we should run consistency check to see if loop closure is good
-          // * odometric consistency check (will only compare against odometry
-          // - if loop fails this, we can just drop it)
-          // extract between factor
-          gtsam::BetweenFactor<poseT> nfg_factor =
-              *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[i]);
-
-          if (!output_values.exists(nfg_factor.front()) ||
-              !output_values.exists(nfg_factor.back())) {
-            log<WARNING>("Cannot add loop closure with non-existing keys");
-            continue;
-          }
-
-          // check if it is a landmark measurement loop closure
-          gtsam::Symbol symbfrnt(nfg_factor.front());
-          gtsam::Symbol symbback(nfg_factor.back());
-          if (specialSymbol(symbfrnt.chr()) || specialSymbol(symbback.chr())) {
-            // it is landmark loop closure
-            gtsam::Key landmark_key = (specialSymbol(symbfrnt.chr()) ?
-                nfg_factor.front() : nfg_factor.back());
-
-            log<INFO>("loop closing with landmark %1%") %
-                gtsam::DefaultKeyFormatter(landmark_key);
-
-            landmarks_[landmark_key].factors.add(nfg_factor);
-            // grow adj matrix
-            incrementLandmarkAdjMatrix(landmark_key);
-          } else {
-
-            double odom_dist;
-            if (isOdomConsistent(nfg_factor, odom_dist)) {
-              nfg_lc_.add(new_factors[i]); // add factor to nfg_lc_
-
-            } else {
-              if (debug_) log<WARNING>("Discarded loop closure (inconsistent with odometry)");
-              continue; // discontinue since loop closure not consistent with odometry
-            }
-
-            incrementAdjMatrix();
-          }
-
-        } else {
-          // add as special loop closure
-          // the remainders are speical loop closure cases
-          nfg_special_.add(new_factors[i]);
+        gtsam::Symbol symb(new_values.keys()[0]);
+        if (isSpecialSymbol(symb.chr())) { // is it a landmark?
+          type = FactorType::FIRST_LANDMARK_OBSERVATION;
+        }else{
+          type = FactorType::ODOMETRY; // just regular odometry
         }
+      } else {
+        type = FactorType::NONBETWEEN_FACTORS; // unrecognized factor, not checked for outlier rejection
       }
-      // Find inliers with Pairwise consistent measurement set maximization
-      findInliers(); // update inliers
-
-      output_nfg = updateOutputGraph();
-      return true;
+    } else if (new_factors.size() > 0 && new_values.size() == 0) {
+      type = FactorType::LOOP_CLOSURES; // both between poses and landmarks
+    } else{
+      // remains UNCLASSIFIED
     }
 
-    if (special_odometry) {
+    // store new values:
+    output_values.insert(new_values); // - store latest pose in values_ (note: values_ is the optimized estimate, while trajectory is the odom estimate)
+
+    // ==============================================================================
+    // handle differently depending on type
+    bool doOptimize = false;
+    switch (type) {
+    case FactorType::ODOMETRY : // odometry, do not optimize
+    {
+      updateOdom(new_factors);
+      doOptimize = false; // no need to optimize just for odometry
+    } break;
+    case FactorType::FIRST_LANDMARK_OBSERVATION : // landmark measurement, initialize
+    {
+      if (debug_) log<INFO>("New landmark observed");
+      LandmarkMeasurements newMeasurement(new_factors);
+      gtsam::Symbol symb(new_values.keys()[0]);
+      landmarks_[symb] = newMeasurement;
+      doOptimize = false; // no need to optimize just for odometry
+    } break;
+    case FactorType::LOOP_CLOSURES :
+    {
+      parseAndIncrementAdjMatrix(new_factors, output_values); // output values is just used to sanity check the keys
+      findInliers(); // update inliers, // Find inliers with Pairwise consistent measurement set maximization
+      doOptimize = true;
+    } break;
+    case FactorType::NONBETWEEN_FACTORS :
+    {
       nfg_special_.add(new_factors);
-      output_values.insert(new_values);
-      // reset graph
-      output_nfg = updateOutputGraph();
-      return false;
+      doOptimize = false;
+    } break;
+    default: // the remainders are specical loop closure cases, includes the "UNCLASSIFIED" case
+    {
+      nfg_special_.add(new_factors);
+      if (new_factors.size() == 0) { // nothing added so no optimization
+        doOptimize = false;
+      }
+      doOptimize = true;
     }
+    }  // end switch
 
-    // the remainders are speical loop closure cases
-    nfg_special_.add(new_factors);
-    output_values.insert(new_values);
-    // nothing added  so no optimization
-    if (new_factors.size() == 0) {
-      return false; // nothing to optimize
-    }
-
-    // reset graph
-    output_nfg = updateOutputGraph();
-    return true;
-  }
+    output_nfg = buildGraphToOptimize();
+    return doOptimize;
+  } // end reject outliers
 
   /*! \brief save the PCM data
    *  saves the distance matrix (final) and also the clique size info
@@ -251,8 +200,63 @@ public:
 
 protected:
 
-  // check if a character is a special symbol as defined in constructor
-  bool specialSymbol(char symb) {
+  /*! \brief goes through the loop closures and updates the corresponding adjacency matrices,
+   * in preparation for max clique
+   */
+  void parseAndIncrementAdjMatrix(const gtsam::NonlinearFactorGraph& new_factors, const gtsam::Values output_values){
+    for (size_t i = 0; i < new_factors.size(); i++) {
+      // iterate through the factors
+      if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[i])) {
+        // regular loop closure.
+        // in this case we should run consistency check to see if loop closure is good
+        // * odometric consistency check (will only compare against odometry
+        // - if loop fails this, we can just drop it)
+        // extract between factor
+        gtsam::BetweenFactor<poseT> nfg_factor =
+            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[i]);
+
+        if (!output_values.exists(nfg_factor.keys().front()) ||
+            !output_values.exists(nfg_factor.keys().back())) {
+          log<WARNING>("Cannot add loop closure with non-existing keys");
+          continue;
+        }
+
+        // check if it is a landmark measurement loop closure
+        gtsam::Symbol symbfrnt(nfg_factor.front());
+        gtsam::Symbol symbback(nfg_factor.back());
+        if (isSpecialSymbol(symbfrnt.chr()) || isSpecialSymbol(symbback.chr())) {
+          // it is landmark loop closure
+          gtsam::Key landmark_key = (isSpecialSymbol(symbfrnt.chr()) ?
+              nfg_factor.front() : nfg_factor.back());
+
+          if (debug_) log<INFO>("loop closing with landmark %1%") %
+              gtsam::DefaultKeyFormatter(landmark_key);
+
+          landmarks_[landmark_key].factors.add(nfg_factor);
+          // grow adj matrix
+          incrementLandmarkAdjMatrix(landmark_key);
+        } else {
+          // It is a proper loop closures
+          double odom_dist;
+          if (isOdomConsistent(nfg_factor, odom_dist)) {
+            nfg_lc_.add(new_factors[i]); // add factor to nfg_lc_
+          } else {
+            if (debug_) log<WARNING>("Discarded loop closure (inconsistent with odometry)");
+            continue; // discontinue since loop closure not consistent with odometry
+          }
+          incrementAdjMatrix();
+        }
+
+      } else {
+        // add as special loop closure
+        // the remainders are speical loop closure cases
+        nfg_special_.add(new_factors[i]);
+      }
+    }
+  }
+
+  // check if a character is a special symbol as defined in constructor (typically these are the landmarks)
+  bool isSpecialSymbol(char symb) const {
     for (size_t i = 0; i < special_symbols_.size(); i++) {
       if (special_symbols_[i] == symb) return true;
     }
@@ -261,12 +265,9 @@ protected:
 
   // initialize PCM with a prior factor
   void initializeWithPrior(const gtsam::PriorFactor<poseT>& prior_factor) {
-
     gtsam::Key initial_key = prior_factor.front();
-
     // construct initial pose with covar
     T<poseT> initial_pose(prior_factor);
-
     // populate trajectory_odom_
     trajectory_odom_.poses[initial_key] = initial_pose;
     nfg_odom_.add(prior_factor); // add to initial odometry
@@ -274,30 +275,34 @@ protected:
 
   // initialize PCM without a prior factor
   void initialize(gtsam::Key initial_key) {
-
     T<poseT> initial_pose;
-
     // populate trajectory_odom_
     trajectory_odom_.poses[initial_key] = initial_pose;
   }
 
+  /* ******************************************************************************* */
   // update the odometry: add new measurements to odometry trajectory tree
-  void updateOdom(const gtsam::BetweenFactor<poseT>& odom_factor) {
-
+  void updateOdom(const gtsam::NonlinearFactorGraph& new_factors) {
+    if (new_factors.size() != 1) {
+      log<WARNING>("Factors passed to updateOdom should be of size one (the odom factor)");
+    }
+    gtsam::BetweenFactor<poseT> odom_factor = 
+        *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[0]);
+    nfg_odom_.add(odom_factor); // - store factor in nfg_odom_
     // update trajectory_odom_ (compose last value with new odom value)
-    gtsam::Key new_key = odom_factor.back();
+    gtsam::Key new_key = odom_factor.keys().back();
 
     // construct pose with covariance for odometry measurement
     T<poseT> odom_delta(odom_factor);
-
     // Now get the latest pose in trajectory and compose
-    gtsam::Key prev_key = odom_factor.front();
+    gtsam::Key prev_key = odom_factor.keys().front();
     T<poseT> prev_pose;
     try {
       prev_pose =
-        trajectory_odom_.poses[prev_key];
+          trajectory_odom_.poses[prev_key];
     } catch (...) {
       log<WARNING>("Attempted to add odom to non-existing key. ");
+      // TODO: this in the future can be where we initialize key0! for future releases
     }
 
     // compose latest pose to odometry for new pose
@@ -307,10 +312,12 @@ protected:
     trajectory_odom_.poses[new_key] = new_pose;
   }
 
-  bool checkOdomConsistent(const PoseWithCovariance<poseT>& result,
-        double& dist) {
-    // For Pcm
-    dist = result.mahalanobis_norm();
+  /* ******************************************************************************* */
+  /*
+   * odometry consistency check specialized to the PoseWithCovariance class
+   */
+  bool checkOdomConsistent(const PoseWithCovariance<poseT>& result, double& dist) const {
+    dist = result.mahalanobis_norm(); // for PCM
     if (debug_) log<INFO>("odometry consistency distance: %1%") % dist;
     if (dist < threshold1_) {
       return true;
@@ -318,11 +325,14 @@ protected:
     return false;
   }
 
-  bool checkOdomConsistent(const PoseWithNode<poseT>& result,
-        double& dist) {
+  /* ******************************************************************************* */
+  /*
+   * odometry consistency check specialized to the PoseWithNode class
+   */
+  bool checkOdomConsistent(const PoseWithNode<poseT>& result, double& dist) {
     // For PcmSimple
-    dist = result.trans_norm();
-    double rot_dist = result.rot_norm();
+    dist = result.avg_trans_norm();
+    double rot_dist = result.avg_rot_norm();
 
     if (debug_) log<INFO>("odometry consistency translation distance: %1%") % dist;
     if (debug_) log<INFO>("odometry consistency rotation distance: %1%") % rot_dist;
@@ -332,13 +342,14 @@ protected:
     return false;
   }
 
-  // check if loop closure is consistent with the odometry easurements
-  bool isOdomConsistent(const gtsam::BetweenFactor<poseT>& lc_factor,
-                        double& dist) {
-    // assume loop is between pose i and j
-    // extract the keys
-    gtsam::Key key_i = lc_factor.front();
-    gtsam::Key key_j = lc_factor.back();
+  /* ******************************************************************************* */
+  /*
+   * general interface for odometry consistency check (both PCM and distance version)
+   */
+  bool isOdomConsistent(const gtsam::BetweenFactor<poseT>& lc_factor, double& dist) {
+    // say: loop is between pose i and j
+    gtsam::Key key_i = lc_factor.keys().front();     // extract the keys
+    gtsam::Key key_j = lc_factor.keys().back();
 
     T<poseT> pij_odom, pji_lc, result;
 
@@ -354,9 +365,12 @@ protected:
     return checkOdomConsistent(result, dist);
   }
 
-  bool checkLoopConsistent(const PoseWithCovariance<poseT>& result,
-        double& dist) {
-    // For Pcm
+  /* ******************************************************************************* */
+  /*
+   * pairwise loop consistency check specialized to the PoseWithCovariance class
+   * TODO: delete this function, rename checkOdomConsistent to checkPairwiseConsistency and let it take a third argument (the threshold)
+   */
+  bool checkLoopConsistent(const PoseWithCovariance<poseT>& result, double& dist) {
     dist = result.mahalanobis_norm();
     if (dist < threshold2_) {
       return true;
@@ -364,55 +378,64 @@ protected:
     return false;
   }
 
-  bool checkLoopConsistent(const PoseWithNode<poseT>& result,
-        double& dist) {
-    // For PcmSimple
-    dist = result.trans_norm();
-    double rot_dist = result.rot_norm();
+  /* ******************************************************************************* */
+  /*
+   * pairwise loop consistency check specialized to the PoseWithNode class
+   * TODO: delete this function, rename checkOdomConsistent to checkPairwiseConsistency and let it take a third argument (the threshold)
+   */
+  bool checkLoopConsistent(const PoseWithNode<poseT>& result, double& dist) {
+    dist = result.avg_trans_norm();
+    double rot_dist = result.avg_rot_norm();
     if (dist < threshold1_ && rot_dist < threshold2_) {
       return true;
     }
     return false;
   }
 
-  // Main PCM function: Check if a pair of loop closures is consistent in measurement
-  bool areLoopsConsistent(const gtsam::BetweenFactor<poseT>& lc_1,
-                          const gtsam::BetweenFactor<poseT>& lc_2,
-                          double& dist) {
+  /* ******************************************************************************* */
+  /*
+   * general interface for loop consistency check (both PCM and distance version)
+   * inputs are 2 loop closures (a,b) and (c,d), where a,b,c,d are keys
+   */
+  bool areLoopsConsistent(const gtsam::BetweenFactor<poseT>& a_lcBetween_b,
+      const gtsam::BetweenFactor<poseT>& c_lcBetween_d,
+      double& dist) {
     // check if two loop closures are consistent
-    gtsam::Key key1a = lc_1.front();
-    gtsam::Key key1b = lc_1.back();
-    gtsam::Key key2a = lc_2.front();
-    gtsam::Key key2b = lc_2.back();
+    // say: loop closure 1 is (a,b)
+    gtsam::Key key_a = a_lcBetween_b.keys().front();
+    gtsam::Key key_b = a_lcBetween_b.keys().back();
+    // say: loop closure 2 is (c,d)
+    gtsam::Key key_c = c_lcBetween_d.keys().front();
+    gtsam::Key key_d = c_lcBetween_d.keys().back();
 
-    T<poseT> p1_lc_inv, p2_lc;
-    p1_lc_inv = T<poseT>(lc_1).inverse();
-    p2_lc = T<poseT>(lc_2);
+    T<poseT> a_lc_b, c_lc_d;
+    a_lc_b = T<poseT>(a_lcBetween_b);
+    c_lc_d = T<poseT>(c_lcBetween_d);
 
-    // find odometry from 1a to 2a
-    T<poseT> p1a2a_odom = trajectory_odom_.getBetween(key1a, key2a);
-
-    // find odometry from 2b to 1b
-    T<poseT> p2b1b_odom = trajectory_odom_.getBetween(key2b, key1b);
-
-    // check that lc_1 pose is consistent with pose from 1a to 1b
-    T<poseT> p1a2b, p1a1b, result;
-    p1a2b = p1a2a_odom.compose(p2_lc);
-    p1a1b = p1a2b.compose(p2b1b_odom);
-    result = p1a1b.compose(p1_lc_inv);
-
-    return checkLoopConsistent(result, dist);
+    // find odometry from a to c
+    T<poseT> a_odom_c = trajectory_odom_.getBetween(key_a, key_c);
+    // find odometry from d to b
+    T<poseT> b_odom_d = trajectory_odom_.getBetween(key_b, key_d);
+    // check that d to b pose is consistent with pose from b to d
+    T<poseT> a_path_d, d_path_b, loop;
+    a_path_d = a_odom_c.compose(c_lc_d);
+    d_path_b = a_path_d.inverse().compose(a_lc_b);
+    loop = d_path_b.compose(b_odom_d);
+    return checkLoopConsistent(loop, dist);
   }
 
-  // increment the adjacency matrix for the main loop closures
+  /* ******************************************************************************* */
+  /*
+   * augment adjacency matrix with an extra (pose-pose) loop closure
+   */
   void incrementAdjMatrix() {
     // * pairwise consistency check (will also compare other loops - if loop fails we still store it, but not include in the optimization)
     // -- add 1 row and 1 column to lc_adjacency_matrix_;
     // -- populate extra row and column by testing pairwise consistency of new lc against all previous ones
-    // -- compute max clique
-    // -- add loops in max clique to a local variable nfg_good_lc
-    // NOTE: this will require a map from rowId (size_t, in adjacency matrix) to slot id (size_t, id of that lc in nfg_lc)
-    size_t num_lc = nfg_lc_.size(); // number of loop closures so far
+    // -- compute max clique (done in the findInliers function)
+    // -- add loops in max clique to a local variable nfg_good_lc (done in the updateOutputGraph function)
+    // Using correspondence rowId (size_t, in adjacency matrix) to slot id (size_t, id of that lc in nfg_lc)
+    size_t num_lc = nfg_lc_.size(); // number of loop closures so far, including the one we just added
     Eigen::MatrixXd new_adj_matrix = Eigen::MatrixXd::Zero(num_lc, num_lc);
     Eigen::MatrixXd new_dst_matrix = Eigen::MatrixXd::Zero(num_lc, num_lc);
     if (num_lc > 1) {
@@ -420,14 +443,12 @@ protected:
       new_adj_matrix.topLeftCorner(num_lc - 1, num_lc - 1) = lc_adjacency_matrix_;
       new_dst_matrix.topLeftCorner(num_lc - 1, num_lc - 1) = lc_distance_matrix_;
 
-      // now iterate through the previous loop closures and fill in last row + col
-      // of consistency matrix
-      for (size_t i = 0; i < num_lc - 1; i++) {
+      // now iterate through the previous loop closures and fill in last row + col of adjacency
+      gtsam::BetweenFactor<poseT> factor_j = // latest loop closure: to be checked
+                  *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(nfg_lc_[num_lc-1]);
+      for (size_t i = 0; i < num_lc - 1; i++) { // compare it against all others
         gtsam::BetweenFactor<poseT> factor_i =
-              *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(nfg_lc_[i]);
-        gtsam::BetweenFactor<poseT> factor_j =
-              *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(nfg_lc_[num_lc-1]);
-
+            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(nfg_lc_[i]);
         // check consistency
         double mah_distance;
         bool consistent = areLoopsConsistent(factor_i, factor_j, mah_distance);
@@ -443,7 +464,10 @@ protected:
     lc_distance_matrix_ = new_dst_matrix;
   }
 
-  // increment adjacency matrix for a landmark
+  /* ******************************************************************************* */
+  /*
+   * augment adjacency matrix for a landmark loop closure
+   */
   void incrementLandmarkAdjMatrix(const gtsam::Key& ldmk_key) {
     // pairwise consistency check for landmarks
     size_t num_lc = landmarks_[ldmk_key].factors.size(); // number measurements
@@ -454,39 +478,41 @@ protected:
       new_adj_matrix.topLeftCorner(num_lc - 1, num_lc - 1) = landmarks_[ldmk_key].adj_matrix;
       new_dst_matrix.topLeftCorner(num_lc - 1, num_lc - 1) = landmarks_[ldmk_key].dist_matrix;
 
-      // now iterate through the previous loop closures and fill in last row + col
-      // of consistency matrix
-      for (size_t i = 0; i < num_lc - 1; i++) {
-        gtsam::BetweenFactor<poseT> factor_i =
-              *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(
-              landmarks_[ldmk_key].factors[i]);
-        gtsam::BetweenFactor<poseT> factor_j =
-              *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(
+      // now iterate through the previous loop closures and fill in last row + col of adjacency
+      gtsam::BetweenFactor<poseT> factor_jl = // latest landmark loop closure: to be checked
+          *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(
               landmarks_[ldmk_key].factors[num_lc-1]);
 
+      // check it against all others
+      for (size_t i = 0; i < num_lc - 1; i++) {
+        gtsam::BetweenFactor<poseT> factor_il =
+            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(
+                landmarks_[ldmk_key].factors[i]);
+
         // check consistency
-        gtsam::Key keyi = factor_i.front();
-        gtsam::Key keyj = factor_j.front();
+        gtsam::Key keyi = factor_il.keys().front();
+        gtsam::Key keyj = factor_jl.keys().front();
 
         if (keyi == ldmk_key || keyj == ldmk_key) {
           log<WARNING>("Landmark observations should be connected pose -> landmark, discarding");
           return;
         }
 
-        T<poseT> pil_inv, pjl;
-        pil_inv = T<poseT>(factor_i).inverse();
-        pjl = T<poseT>(factor_j);
+        // factors are (i,l) and (j,l) and connect poses i,j to a landmark l
+        T<poseT> i_pose_l, j_pose_l;
+        i_pose_l = T<poseT>(factor_il);
+        j_pose_l = T<poseT>(factor_jl);
 
         // find odometry from 1a to 2a
-        T<poseT> pij_odom = trajectory_odom_.getBetween(keyi, keyj);
+        T<poseT> i_odom_j = trajectory_odom_.getBetween(keyi, keyj);
 
         // check that lc_1 pose is consistent with pose from 1a to 1b
-        T<poseT> pil, result;
-        pil = pij_odom.compose(pjl);
-        result = pil.compose(pil_inv);
+        T<poseT> i_path_l, loop;
+        i_path_l = i_odom_j.compose(j_pose_l);
+        loop = i_path_l.inverse().compose(i_pose_l);
 
         double dist;
-        bool consistent = checkLoopConsistent(result, dist);
+        bool consistent = checkLoopConsistent(loop, dist);
 
         new_dst_matrix(num_lc-1, i) = dist;
         new_dst_matrix(i, num_lc-1) = dist;
@@ -500,9 +526,14 @@ protected:
     landmarks_[ldmk_key].dist_matrix = new_dst_matrix;
   }
 
-  // Based on adjacency matrices, call maxclique to extract inliers
+  /* ******************************************************************************* */
+  /*
+   * Based on adjacency matrices, call maxclique to extract inliers
+   */
   void findInliers() {
-    if (debug_) log<INFO>("total loop closures registered: %1%") % nfg_lc_.size();
+    if (debug_)
+      log<INFO>("total loop closures registered: %1%") % nfg_lc_.size();
+
     if (nfg_lc_.size() != 0) {
       nfg_good_lc_ = gtsam::NonlinearFactorGraph(); // reset
       std::vector<int> max_clique_data;
@@ -529,11 +560,14 @@ protected:
     }
   }
 
-  // update the set of inliers to be outputted
-  gtsam::NonlinearFactorGraph updateOutputGraph() {
+  /* ******************************************************************************* */
+  /*
+   * update the set of inliers to be outputted
+   */
+  gtsam::NonlinearFactorGraph buildGraphToOptimize() {
     gtsam::NonlinearFactorGraph output_nfg; // reset
     output_nfg.add(nfg_odom_);
-    output_nfg.add(nfg_good_lc_);
+    output_nfg.add(nfg_good_lc_); // computed by find inliers
     // add the good loop closures associated with landmarks
     std::unordered_map<gtsam::Key, LandmarkMeasurements>::iterator it = landmarks_.begin();
     while(it != landmarks_.end()) {
@@ -544,11 +578,15 @@ protected:
     return output_nfg;
   }
 
+  /* ******************************************************************************* */
+  /*
+   * debug function: save max clique results
+   */
   void saveCliqueSizeData(std::string folder_path) {
     log<INFO>("Saving clique size data");
     std::stringstream filename;
     filename << folder_path << "/clique_size" << std::setfill('0')
-        << std::setw(3) << lc_distance_matrix_.rows() << ".txt";
+    << std::setw(3) << lc_distance_matrix_.rows() << ".txt";
 
     std::ofstream cfile(filename.str());
     if (cfile.is_open()) {
@@ -567,11 +605,15 @@ protected:
     }
   }
 
+  /* ******************************************************************************* */
+  /*
+   * debug function: save max clique results
+   */
   void saveDistanceMatrix(std::string folder_path) {
     log<INFO>("Saving distance matrix");
     std::stringstream filename;
     filename << folder_path << "/dst_matrix" << std::setfill('0')
-        << std::setw(3) << lc_distance_matrix_.rows() << ".txt";
+    << std::setw(3) << lc_distance_matrix_.rows() << ".txt";
     std::ofstream file(filename.str());
     if (file.is_open()) {
       file << lc_distance_matrix_;

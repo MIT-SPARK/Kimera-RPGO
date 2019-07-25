@@ -217,7 +217,7 @@ protected:
         gtsam::BetweenFactor<poseT> nfg_factor =
             *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[i]);
 
-        if (!output_values.exists(nfg_factor.keys().front()) || // TODO: THIS CHECK SHOULD BE EARLIER and maybe classify into something different from loop closure?
+        if (!output_values.exists(nfg_factor.keys().front()) ||
             !output_values.exists(nfg_factor.keys().back())) {
           log<WARNING>("Cannot add loop closure with non-existing keys");
           continue;
@@ -331,7 +331,6 @@ protected:
     // For PcmSimple
     dist = result.trans_norm(); // TODO: rename this function to average_trans_norm (current name is misleading since you divide by node?)
     double rot_dist = result.rot_norm(); // TODO: rename this function to average_rot_norm (current name is misleading since you divide by node?)
-    // TODO: are you sure you need to divide by node?
 
     if (debug_) log<INFO>("odometry consistency translation distance: %1%") % dist;
     if (debug_) log<INFO>("odometry consistency rotation distance: %1%") % rot_dist;

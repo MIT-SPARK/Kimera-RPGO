@@ -153,9 +153,7 @@ public:
     switch (type) {
     case FactorType::ODOMETRY : // odometry, do not optimize
     {
-      gtsam::BetweenFactor<poseT> odom_factor = *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[0]); // TODO: move this inside updateOdom (cleaner)
-      updateOdom(odom_factor);
-      nfg_odom_.add(odom_factor); // - store factor in nfg_odom_
+      updateOdom(new_factors);
       doOptimize = false; // no need to optimize just for odometry
     } break;
     case FactorType::FIRST_LANDMARK_OBSERVATION : // landmark measurement, initialize
@@ -258,7 +256,7 @@ protected:
   }
 
   // check if a character is a special symbol as defined in constructor (typically these are the landmarks)
-  bool isSpecialSymbol(char symb) {
+  bool isSpecialSymbol(char symb) const {
     for (size_t i = 0; i < special_symbols_.size(); i++) {
       if (special_symbols_[i] == symb) return true;
     }
@@ -284,14 +282,18 @@ protected:
 
   /* ******************************************************************************* */
   // update the odometry: add new measurements to odometry trajectory tree
-  void updateOdom(const gtsam::BetweenFactor<poseT>& odom_factor) {
-
+  void updateOdom(const gtsam::NonlinearFactorGraph& new_factors) {
+    if (new_factors.size() != 1) {
+      log<WARNING>("Factors passed to updateOdom should be of size one (the odom factor)");
+    }
+    gtsam::BetweenFactor<poseT> odom_factor = 
+        *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[0]);
+    nfg_odom_.add(odom_factor); // - store factor in nfg_odom_
     // update trajectory_odom_ (compose last value with new odom value)
     gtsam::Key new_key = odom_factor.keys().back();
 
     // construct pose with covariance for odometry measurement
     T<poseT> odom_delta(odom_factor);
-
     // Now get the latest pose in trajectory and compose
     gtsam::Key prev_key = odom_factor.keys().front();
     T<poseT> prev_pose;
@@ -314,7 +316,7 @@ protected:
   /*
    * odometry consistency check specialized to the PoseWithCovariance class
    */
-  bool checkOdomConsistent(const PoseWithCovariance<poseT>& result, double& dist) {
+  bool checkOdomConsistent(const PoseWithCovariance<poseT>& result, double& dist) const {
     dist = result.mahalanobis_norm(); // for PCM
     if (debug_) log<INFO>("odometry consistency distance: %1%") % dist;
     if (dist < threshold1_) {
@@ -329,8 +331,8 @@ protected:
    */
   bool checkOdomConsistent(const PoseWithNode<poseT>& result, double& dist) {
     // For PcmSimple
-    dist = result.trans_norm(); // TODO: rename this function to average_trans_norm (current name is misleading since you divide by node?)
-    double rot_dist = result.rot_norm(); // TODO: rename this function to average_rot_norm (current name is misleading since you divide by node?)
+    dist = result.avg_trans_norm();
+    double rot_dist = result.avg_rot_norm();
 
     if (debug_) log<INFO>("odometry consistency translation distance: %1%") % dist;
     if (debug_) log<INFO>("odometry consistency rotation distance: %1%") % rot_dist;
@@ -382,8 +384,8 @@ protected:
    * TODO: delete this function, rename checkOdomConsistent to checkPairwiseConsistency and let it take a third argument (the threshold)
    */
   bool checkLoopConsistent(const PoseWithNode<poseT>& result, double& dist) {
-    dist = result.trans_norm();
-    double rot_dist = result.rot_norm();
+    dist = result.avg_trans_norm();
+    double rot_dist = result.avg_rot_norm();
     if (dist < threshold1_ && rot_dist < threshold2_) {
       return true;
     }

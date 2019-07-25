@@ -264,14 +264,14 @@ struct PoseWithNode {
     return out;
   }
 
-  double trans_norm() const {
+  double avg_trans_norm() const {
     // calculate mahalanobis norm
     gtsam::Vector log = T::Logmap(pose);
     const int t_dim =  getTranslationDim<T>();
     return std::sqrt(log.tail(t_dim).transpose() * log.tail(t_dim)) / node;
   }
 
-  double rot_norm() const {
+  double avg_rot_norm() const {
     // calculate mahalanobis norm
     if (!rotation_info) return 0; 
     gtsam::Vector log = T::Logmap(pose);

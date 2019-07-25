@@ -90,16 +90,16 @@ TEST(PoseWithNode, Norm)
   A.pose = gtsam::Pose3();
   A.node = 1;
 
-  EXPECT(0 == A.rot_norm());
-  EXPECT(0 == A.trans_norm());
+  EXPECT(0 == A.avg_rot_norm());
+  EXPECT(0 == A.avg_trans_norm());
 
   B.pose = gtsam::Pose3(gtsam::Rot3(1,0,0,0), gtsam::Point3(1,0,0));
   B.node = 5;
-  EXPECT(0.2 == B.trans_norm());
+  EXPECT(0.2 == B.avg_trans_norm());
 
   C.pose = gtsam::Pose3(gtsam::Rot3(0,0,1,0), gtsam::Point3(0,0,0));
   C.node = 5;
-  EXPECT_DOUBLES_EQUAL(3.1415927/5, C.rot_norm(), 1e-6);
+  EXPECT_DOUBLES_EQUAL(3.1415927/5, C.avg_rot_norm(), 1e-6);
 }
 
 /* ************************************************************************* */

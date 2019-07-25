@@ -57,6 +57,10 @@ public:
   void setQuiet() { debug_ = false; }
 
 protected:
+  bool addAndCheckIfOptimize(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(),
+      const gtsam::Values& values=gtsam::Values());
+
+protected:
   bool isSpecialSymbol(char symb) const;
   gtsam::Values values_;
   gtsam::NonlinearFactorGraph nfg_;

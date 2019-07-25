@@ -58,6 +58,7 @@ struct PoseWithCovariance {
   /* ---------------------------------------------------------- */
   T pose; // ex. gtsam::Pose3
   gtsam::Matrix covariance_matrix;
+  bool rotation_info = true;
 
   /* default constructor -------------------------------------- */
   PoseWithCovariance() {
@@ -95,16 +96,17 @@ struct PoseWithCovariance {
     const int dim = getDim<T>();
     const int r_dim = getRotationDim<T>();
     const int t_dim = getTranslationDim<T>();
+    rotation_info = true;
     if (std::isnan(covar.block(0,0,r_dim,r_dim).trace())) {
+      rotation_info = false;
       // only keep translation part
-      Eigen::MatrixXd temp = Eigen::MatrixXd::Zero(dim, dim);
+      Eigen::MatrixXd temp = Eigen::MatrixXd::Zero(dim, dim); // TODO: I wonder if this can cause issues: ...
+      // ... later you invert this matrix, which now contains a bunch of zero (it is not full rank)
       temp.block(r_dim,r_dim,t_dim,t_dim) =
           covar.block(r_dim,r_dim,t_dim,t_dim);
       covar = temp;
     }
-
     covariance_matrix = covar;
-
   }
 
   /* method to combine two poses (along with their covariances) */
@@ -117,17 +119,17 @@ struct PoseWithCovariance {
     out.covariance_matrix = Ha * covariance_matrix * Ha.transpose() +
         Hb * other.covariance_matrix * Hb.transpose();
 
+    if (!rotation_info || !other.rotation_info) out.rotation_info = false;
     return out;
   }
 
   /* method to invert a pose along with its covariance -------- */
   /* ---------------------------------------------------------- */
   PoseWithCovariance inverse() const {
-    gtsam::Matrix Ha;
     PoseWithCovariance<T> out;
-    out.pose = pose.inverse(Ha);
-    out.covariance_matrix = Ha * covariance_matrix * Ha.transpose();
-
+    out.pose = pose.inverse();
+    out.covariance_matrix = covariance_matrix;
+    if (!rotation_info) out.rotation_info = false;
     return out;
   }
 
@@ -159,133 +161,123 @@ struct PoseWithCovariance {
       //   log<WARNING>("Warning: Covariance matrix between two poses not PSD");
       // }
     }
+    if (!rotation_info || !other.rotation_info) out.rotation_info = false;
     return out;
   }
 
-  double norm() const {
+  double mahalanobis_norm() const {
     // calculate mahalanobis norm
     gtsam::Vector log = T::Logmap(pose);
+    if (!rotation_info) {
+      // only use translation part 
+      int t_dim = getTranslationDim<T>();
+      int r_dim = getRotationDim<T>();
+      Eigen::MatrixXd cov_block = covariance_matrix.block(r_dim, r_dim, t_dim, t_dim);
+      return std::sqrt(log.tail(t_dim).transpose() * gtsam::inverse(cov_block) * log.tail(t_dim));
+    }
+
     return std::sqrt(log.transpose() * gtsam::inverse(covariance_matrix) * log);
   }
 };
 
-/** \struct PoseWithDistance
- *  \brief Structure to store a pose and its distance from start
+/** \struct PoseWithNode
+ *  \brief Structure to store a pose and its distance (number of nodes) from start
  *  \currently supports gtsam::Pose2 and gtsam::Pose3
  */
 template <class T>
-struct PoseWithDistance {
+struct PoseWithNode {
   /* variables ------------------------------------------------ */
   /* ---------------------------------------------------------- */
   T pose; // ex. gtsam::Pose3
-  double distance;
+  int node; // node away from prior
+  bool rotation_info = true; // to deal with no rotation info case
 
   /* default constructor -------------------------------------- */
-  PoseWithDistance() {
-    pose =  T();
-    distance = 0;
+  PoseWithNode() {
+    pose = T();
+    node = 0;
   }
 
   /* basic constructor ---------------------------------------- */
-  PoseWithDistance(T pose_in, double dist_in) {
+  PoseWithNode(T pose_in, int node_in) {
     pose = pose_in;
-    distance = dist_in;
+    node = node_in;
   }
 
   /* construct from gtsam prior factor ------------------------ */
-  PoseWithDistance(const gtsam::PriorFactor<T>& prior_factor) {
+  PoseWithNode(const gtsam::PriorFactor<T>& prior_factor) {
     T value = prior_factor.prior();
     pose = value;
-    distance = 0.0;
+    node = 0;
   }
 
   /* construct from gtsam between factor  --------------------- */
-  PoseWithDistance(const gtsam::BetweenFactor<T>& between_factor) {
+  PoseWithNode(const gtsam::BetweenFactor<T>& between_factor) {
     pose = between_factor.measured();
-    distance = between_factor.measured.translation().norm();
+    gtsam::Matrix covar = boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>
+        (between_factor.get_noiseModel())->covariance();
+
+    // prevent propagation of nan values in the edge case
+    const int dim = getDim<T>();
+    const int r_dim = getRotationDim<T>();
+    const int t_dim = getTranslationDim<T>();
+    rotation_info = true;
+    if (std::isnan(covar.block(0,0,r_dim,r_dim).trace())) {
+      rotation_info = false;
+    }
+    node = 1;
   }
 
-  /* method to combine two poses (along with their covariances) */
+  /* method to combine two poses (along with their node numbers) */
   /* ---------------------------------------------------------- */
-  PoseWithDistance compose(const PoseWithDistance& other) const {
-    PoseWithDistance<T> out;
+  PoseWithNode compose(const PoseWithNode& other) const {
+    PoseWithNode<T> out;
 
     out.pose = pose.compose(other.pose);
-    out.distance = distance + other.pose.translation().norm();
+    out.node = node + other.node;
+
+    if (!rotation_info || !other.rotation_info) out.rotation_info = false;
     return out;
   }
 
   /* method to invert a pose along with its covariance -------- */
   /* ---------------------------------------------------------- */
-  PoseWithDistance inverse() const {
-    PoseWithDistance<T> out;
+  PoseWithNode inverse() const {
+    PoseWithNode<T> out;
 
     out.pose = pose.inverse();
-    out.distance = distance;
+    out.node = node;
+
+    if (!rotation_info) out.rotation_info = false;
     return out;
   }
 
   /* method to find the transform between two poses ------------ */
   /* ----------------------------------------------------------- */
-  PoseWithDistance between(const PoseWithDistance& other) const {
-    PoseWithDistance<T> out;
+  PoseWithNode between(const PoseWithNode& other) const {
+    PoseWithNode<T> out;
     out.pose = pose.between(other.pose); // returns between in a frame
 
-    out.distance = abs(other.distance - distance);
+    out.node = abs(other.node - node);
+
+    if (!rotation_info || !other.rotation_info) out.rotation_info = false;
     return out;
   }
 
-  double norm() const {
+  double avg_trans_norm() const {
     // calculate mahalanobis norm
     gtsam::Vector log = T::Logmap(pose);
-    return std::sqrt(log.transpose() * log) / distance;
+    const int t_dim =  getTranslationDim<T>();
+    return std::sqrt(log.tail(t_dim).transpose() * log.tail(t_dim)) / node;
   }
-};
 
-/** \struct Transform
- *  \brief Structure defining a transformation between two poses
- */
-template <class T>
-struct Transform {
-    gtsam::Key i, j;
-    PoseWithCovariance<T> pose;
-    bool is_separator;
-};
-
-/** \struct Transforms
- *  \brief Structure defining a std::map of transformations
- */
-template <class T>
-struct Transforms {
-    gtsam::Key start_id, end_id;
-    std::map<std::pair<gtsam::Key,gtsam::Key>, Transform<T>> transforms;
-};
-
-/** \struct TrajectoryPose
- *  \brief Structure defining a pose in a robot trajectory
- */
-template <class T>
-struct TrajectoryPose {
-    gtsam::Key id;
-    PoseWithCovariance<T> pose;
-};
-
-/** \struct Trajectory
- *  \brief Structure defining a robot trajectory
- */
-template <class T>
-struct Trajectory {
-    gtsam::Key start_id, end_id;
-    std::map<gtsam::Key, TrajectoryPose<T>> trajectory_poses;
-};
-
-/** \struct DistTrajectory
- *  \brief Same as Trajectory but instead of covariance tracks distance
- */
-template <class T>
-struct DistTrajectory {
-    gtsam::Key start_id, end_id;
-    std::map<gtsam::Key, PoseWithDistance<T>> trajectory_poses;
+  double avg_rot_norm() const {
+    // calculate mahalanobis norm
+    if (!rotation_info) return 0; 
+    gtsam::Vector log = T::Logmap(pose);
+    const int r_dim =  getRotationDim<T>();
+    return std::sqrt(log.head(r_dim).transpose() * log.head(r_dim)) / node;
+  }
 };
 
 }

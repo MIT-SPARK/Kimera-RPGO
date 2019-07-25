@@ -481,19 +481,19 @@ protected:
       new_dst_matrix.topLeftCorner(num_lc - 1, num_lc - 1) = landmarks_[ldmk_key].dist_matrix;
 
       // now iterate through the previous loop closures and fill in last row + col of adjacency
-      gtsam::BetweenFactor<poseT> factor_j = // latest landmark loop closure: to be checked
+      gtsam::BetweenFactor<poseT> factor_jl = // latest landmark loop closure: to be checked
           *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(
               landmarks_[ldmk_key].factors[num_lc-1]);
 
       // check it against all others
       for (size_t i = 0; i < num_lc - 1; i++) {
-        gtsam::BetweenFactor<poseT> factor_i =
+        gtsam::BetweenFactor<poseT> factor_il =
             *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(
                 landmarks_[ldmk_key].factors[i]);
 
         // check consistency
-        gtsam::Key keyi = factor_i.keys().front();
-        gtsam::Key keyj = factor_j.keys().front();
+        gtsam::Key keyi = factor_il.keys().front();
+        gtsam::Key keyj = factor_jl.keys().front();
 
         if (keyi == ldmk_key || keyj == ldmk_key) {
           log<WARNING>("Landmark observations should be connected pose -> landmark, discarding");
@@ -501,20 +501,20 @@ protected:
         }
 
         // factors are (i,l) and (j,l) and connect poses i,j to a landmark l
-        T<poseT> pil_inv, pjl;
-        pil_inv = T<poseT>(factor_i).inverse();
-        pjl = T<poseT>(factor_j);
+        T<poseT> l_pose_i, j_pose_l;
+        l_pose_i = T<poseT>(factor_il).inverse();
+        j_pose_l = T<poseT>(factor_jl);
 
         // find odometry from 1a to 2a
-        T<poseT> pij_odom = trajectory_odom_.getBetween(keyi, keyj);
+        T<poseT> i_odom_j = trajectory_odom_.getBetween(keyi, keyj);
 
         // check that lc_1 pose is consistent with pose from 1a to 1b
-        T<poseT> pil, result;
-        pil = pij_odom.compose(pjl);
-        result = pil.compose(pil_inv);
+        T<poseT> i_path_l, loop;
+        i_path_l = i_odom_j.compose(j_pose_l);
+        loop = i_path_l.compose(l_pose_i);
 
         double dist;
-        bool consistent = checkLoopConsistent(result, dist);
+        bool consistent = checkLoopConsistent(loop, dist);
 
         new_dst_matrix(num_lc-1, i) = dist;
         new_dst_matrix(i, num_lc-1) = dist;

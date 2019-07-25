@@ -260,7 +260,7 @@ protected:
     }
   }
 
-  // check if a character is a special symbol as defined in constructor
+  // check if a character is a special symbol as defined in constructor (typically these are the landmarks)
   bool isSpecialSymbol(char symb) {
     for (size_t i = 0; i < special_symbols_.size(); i++) {
       if (special_symbols_[i] == symb) return true;
@@ -270,12 +270,9 @@ protected:
 
   // initialize PCM with a prior factor
   void initializeWithPrior(const gtsam::PriorFactor<poseT>& prior_factor) {
-
     gtsam::Key initial_key = prior_factor.front();
-
     // construct initial pose with covar
     T<poseT> initial_pose(prior_factor);
-
     // populate trajectory_odom_
     trajectory_odom_.poses[initial_key] = initial_pose;
     nfg_odom_.add(prior_factor); // add to initial odometry
@@ -283,30 +280,30 @@ protected:
 
   // initialize PCM without a prior factor
   void initialize(gtsam::Key initial_key) {
-
     T<poseT> initial_pose;
-
     // populate trajectory_odom_
     trajectory_odom_.poses[initial_key] = initial_pose;
   }
 
+  /* ******************************************************************************* */
   // update the odometry: add new measurements to odometry trajectory tree
   void updateOdom(const gtsam::BetweenFactor<poseT>& odom_factor) {
 
     // update trajectory_odom_ (compose last value with new odom value)
-    gtsam::Key new_key = odom_factor.back();
+    gtsam::Key new_key = odom_factor.back(); // TODO: is this accessing the second key? syntax is confusing, maybe use ->keys().end()?
 
     // construct pose with covariance for odometry measurement
     T<poseT> odom_delta(odom_factor);
 
     // Now get the latest pose in trajectory and compose
-    gtsam::Key prev_key = odom_factor.front();
+    gtsam::Key prev_key = odom_factor.front(); // TODO: is this accessing the second key? syntax is confusing, maybe use ->keys().begin()?
     T<poseT> prev_pose;
     try {
       prev_pose =
           trajectory_odom_.poses[prev_key];
     } catch (...) {
       log<WARNING>("Attempted to add odom to non-existing key. ");
+      // TODO: this in the future can be where we initialize key0! for future releases
     }
 
     // compose latest pose to odometry for new pose
@@ -316,10 +313,12 @@ protected:
     trajectory_odom_.poses[new_key] = new_pose;
   }
 
-  bool checkOdomConsistent(const PoseWithCovariance<poseT>& result,
-      double& dist) {
-    // For Pcm
-    dist = result.mahalanobis_norm();
+  /* ******************************************************************************* */
+  /*
+   * odometry consistency check specialized to the PoseWithCovariance class
+   */
+  bool checkOdomConsistent(const PoseWithCovariance<poseT>& result, double& dist) {
+    dist = result.mahalanobis_norm(); // for PCM
     if (debug_) log<INFO>("odometry consistency distance: %1%") % dist;
     if (dist < threshold1_) {
       return true;
@@ -327,11 +326,15 @@ protected:
     return false;
   }
 
-  bool checkOdomConsistent(const PoseWithNode<poseT>& result,
-      double& dist) {
+  /* ******************************************************************************* */
+  /*
+   * odometry consistency check specialized to the PoseWithNode class
+   */
+  bool checkOdomConsistent(const PoseWithNode<poseT>& result, double& dist) {
     // For PcmSimple
-    dist = result.trans_norm();
-    double rot_dist = result.rot_norm();
+    dist = result.trans_norm(); // TODO: rename this function to average_trans_norm (current name is misleading since you divide by node?)
+    double rot_dist = result.rot_norm(); // TODO: rename this function to average_rot_norm (current name is misleading since you divide by node?)
+    // TODO: are you sure you need to divide by node?
 
     if (debug_) log<INFO>("odometry consistency translation distance: %1%") % dist;
     if (debug_) log<INFO>("odometry consistency rotation distance: %1%") % rot_dist;
@@ -341,12 +344,13 @@ protected:
     return false;
   }
 
-  // check if loop closure is consistent with the odometry easurements
-  bool isOdomConsistent(const gtsam::BetweenFactor<poseT>& lc_factor,
-      double& dist) {
-    // assume loop is between pose i and j
-    // extract the keys
-    gtsam::Key key_i = lc_factor.front();
+  /* ******************************************************************************* */
+  /*
+   * general interface for odometry consistency check (both PCM and distance version)
+   */
+  bool isOdomConsistent(const gtsam::BetweenFactor<poseT>& lc_factor, double& dist) {
+    // say: loop is between pose i and j
+    gtsam::Key key_i = lc_factor.front();     // extract the keys // TODO: check syntax to get keys
     gtsam::Key key_j = lc_factor.back();
 
     T<poseT> pij_odom, pji_lc, result;
@@ -363,6 +367,10 @@ protected:
     return checkOdomConsistent(result, dist);
   }
 
+  /* ******************************************************************************* */
+  /*
+   * pairwise loop consistency check specialized to the PoseWithCovariance class
+   */
   bool checkLoopConsistent(const PoseWithCovariance<poseT>& result,
       double& dist) {
     // For Pcm
@@ -373,6 +381,10 @@ protected:
     return false;
   }
 
+  /* ******************************************************************************* */
+  /*
+   * pairwise loop consistency check specialized to the PoseWithNode class
+   */
   bool checkLoopConsistent(const PoseWithNode<poseT>& result,
       double& dist) {
     // For PcmSimple
@@ -384,7 +396,10 @@ protected:
     return false;
   }
 
-  // Main PCM function: Check if a pair of loop closures is consistent in measurement
+  /* ******************************************************************************* */
+  /*
+   * general interface for loop consistency check (both PCM and distance version)
+   */
   bool areLoopsConsistent(const gtsam::BetweenFactor<poseT>& lc_1,
       const gtsam::BetweenFactor<poseT>& lc_2,
       double& dist) {

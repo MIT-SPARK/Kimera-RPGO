@@ -160,7 +160,7 @@ public:
     } break;
     case FactorType::FIRST_LANDMARK_OBSERVATION : // landmark measurement, initialize
     {
-      log<INFO>("New landmark observed");
+      if (debug_) log<INFO>("New landmark observed");
       LandmarkMeasurements newMeasurement(new_factors);
       gtsam::Symbol symb(new_values.keys()[0]);
       landmarks_[symb] = newMeasurement;
@@ -231,7 +231,7 @@ protected:
           gtsam::Key landmark_key = (isSpecialSymbol(symbfrnt.chr()) ?
               nfg_factor.front() : nfg_factor.back());
 
-          log<INFO>("loop closing with landmark %1%") %
+          if (debug_) log<INFO>("loop closing with landmark %1%") %
               gtsam::DefaultKeyFormatter(landmark_key);
 
           landmarks_[landmark_key].factors.add(nfg_factor);

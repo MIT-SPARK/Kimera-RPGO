@@ -406,8 +406,8 @@ protected:
     gtsam::Key key_c = c_lcBetween_d.keys().front();
     gtsam::Key key_d = c_lcBetween_d.keys().back();
 
-    T<poseT> b_lc_a, c_lc_d;
-    b_lc_a = T<poseT>(a_lcBetween_b).inverse();
+    T<poseT> a_lc_b, c_lc_d;
+    a_lc_b = T<poseT>(a_lcBetween_b);
     c_lc_d = T<poseT>(c_lcBetween_d);
 
     // find odometry from 1a to 2a
@@ -417,12 +417,12 @@ protected:
     T<poseT> d_odom_b = trajectory_odom_.getBetween(key_d, key_b);
 
     // check that lc_1 pose is consistent with pose from 1a to 1b
-    T<poseT> a_path_d, a_path_b, loop;
+    T<poseT> a_path_d, b_path_d, loop;
     a_path_d = a_odom_c.compose(c_lc_d);
-    a_path_b = a_path_d.compose(d_odom_b);
-    loop = a_path_b.compose(b_lc_a);
+    b_path_d = a_path_d.inverse().compose(a_lc_b);
+    loop = b_path_d.compose(d_odom_b);
 
-    return checkLoopConsistent(loop, dist); // TODO: where is the zero information case handled? (e.g., manual loop closure)
+    return checkLoopConsistent(loop, dist);
   }
 
   /* ******************************************************************************* */

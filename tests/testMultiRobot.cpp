@@ -27,7 +27,7 @@ TEST(RobustSolver, multiRobotPcm)
           <--            */
   // set up RobustPGO solver
   RobustSolverParams params;
-  params.setPcm3DParams(10.0, 1.5, Verbosity::QUIET);
+  params.setPcm3DParams(5.0, 2.5, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
 
@@ -116,24 +116,21 @@ TEST(RobustSolver, multiRobotPcm)
   // loop closures
   gtsam::NonlinearFactorGraph lc_factors;
 
-  // first add some good loop closure
+  // first a good loop closure
   gtsam::Key a1 = gtsam::Symbol('a',1);
   gtsam::Key b1 = gtsam::Symbol('b',1);
   lc_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(b1, a1,
-      gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, 0.9,0)), noise));
+      gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0,1,0)), noise));
 
   gtsam::Key a4 = gtsam::Symbol('a',4);
   gtsam::Key b4 = gtsam::Symbol('b',4);
-  gtsam::Rot3 Rab4 = gtsam::Rot3::Rz(3.14);
-  lc_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(a4, b4,
-      gtsam::Pose3(Rab4, gtsam::Point3(0,0,-2.9)), noise));
 
   pgo->update(lc_factors, gtsam::Values());
 
   nfg = pgo->getFactorsUnsafe();
   est = pgo->calculateEstimate();
 
-  EXPECT(nfg.size()==size_t(13));
+  EXPECT(nfg.size()==size_t(12));
   EXPECT(est.size()==size_t(12));
 
   // add a mixture of good and bad loop closures
@@ -153,7 +150,7 @@ TEST(RobustSolver, multiRobotPcm)
   nfg = pgo->getFactorsUnsafe();
   est = pgo->calculateEstimate();
 
-  EXPECT(nfg.size()==size_t(14));
+  EXPECT(nfg.size()==size_t(13));
   EXPECT(est.size()==size_t(12));
 
   // add a good and bad single robot loop closures
@@ -171,7 +168,7 @@ TEST(RobustSolver, multiRobotPcm)
   nfg = pgo->getFactorsUnsafe();
   est = pgo->calculateEstimate();
 
-  EXPECT(nfg.size()==size_t(15));
+  EXPECT(nfg.size()==size_t(14));
   EXPECT(est.size()==size_t(12));
 }
 

@@ -50,7 +50,6 @@ enum class FactorType {
 // poseT can be gtsam::Pose2 or Pose3 for 3D vs 3D
 // T can be PoseWithCovariance or PoseWithDistance based on
 // If using Pcm or PcmDistance
-
 template<class poseT, template <class> class T>
 class Pcm : public OutlierRemoval{
 public:
@@ -218,8 +217,8 @@ protected:
         gtsam::BetweenFactor<poseT> nfg_factor =
             *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[i]);
 
-        if (!output_values.exists(nfg_factor.front()) || // TODO: THIS CHECK SHOULD BE EARLIER and maybe classify into something different from loop closure?
-            !output_values.exists(nfg_factor.back())) {
+        if (!output_values.exists(nfg_factor.keys().front()) || // TODO: THIS CHECK SHOULD BE EARLIER and maybe classify into something different from loop closure?
+            !output_values.exists(nfg_factor.keys().back())) {
           log<WARNING>("Cannot add loop closure with non-existing keys");
           continue;
         }
@@ -290,13 +289,13 @@ protected:
   void updateOdom(const gtsam::BetweenFactor<poseT>& odom_factor) {
 
     // update trajectory_odom_ (compose last value with new odom value)
-    gtsam::Key new_key = odom_factor.back(); // TODO: is this accessing the second key? syntax is confusing, maybe use ->keys().end()?
+    gtsam::Key new_key = odom_factor.keys().back();
 
     // construct pose with covariance for odometry measurement
     T<poseT> odom_delta(odom_factor);
 
     // Now get the latest pose in trajectory and compose
-    gtsam::Key prev_key = odom_factor.front(); // TODO: is this accessing the second key? syntax is confusing, maybe use ->keys().begin()?
+    gtsam::Key prev_key = odom_factor.keys().front();
     T<poseT> prev_pose;
     try {
       prev_pose =
@@ -350,8 +349,8 @@ protected:
    */
   bool isOdomConsistent(const gtsam::BetweenFactor<poseT>& lc_factor, double& dist) {
     // say: loop is between pose i and j
-    gtsam::Key key_i = lc_factor.front();     // extract the keys // TODO: check syntax to get keys
-    gtsam::Key key_j = lc_factor.back();
+    gtsam::Key key_i = lc_factor.keys().front();     // extract the keys
+    gtsam::Key key_j = lc_factor.keys().back();
 
     T<poseT> pij_odom, pji_lc, result;
 
@@ -370,10 +369,9 @@ protected:
   /* ******************************************************************************* */
   /*
    * pairwise loop consistency check specialized to the PoseWithCovariance class
+   * TODO: delete this function, rename checkOdomConsistent to checkPairwiseConsistency and let it take a third argument (the threshold)
    */
-  bool checkLoopConsistent(const PoseWithCovariance<poseT>& result,
-      double& dist) {
-    // For Pcm
+  bool checkLoopConsistent(const PoseWithCovariance<poseT>& result, double& dist) {
     dist = result.mahalanobis_norm();
     if (dist < threshold2_) {
       return true;
@@ -384,10 +382,9 @@ protected:
   /* ******************************************************************************* */
   /*
    * pairwise loop consistency check specialized to the PoseWithNode class
+   * TODO: delete this function, rename checkOdomConsistent to checkPairwiseConsistency and let it take a third argument (the threshold)
    */
-  bool checkLoopConsistent(const PoseWithNode<poseT>& result,
-      double& dist) {
-    // For PcmSimple
+  bool checkLoopConsistent(const PoseWithNode<poseT>& result, double& dist) {
     dist = result.trans_norm();
     double rot_dist = result.rot_norm();
     if (dist < threshold1_ && rot_dist < threshold2_) {
@@ -399,36 +396,42 @@ protected:
   /* ******************************************************************************* */
   /*
    * general interface for loop consistency check (both PCM and distance version)
+   * inputs are 2 loop closures (a,b) and (c,d), where a,b,c,d are keys
    */
-  bool areLoopsConsistent(const gtsam::BetweenFactor<poseT>& lc_1,
-      const gtsam::BetweenFactor<poseT>& lc_2,
+  bool areLoopsConsistent(const gtsam::BetweenFactor<poseT>& a_lcBetween_b,
+      const gtsam::BetweenFactor<poseT>& c_lcBetween_d,
       double& dist) {
     // check if two loop closures are consistent
-    gtsam::Key key1a = lc_1.front();
-    gtsam::Key key1b = lc_1.back();
-    gtsam::Key key2a = lc_2.front();
-    gtsam::Key key2b = lc_2.back();
+    // say: loop closure 1 is (a,b)
+    gtsam::Key key_a = a_lcBetween_b.keys().front();
+    gtsam::Key key_b = a_lcBetween_b.keys().back();
+    // say: loop closure 2 is (c,d)
+    gtsam::Key key_c = c_lcBetween_d.keys().front();
+    gtsam::Key key_d = c_lcBetween_d.keys().back();
 
-    T<poseT> p1_lc_inv, p2_lc;
-    p1_lc_inv = T<poseT>(lc_1).inverse();
-    p2_lc = T<poseT>(lc_2);
+    T<poseT> b_lc_a, c_lc_d;
+    b_lc_a = T<poseT>(a_lcBetween_b).inverse();
+    c_lc_d = T<poseT>(c_lcBetween_d);
 
     // find odometry from 1a to 2a
-    T<poseT> p1a2a_odom = trajectory_odom_.getBetween(key1a, key2a);
+    T<poseT> a_odom_c = trajectory_odom_.getBetween(key_a, key_c);
 
     // find odometry from 2b to 1b
-    T<poseT> p2b1b_odom = trajectory_odom_.getBetween(key2b, key1b);
+    T<poseT> d_odom_b = trajectory_odom_.getBetween(key_d, key_b);
 
     // check that lc_1 pose is consistent with pose from 1a to 1b
-    T<poseT> p1a2b, p1a1b, result;
-    p1a2b = p1a2a_odom.compose(p2_lc);
-    p1a1b = p1a2b.compose(p2b1b_odom);
-    result = p1a1b.compose(p1_lc_inv);
+    T<poseT> a_path_d, a_path_b, loop;
+    a_path_d = a_odom_c.compose(c_lc_d);
+    a_path_b = a_path_d.compose(d_odom_b);
+    loop = a_path_b.compose(b_lc_a);
 
-    return checkLoopConsistent(result, dist);
+    return checkLoopConsistent(loop, dist);
   }
 
-  // increment the adjacency matrix for the main loop closures
+  /* ******************************************************************************* */
+  /*
+   * augment adjacency matrix with an extra (pose-pose) loop closure
+   */
   void incrementAdjMatrix() {
     // * pairwise consistency check (will also compare other loops - if loop fails we still store it, but not include in the optimization)
     // -- add 1 row and 1 column to lc_adjacency_matrix_;

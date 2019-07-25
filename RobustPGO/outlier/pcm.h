@@ -187,7 +187,7 @@ public:
     }
     }  // end switch
 
-    output_nfg = updateOutputGraph();
+    output_nfg = buildGraphToOptimize();
     return doOptimize;
   } // end reject outliers
 
@@ -217,7 +217,7 @@ protected:
         gtsam::BetweenFactor<poseT> nfg_factor =
             *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[i]);
 
-        if (!output_values.exists(nfg_factor.keys().front()) || // TODO: THIS CHECK SHOULD BE EARLIER and maybe classify into something different from loop closure?
+        if (!output_values.exists(nfg_factor.keys().front()) ||
             !output_values.exists(nfg_factor.keys().back())) {
           log<WARNING>("Cannot add loop closure with non-existing keys");
           continue;
@@ -331,7 +331,6 @@ protected:
     // For PcmSimple
     dist = result.trans_norm(); // TODO: rename this function to average_trans_norm (current name is misleading since you divide by node?)
     double rot_dist = result.rot_norm(); // TODO: rename this function to average_rot_norm (current name is misleading since you divide by node?)
-    // TODO: are you sure you need to divide by node?
 
     if (debug_) log<INFO>("odometry consistency translation distance: %1%") % dist;
     if (debug_) log<INFO>("odometry consistency rotation distance: %1%") % rot_dist;
@@ -528,9 +527,14 @@ protected:
     landmarks_[ldmk_key].dist_matrix = new_dst_matrix;
   }
 
-  // Based on adjacency matrices, call maxclique to extract inliers
+  /* ******************************************************************************* */
+  /*
+   * Based on adjacency matrices, call maxclique to extract inliers
+   */
   void findInliers() {
-    if (debug_) log<INFO>("total loop closures registered: %1%") % nfg_lc_.size();
+    if (debug_)
+      log<INFO>("total loop closures registered: %1%") % nfg_lc_.size();
+
     if (nfg_lc_.size() != 0) {
       nfg_good_lc_ = gtsam::NonlinearFactorGraph(); // reset
       std::vector<int> max_clique_data;
@@ -557,11 +561,14 @@ protected:
     }
   }
 
-  // update the set of inliers to be outputted
-  gtsam::NonlinearFactorGraph updateOutputGraph() {
+  /* ******************************************************************************* */
+  /*
+   * update the set of inliers to be outputted
+   */
+  gtsam::NonlinearFactorGraph buildGraphToOptimize() {
     gtsam::NonlinearFactorGraph output_nfg; // reset
     output_nfg.add(nfg_odom_);
-    output_nfg.add(nfg_good_lc_);
+    output_nfg.add(nfg_good_lc_); // computed by find inliers
     // add the good loop closures associated with landmarks
     std::unordered_map<gtsam::Key, LandmarkMeasurements>::iterator it = landmarks_.begin();
     while(it != landmarks_.end()) {
@@ -572,6 +579,10 @@ protected:
     return output_nfg;
   }
 
+  /* ******************************************************************************* */
+  /*
+   * debug function: save max clique results
+   */
   void saveCliqueSizeData(std::string folder_path) {
     log<INFO>("Saving clique size data");
     std::stringstream filename;
@@ -595,6 +606,10 @@ protected:
     }
   }
 
+  /* ******************************************************************************* */
+  /*
+   * debug function: save max clique results
+   */
   void saveDistanceMatrix(std::string folder_path) {
     log<INFO>("Saving distance matrix");
     std::stringstream filename;

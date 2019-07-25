@@ -242,12 +242,10 @@ protected:
           double odom_dist;
           if (isOdomConsistent(nfg_factor, odom_dist)) {
             nfg_lc_.add(new_factors[i]); // add factor to nfg_lc_
-
           } else {
             if (debug_) log<WARNING>("Discarded loop closure (inconsistent with odometry)");
             continue; // discontinue since loop closure not consistent with odometry
           }
-
           incrementAdjMatrix();
         }
 
@@ -425,7 +423,7 @@ protected:
     a_path_b = a_path_d.compose(d_odom_b);
     loop = a_path_b.compose(b_lc_a);
 
-    return checkLoopConsistent(loop, dist);
+    return checkLoopConsistent(loop, dist); // TODO: where is the zero information case handled? (e.g., manual loop closure)
   }
 
   /* ******************************************************************************* */
@@ -436,10 +434,10 @@ protected:
     // * pairwise consistency check (will also compare other loops - if loop fails we still store it, but not include in the optimization)
     // -- add 1 row and 1 column to lc_adjacency_matrix_;
     // -- populate extra row and column by testing pairwise consistency of new lc against all previous ones
-    // -- compute max clique
-    // -- add loops in max clique to a local variable nfg_good_lc
+    // -- compute max clique (done in the findInliers function)
+    // -- add loops in max clique to a local variable nfg_good_lc (done in the updateOutputGraph function)
     // Using correspondence rowId (size_t, in adjacency matrix) to slot id (size_t, id of that lc in nfg_lc)
-    size_t num_lc = nfg_lc_.size(); // number of loop closures so far
+    size_t num_lc = nfg_lc_.size(); // number of loop closures so far, including the one we just added
     Eigen::MatrixXd new_adj_matrix = Eigen::MatrixXd::Zero(num_lc, num_lc);
     Eigen::MatrixXd new_dst_matrix = Eigen::MatrixXd::Zero(num_lc, num_lc);
     if (num_lc > 1) {
@@ -447,14 +445,12 @@ protected:
       new_adj_matrix.topLeftCorner(num_lc - 1, num_lc - 1) = lc_adjacency_matrix_;
       new_dst_matrix.topLeftCorner(num_lc - 1, num_lc - 1) = lc_distance_matrix_;
 
-      // now iterate through the previous loop closures and fill in last row + col
-      // of consistency matrix
-      for (size_t i = 0; i < num_lc - 1; i++) {
+      // now iterate through the previous loop closures and fill in last row + col of adjacency
+      gtsam::BetweenFactor<poseT> factor_j = // latest loop closure: to be checked
+                  *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(nfg_lc_[num_lc-1]);
+      for (size_t i = 0; i < num_lc - 1; i++) { // compare it against all others
         gtsam::BetweenFactor<poseT> factor_i =
             *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(nfg_lc_[i]);
-        gtsam::BetweenFactor<poseT> factor_j =
-            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(nfg_lc_[num_lc-1]);
-
         // check consistency
         double mah_distance;
         bool consistent = areLoopsConsistent(factor_i, factor_j, mah_distance);
@@ -470,7 +466,10 @@ protected:
     lc_distance_matrix_ = new_dst_matrix;
   }
 
-  // increment adjacency matrix for a landmark
+  /* ******************************************************************************* */
+  /*
+   * augment adjacency matrix for a landmark loop closure
+   */
   void incrementLandmarkAdjMatrix(const gtsam::Key& ldmk_key) {
     // pairwise consistency check for landmarks
     size_t num_lc = landmarks_[ldmk_key].factors.size(); // number measurements
@@ -481,25 +480,27 @@ protected:
       new_adj_matrix.topLeftCorner(num_lc - 1, num_lc - 1) = landmarks_[ldmk_key].adj_matrix;
       new_dst_matrix.topLeftCorner(num_lc - 1, num_lc - 1) = landmarks_[ldmk_key].dist_matrix;
 
-      // now iterate through the previous loop closures and fill in last row + col
-      // of consistency matrix
+      // now iterate through the previous loop closures and fill in last row + col of adjacency
+      gtsam::BetweenFactor<poseT> factor_j = // latest landmark loop closure: to be checked
+          *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(
+              landmarks_[ldmk_key].factors[num_lc-1]);
+
+      // check it against all others
       for (size_t i = 0; i < num_lc - 1; i++) {
         gtsam::BetweenFactor<poseT> factor_i =
             *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(
                 landmarks_[ldmk_key].factors[i]);
-        gtsam::BetweenFactor<poseT> factor_j =
-            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(
-                landmarks_[ldmk_key].factors[num_lc-1]);
 
         // check consistency
-        gtsam::Key keyi = factor_i.front();
-        gtsam::Key keyj = factor_j.front();
+        gtsam::Key keyi = factor_i.keys().front();
+        gtsam::Key keyj = factor_j.keys().front();
 
         if (keyi == ldmk_key || keyj == ldmk_key) {
           log<WARNING>("Landmark observations should be connected pose -> landmark, discarding");
           return;
         }
 
+        // factors are (i,l) and (j,l) and connect poses i,j to a landmark l
         T<poseT> pil_inv, pjl;
         pil_inv = T<poseT>(factor_i).inverse();
         pjl = T<poseT>(factor_j);

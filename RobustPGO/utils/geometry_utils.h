@@ -97,14 +97,13 @@ struct PoseWithCovariance {
     const int t_dim = getTranslationDim<T>();
     if (std::isnan(covar.block(0,0,r_dim,r_dim).trace())) {
       // only keep translation part
-      Eigen::MatrixXd temp = Eigen::MatrixXd::Zero(dim, dim);
+      Eigen::MatrixXd temp = Eigen::MatrixXd::Zero(dim, dim); // TODO: I wonder if this can cause issues: ...
+      // ... later you invert this matrix, which now contains a bunch of zero (it is not full rank)
       temp.block(r_dim,r_dim,t_dim,t_dim) =
           covar.block(r_dim,r_dim,t_dim,t_dim);
       covar = temp;
     }
-
     covariance_matrix = covar;
-
   }
 
   /* method to combine two poses (along with their covariances) */

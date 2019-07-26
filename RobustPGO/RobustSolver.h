@@ -118,7 +118,6 @@ public:
           }
 
           factors[i].reset();
-          break;
         }
       }
     }

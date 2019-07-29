@@ -72,4 +72,6 @@ configure_file(tests/test_config.h.in tests/test_config.h)
 
 ###########################################################################
 # Installation
-set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_PREFIX}/cmake/RobustPGO)
+export(TARGETS RobustPGO FILE ${CMAKE_CURRENT_SOURCE_DIR}/cmake/RobustPGOTargets.cmake)
+set(CMAKE_EXPORT_PACKAGE_REGISTRY ON)
+export(PACKAGE RobustPGO)

@@ -100,7 +100,7 @@ public:
     }
 
     // now search for the special symbols (i.e. artifacts)
-    std::vector<gtsam::Key> landmarks; 
+    std::vector<gtsam::Key> landmarks;
     for (size_t i = 0; i < factors.size(); i++) {
       if (factors[i] != NULL){
         gtsam::Symbol symb(factors[i]->back());
@@ -165,7 +165,9 @@ public:
   void saveData(std::string folder_path) const {
     std::string g2o_file_path = folder_path + "/result.g2o";
     gtsam::writeG2o(nfg_, values_, g2o_file_path);
-    outlier_removal_->saveData(folder_path);
+    if (outlier_removal_) {
+      outlier_removal_->saveData(folder_path);
+    }
   }
 
   /*! \brief Load a factor graph with a prior

@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.5)
-project(RobustPGO LANGUAGES CXX)
+project(RobustPGO VERSION 1.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 14) # TODO: remove this later and use target_compile_options
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -21,10 +21,6 @@ if(NOT TARGET Boost::boost)
   INTERFACE_LINK_LIBRARIES "${Boost_LIBRARIES}"
   INTERFACE_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")
 endif()
-
-###########################################################################
-# # Find Eigen (This seens to be needed for some versions of gtsam)
-# find_package(Eigen3 REQUIRED)
 
 ###########################################################################
 # Compile
@@ -51,9 +47,7 @@ target_link_libraries(RobustPGO
 target_include_directories(RobustPGO
   PUBLIC
     ${GTSAM_INCLUDE_DIR}
-    # ${EIGEN3_INCLUDE_DIRS} # needed for some versions of gtsam
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-    $<INSTALL_INTERFACE:src>
 )
 
 ###########################################################################
@@ -72,4 +66,20 @@ configure_file(tests/test_config.h.in tests/test_config.h)
 
 ###########################################################################
 # Installation
-set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_PREFIX}/cmake/RobustPGO)
+set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/RobustPGO)
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/RobustPGOConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+
+# Create RobustPGOConfig.cmake with extra info from RobustPGOConfig.cmake.in
+# This file is necessary to find_package the library RobustPGO.
+configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/RobustPGOConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/RobustPGOConfig.cmake
+    INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
+)
+
+export(TARGETS RobustPGO FILE RobustPGOTargets.cmake)
+export(PACKAGE RobustPGO)

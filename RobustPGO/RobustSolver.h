@@ -100,25 +100,29 @@ public:
     }
 
     // now search for the special symbols (i.e. artifacts)
+    std::vector<gtsam::Key> landmarks;
     for (size_t i = 0; i < factors.size(); i++) {
       if (factors[i] != NULL){
         gtsam::Symbol symb(factors[i]->back());
         if (isSpecialSymbol(symb.chr())) {
-          gtsam::Values new_values;
-          gtsam::NonlinearFactorGraph new_factors;
-          new_values.insert(factors[i]->back(), values.at(factors[i]->back()));
-          new_factors.add(factors[i]);
+          // check that landmark have not previously been seen
+          if (std::find(landmarks.begin(), landmarks.end(), symb) == landmarks.end()) {
+            gtsam::Values new_values;
+            gtsam::NonlinearFactorGraph new_factors;
+            new_values.insert(factors[i]->back(), values.at(factors[i]->back()));
+            new_factors.add(factors[i]);
+            landmarks.push_back(symb);
 
-          // This is essentially addOdometry, but let's not call it that here?
-          // Since what's happening in outlier_removal_ is different
-          if (outlier_removal_) {
-            outlier_removal_->removeOutliers(new_factors, new_values, nfg_, values_);
-          } else {
-            addAndCheckIfOptimize(new_factors, new_values);
+            // This is essentially addOdometry, but let's not call it that here?
+            // Since what's happening in outlier_removal_ is different
+            if (outlier_removal_) {
+              outlier_removal_->removeOutliers(new_factors, new_values, nfg_, values_);
+            } else {
+              addAndCheckIfOptimize(new_factors, new_values);
+            }
+
+            factors[i].reset();
           }
-
-          factors[i].reset();
-          break;
         }
       }
     }
@@ -161,7 +165,9 @@ public:
   void saveData(std::string folder_path) const {
     std::string g2o_file_path = folder_path + "/result.g2o";
     gtsam::writeG2o(nfg_, values_, g2o_file_path);
-    outlier_removal_->saveData(folder_path);
+    if (outlier_removal_) {
+      outlier_removal_->saveData(folder_path);
+    }
   }
 
   /*! \brief Load a factor graph with a prior

@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.5)
 project(RobustPGO VERSION 1.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 14) # TODO: remove this later and use target_compile_options
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -82,5 +82,4 @@ configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/RobustPGOConfig.cm
 )
 
 export(TARGETS RobustPGO FILE RobustPGOTargets.cmake)
-#set(CMAKE_EXPORT_PACKAGE_REGISTRY ON)
 export(PACKAGE RobustPGO)

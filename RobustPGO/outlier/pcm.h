@@ -286,7 +286,7 @@ protected:
     if (new_factors.size() != 1) {
       log<WARNING>("Factors passed to updateOdom should be of size one (the odom factor)");
     }
-    gtsam::BetweenFactor<poseT> odom_factor = 
+    gtsam::BetweenFactor<poseT> odom_factor =
         *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[0]);
     nfg_odom_.add(odom_factor); // - store factor in nfg_odom_
     // update trajectory_odom_ (compose last value with new odom value)

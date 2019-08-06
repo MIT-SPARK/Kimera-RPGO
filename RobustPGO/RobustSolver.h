@@ -67,85 +67,7 @@ public:
    *  - key0: Lowest key of the graph to be connected (root of odometry)
    */
   void updateBatch(gtsam::NonlinearFactorGraph factors,
-      const gtsam::Values& values, const gtsam::Key& key0) {
-
-    // load graph assumes that the previous graph has been cleared
-    gtsam::Key current_key = key0; // initial key
-    // note that as of now only deal with between factors)
-    // first load the odometry
-    // order a nonlinear factor graph as odometry first
-    bool extracted_odom = false;
-    while (!extracted_odom) {
-      bool end_of_odom = true;
-      for (size_t i = 0; i < factors.size(); i++) {
-        // search through
-        if (factors[i] != NULL && factors[i]->keys().size() == 2 &&
-            factors[i]->front() == current_key && factors[i]->back() == current_key + 1) {
-          end_of_odom = false;
-
-          gtsam::Values new_values;
-          gtsam::NonlinearFactorGraph new_factors;
-          // assumes key0 is already in the graph/values
-          new_values.insert(current_key + 1, values.at(current_key + 1));
-          new_factors.add(factors[i]);
-
-          addOdometry(new_factors, new_values);
-
-          current_key = current_key + 1;
-          factors[i].reset(); // delete factor from graph
-          break;
-        }
-      }
-      if (end_of_odom) extracted_odom = true;
-    }
-
-    // now search for the special symbols (i.e. artifacts)
-    std::vector<gtsam::Key> landmarks; 
-    for (size_t i = 0; i < factors.size(); i++) {
-      if (factors[i] != NULL){
-        gtsam::Symbol symb(factors[i]->back());
-        if (isSpecialSymbol(symb.chr())) {
-          // check that landmark have not previously been seen
-          if (std::find(landmarks.begin(), landmarks.end(), symb) == landmarks.end()) {
-            gtsam::Values new_values;
-            gtsam::NonlinearFactorGraph new_factors;
-            new_values.insert(factors[i]->back(), values.at(factors[i]->back()));
-            new_factors.add(factors[i]);
-            landmarks.push_back(symb);
-
-            // This is essentially addOdometry, but let's not call it that here?
-            // Since what's happening in outlier_removal_ is different
-            if (outlier_removal_) {
-              outlier_removal_->removeOutliers(new_factors, new_values, nfg_, values_);
-            } else {
-              addAndCheckIfOptimize(new_factors, new_values);
-            }
-
-            factors[i].reset();
-          }
-        }
-      }
-    }
-
-    // add the other non-odom loop closures
-    gtsam::NonlinearFactorGraph new_factors;
-    for (size_t i = 0; i < factors.size(); i++) {
-      if (factors[i] != NULL) {
-        // if (debug_) {
-        //   std::cout << "loop closure: " << factors[i]->front() << ">" << factors[i]->back() << std::endl;
-        // }
-        new_factors.add(factors[i]);
-      }
-    }
-
-    if (outlier_removal_) {
-      outlier_removal_->removeOutliers(new_factors, gtsam::Values(), nfg_, values_);
-    } else {
-      addAndCheckIfOptimize(new_factors, gtsam::Values());
-    }
-
-    optimize(); // optimize once after loading
-  }
+      const gtsam::Values& values, const gtsam::Key& key0);
 
 private:
   std::unique_ptr<OutlierRemoval> outlier_removal_; // outlier removal method;
@@ -165,7 +87,9 @@ public:
   void saveData(std::string folder_path) const {
     std::string g2o_file_path = folder_path + "/result.g2o";
     gtsam::writeG2o(nfg_, values_, g2o_file_path);
-    outlier_removal_->saveData(folder_path);
+    if (outlier_removal_) {
+      outlier_removal_->saveData(folder_path);
+    }
   }
 
   /*! \brief Load a factor graph with a prior

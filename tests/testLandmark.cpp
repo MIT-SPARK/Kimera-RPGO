@@ -9,7 +9,6 @@
 #include <memory>
 
 #include "RobustPGO/RobustSolver.h"
-#include "RobustPGO/outlier/pcm.h"
 #include "RobustPGO/SolverParams.h"
 #include "test_config.h"
 
@@ -23,7 +22,7 @@ TEST(RobustSolver, LandmarkPcm)
   std::vector<char> special_symbs{'l'}; // for landmarks
   params.specialSymbols = special_symbs;
 
-  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);
@@ -95,15 +94,15 @@ TEST(RobustSolver, LandmarkPcm)
   EXPECT(nfg.size()==size_t(6));
   EXPECT(est.size()==size_t(6));
 
-  // Now start adding landmarks 
-  // Add first observation 
+  // Now start adding landmarks
+  // Add first observation
   gtsam::Vector6 ldmk_prec;
   ldmk_prec.head<3>().setConstant(0); // rotation precision
   ldmk_prec.tail<3>().setConstant(25);
   static const gtsam::SharedNoiseModel& lmk_noise =
       gtsam::noiseModel::Diagonal::Precisions(ldmk_prec);
 
-  gtsam::NonlinearFactorGraph landmark_factors; 
+  gtsam::NonlinearFactorGraph landmark_factors;
   gtsam::Values landmark_values;
   gtsam::Key l0 = gtsam::Symbol('l',0);
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
@@ -116,7 +115,7 @@ TEST(RobustSolver, LandmarkPcm)
   EXPECT(nfg.size()==size_t(7));
   EXPECT(est.size()==size_t(7));
 
-  // add a reobservation should be consistent 
+  // add a reobservation should be consistent
   landmark_factors = gtsam::NonlinearFactorGraph();
   landmark_values = gtsam::Values();
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
@@ -128,7 +127,7 @@ TEST(RobustSolver, LandmarkPcm)
   EXPECT(nfg.size()==size_t(8));
   EXPECT(est.size()==size_t(7));
 
-  // add a reobservation that's not consistent 
+  // add a reobservation that's not consistent
   landmark_factors = gtsam::NonlinearFactorGraph();
   landmark_values = gtsam::Values();
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
@@ -155,7 +154,7 @@ TEST(RobustSolver, LandmarkPcm)
   EXPECT(nfg.size()==size_t(9));
   EXPECT(est.size()==size_t(8));
 
-  // add a reobservation should be consistent 
+  // add a reobservation should be consistent
   landmark_factors = gtsam::NonlinearFactorGraph();
   landmark_values = gtsam::Values();
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
@@ -177,7 +176,7 @@ TEST(RobustSolver, LandmarkPcmSimple)
   std::vector<char> special_symbs{'l'}; // for landmarks
   params.specialSymbols = special_symbs;
 
-  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);
@@ -249,15 +248,15 @@ TEST(RobustSolver, LandmarkPcmSimple)
   EXPECT(nfg.size()==size_t(6));
   EXPECT(est.size()==size_t(6));
 
-  // Now start adding landmarks 
-  // Add first observation 
+  // Now start adding landmarks
+  // Add first observation
   gtsam::Vector6 ldmk_prec;
   ldmk_prec.head<3>().setConstant(0); // rotation precision
   ldmk_prec.tail<3>().setConstant(25);
   static const gtsam::SharedNoiseModel& lmk_noise =
       gtsam::noiseModel::Diagonal::Precisions(ldmk_prec);
 
-  gtsam::NonlinearFactorGraph landmark_factors; 
+  gtsam::NonlinearFactorGraph landmark_factors;
   gtsam::Values landmark_values;
   gtsam::Key l0 = gtsam::Symbol('l',0);
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
@@ -270,7 +269,7 @@ TEST(RobustSolver, LandmarkPcmSimple)
   EXPECT(nfg.size()==size_t(7));
   EXPECT(est.size()==size_t(7));
 
-  // add a reobservation should be consistent 
+  // add a reobservation should be consistent
   landmark_factors = gtsam::NonlinearFactorGraph();
   landmark_values = gtsam::Values();
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
@@ -282,7 +281,7 @@ TEST(RobustSolver, LandmarkPcmSimple)
   EXPECT(nfg.size()==size_t(8));
   EXPECT(est.size()==size_t(7));
 
-  // add a reobservation that's not consistent 
+  // add a reobservation that's not consistent
   landmark_factors = gtsam::NonlinearFactorGraph();
   landmark_values = gtsam::Values();
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
@@ -309,7 +308,7 @@ TEST(RobustSolver, LandmarkPcmSimple)
   EXPECT(nfg.size()==size_t(9));
   EXPECT(est.size()==size_t(8));
 
-  // add a reobservation should be consistent 
+  // add a reobservation should be consistent
   landmark_factors = gtsam::NonlinearFactorGraph();
   landmark_values = gtsam::Values();
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
@@ -329,7 +328,7 @@ TEST(RobustSolver, LandmarkNoReject)
   RobustSolverParams params;
   params.setNoRejection(Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);
@@ -401,15 +400,15 @@ TEST(RobustSolver, LandmarkNoReject)
   EXPECT(nfg.size()==size_t(7));
   EXPECT(est.size()==size_t(6));
 
-  // Now start adding landmarks 
-  // Add first observation 
+  // Now start adding landmarks
+  // Add first observation
   gtsam::Vector6 ldmk_prec;
   ldmk_prec.head<3>().setConstant(0); // rotation precision
   ldmk_prec.tail<3>().setConstant(25);
   static const gtsam::SharedNoiseModel& lmk_noise =
       gtsam::noiseModel::Diagonal::Precisions(ldmk_prec);
 
-  gtsam::NonlinearFactorGraph landmark_factors; 
+  gtsam::NonlinearFactorGraph landmark_factors;
   gtsam::Values landmark_values;
   gtsam::Key l0 = gtsam::Symbol('l',0);
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
@@ -422,7 +421,7 @@ TEST(RobustSolver, LandmarkNoReject)
   EXPECT(nfg.size()==size_t(8));
   EXPECT(est.size()==size_t(7));
 
-  // add a reobservation should be consistent 
+  // add a reobservation should be consistent
   landmark_factors = gtsam::NonlinearFactorGraph();
   landmark_values = gtsam::Values();
   gtsam::Matrix3 R;
@@ -438,7 +437,7 @@ TEST(RobustSolver, LandmarkNoReject)
   EXPECT(nfg.size()==size_t(9));
   EXPECT(est.size()==size_t(7));
 
-  // add a reobservation that's not consistent 
+  // add a reobservation that's not consistent
   landmark_factors = gtsam::NonlinearFactorGraph();
   landmark_values = gtsam::Values();
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
@@ -465,7 +464,7 @@ TEST(RobustSolver, LandmarkNoReject)
   EXPECT(nfg.size()==size_t(11));
   EXPECT(est.size()==size_t(8));
 
-  // add a reobservation should be consistent 
+  // add a reobservation should be consistent
   landmark_factors = gtsam::NonlinearFactorGraph();
   landmark_values = gtsam::Values();
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(

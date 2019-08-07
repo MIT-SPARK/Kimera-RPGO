@@ -37,6 +37,8 @@ class RobustSolver : public GenericSolver{
 public:
   RobustSolver(const RobustSolverParams& params);
 
+  virtual ~RobustSolver() = default;
+
   /*! \brief Normal update call for Robust Solver
    *  add new factors and values and optimize, possibly after rejecting outliers.
    *  - nfg: new factors

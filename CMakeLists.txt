@@ -24,7 +24,7 @@ endif()
 
 ###########################################################################
 # Compile
-add_library(RobustPGO STATIC
+add_library(RobustPGO SHARED
   RobustPGO/logger.h
   RobustPGO/GenericSolver.cpp
   RobustPGO/RobustSolver.cpp

@@ -9,7 +9,6 @@
 #include <memory>
 
 #include "RobustPGO/RobustSolver.h"
-#include "RobustPGO/outlier/pcm.h"
 #include "RobustPGO/SolverParams.h"
 #include "test_config.h"
 
@@ -28,7 +27,7 @@ TEST(RobustSolver, Load1)
   RobustSolverParams params;
   params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel& noise =
@@ -60,7 +59,7 @@ TEST(RobustSolver, Add1)
   RobustSolverParams params;
   params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
@@ -91,7 +90,7 @@ TEST(RobustSolver, Add1)
   EXPECT(nfg_out.size()==size_t(92));
   EXPECT(values_out.size()==size_t(92));
 
-  // Try add another loop closuer 
+  // Try add another loop closuer
   // create the between factor for connection
   gtsam::Key key_b1 = gtsam::Symbol('b', 1);
   gtsam::Key key_a1 = gtsam::Symbol('a', 1);
@@ -122,7 +121,7 @@ TEST(RobustSolver, Load2)
   std::vector<char> special_symbs{'l', 'u'}; // for landmarks
   params.specialSymbols = special_symbs;
 
-  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel& noise =
@@ -154,7 +153,7 @@ TEST(RobustSolver, Add2)
   RobustSolverParams params;
   params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
@@ -184,7 +183,7 @@ TEST(RobustSolver, Add2)
   EXPECT(nfg_out.size()==size_t(97));
   EXPECT(values_out.size()==size_t(92));
 
-  // Try add another loop closuer 
+  // Try add another loop closuer
   // create the between factor for connection
   gtsam::Key key_b1 = gtsam::Symbol('b', 1);
   gtsam::Key key_a1 = gtsam::Symbol('a', 1);
@@ -216,7 +215,7 @@ TEST(RobustSolver, Load1NoPrior)
   RobustSolverParams params;
   params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
 
@@ -244,7 +243,7 @@ TEST(RobustSolver, NoRejectLoad)
   RobustSolverParams params;
   params.setNoRejection(Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel& noise =
@@ -276,7 +275,7 @@ TEST(RobustSolver, NoRejectAdd)
   RobustSolverParams params;
   params.setNoRejection(Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
@@ -306,7 +305,7 @@ TEST(RobustSolver, NoRejectAdd)
   EXPECT(nfg_out.size()==size_t(97));
   EXPECT(values_out.size()==size_t(92));
 
-  // Try add another loop closuer 
+  // Try add another loop closuer
   // create the between factor for connection
   gtsam::Key key_b1 = gtsam::Symbol('b', 1);
   gtsam::Key key_a1 = gtsam::Symbol('a', 1);
@@ -320,7 +319,7 @@ TEST(RobustSolver, NoRejectAdd)
 
   nfg_out = pgo->getFactorsUnsafe();
   values_out = pgo->calculateEstimate();
-  
+
   EXPECT(nfg_out.size()==size_t(98));
   EXPECT(values_out.size()==size_t(92));
 }
@@ -338,7 +337,7 @@ TEST(RobustSolver, Load1PcmSimple)
   RobustSolverParams params;
   params.setPcmSimple3DParams(0.001, 0.0001, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel& noise =
@@ -370,7 +369,7 @@ TEST(RobustSolver, Add1PcmSimple)
   RobustSolverParams params;
   params.setPcmSimple3DParams(0.001, 0.0001, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
@@ -401,7 +400,7 @@ TEST(RobustSolver, Add1PcmSimple)
   EXPECT(nfg_out.size()==size_t(92));
   EXPECT(values_out.size()==size_t(92));
 
-  // Try add another loop closuer 
+  // Try add another loop closuer
   // create the between factor for connection
   gtsam::Key key_b1 = gtsam::Symbol('b', 1);
   gtsam::Key key_a1 = gtsam::Symbol('a', 1);
@@ -415,7 +414,7 @@ TEST(RobustSolver, Add1PcmSimple)
 
   nfg_out = pgo->getFactorsUnsafe();
   values_out = pgo->calculateEstimate();
-  
+
   EXPECT(nfg_out.size()==size_t(92));
   EXPECT(values_out.size()==size_t(92));
 }
@@ -433,7 +432,7 @@ TEST(RobustSolver, Load2PcmSimple)
   RobustSolverParams params;
   params.setPcmSimple3DParams(100.0, 100.0, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel& noise =
@@ -465,7 +464,7 @@ TEST(RobustSolver, Add2PcmSimple)
   RobustSolverParams params;
   params.setPcmSimple3DParams(100.0, 100.0, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
@@ -495,7 +494,7 @@ TEST(RobustSolver, Add2PcmSimple)
   EXPECT(nfg_out.size()==size_t(97));
   EXPECT(values_out.size()==size_t(92));
 
-  // Try add another loop closuer 
+  // Try add another loop closuer
   // create the between factor for connection
   gtsam::Key key_b1 = gtsam::Symbol('b', 1);
   gtsam::Key key_a1 = gtsam::Symbol('a', 1);
@@ -509,7 +508,7 @@ TEST(RobustSolver, Add2PcmSimple)
 
   nfg_out = pgo->getFactorsUnsafe();
   values_out = pgo->calculateEstimate();
-  
+
   EXPECT(nfg_out.size()==size_t(98));
   EXPECT(values_out.size()==size_t(92));
 }
@@ -527,7 +526,7 @@ TEST(RobustSolver, Load1NoPriorPcmSimple)
   RobustSolverParams params;
   params.setPcmSimple3DParams(100.0, 100.0, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
 

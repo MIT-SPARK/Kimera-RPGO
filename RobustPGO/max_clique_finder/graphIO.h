@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/*   Description:  an I/O library for reading a graph    			 	   */                                                   
+/*   Description:  an I/O library for reading a graph    			 	   */
 /*                                                                           		   */
 /*                                                                           		   */
 /*   Authors: Md. Mostofa Ali Patwary and Bharath Pattabiraman             		   */
@@ -46,7 +46,7 @@ public:
 	bool readGraph(string s_InputFile, float connStrength = -DBL_MAX);
 	string getFileExtension(string fileName);
 	bool ReadMatrixMarketAdjacencyGraph(string s_InputFile, float connStrength = -DBL_MAX);
-	bool ReadEigenAdjacencyMatrix(Eigen::MatrixXd adjMatrix, float connStrength = -DBL_MAX);
+	bool ReadEigenAdjacencyMatrix(Eigen::MatrixXd adjMatrix);
 	bool ReadMeTiSAdjacencyGraph(string s_InputFile);
 	void CalculateVertexDegrees();
 
@@ -56,7 +56,7 @@ public:
 	int GetMinimumVertexDegree(){ return m_i_MinimumVertexDegree; }
 	double GetAverageVertexDegree(){ return m_d_AverageVertexDegree; }
 	string GetInputFile(){ return m_s_InputFile; }
-	
+
 	vector <int>* GetVerticesPtr(){ return &m_vi_Vertices; }
 	vector <int>* GetEdgesPtr(){ return &m_vi_Edges; }
 

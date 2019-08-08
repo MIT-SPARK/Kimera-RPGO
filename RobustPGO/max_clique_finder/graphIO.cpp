@@ -1,5 +1,5 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-/*   Description:  an I/O library for reading a graph    			 	   */                                                   
+/*   Description:  an I/O library for reading a graph    			 	   */
 /*                                                                           		   */
 /*                                                                           		   */
 /*   Authors: Md. Mostofa Ali Patwary and Bharath Pattabiraman             		   */
@@ -30,7 +30,7 @@ CGraphIO::~CGraphIO()
 
 bool CGraphIO::readGraph(string s_InputFile, float connStrength)
 {
-	string fileExtension = getFileExtension(s_InputFile);		
+	string fileExtension = getFileExtension(s_InputFile);
 	if(fileExtension == "mtx")
 	{
 		// matrix market format
@@ -42,7 +42,7 @@ bool CGraphIO::readGraph(string s_InputFile, float connStrength)
 		return ReadMeTiSAdjacencyGraph(s_InputFile);
 	}
 	else
-		return false;	
+		return false;
 }
 
 bool CGraphIO::ReadMatrixMarketAdjacencyGraph(string s_InputFile, float connStrength)
@@ -55,8 +55,8 @@ bool CGraphIO::ReadMatrixMarketAdjacencyGraph(string s_InputFile, float connStre
 	int entry_counter = 0, num_of_entries = 0;
 	double value;
 
-	ifstream in (s_InputFile.c_str());	
-	if(!in) 
+	ifstream in (s_InputFile.c_str());
+	if(!in)
 	{
 		cout<<m_s_InputFile<<" not Found!"<<endl;
 		return false;
@@ -77,7 +77,7 @@ bool CGraphIO::ReadMatrixMarketAdjacencyGraph(string s_InputFile, float connStre
 	strcpy(data, line.c_str());
 
 	if (sscanf(data, "%s %s %s %s %s", banner, mtx, crd, data_type, storage_scheme) != 5)
-	{    
+	{
 		cout << "Matrix file banner is missing!!!" << endl;
 		return false;
 	}
@@ -95,7 +95,7 @@ bool CGraphIO::ReadMatrixMarketAdjacencyGraph(string s_InputFile, float connStre
 	in2.str(line);
 	in2 >> row >> col >> num_of_entries;
 
-	if(row!=col) 
+	if(row!=col)
 	{
 		cout<<"* WARNING: GraphInputOutput::ReadMatrixMarketAdjacencyGraph()"<<endl;
 		cout<<"*\t row!=col. This is not a square matrix. Can't process."<<endl;
@@ -146,14 +146,14 @@ bool CGraphIO::ReadMatrixMarketAdjacencyGraph(string s_InputFile, float connStre
 						nodeList[rowIndex].push_back(colIndex);
 						nodeList[colIndex].push_back(rowIndex);
 					}
-				} 
-				else 
+				}
+				else
 				{
 					nodeList[rowIndex].push_back(colIndex);
 					nodeList[colIndex].push_back(rowIndex);
 				}
 
-				if(b_getValue && value > connStrength) 
+				if(b_getValue && value > connStrength)
 				{
 					valueList[rowIndex].push_back(value);
 					valueList[colIndex].push_back(value);
@@ -165,15 +165,15 @@ bool CGraphIO::ReadMatrixMarketAdjacencyGraph(string s_InputFile, float connStre
 	//cout << "No. of upper triangular pruned: " << num_upper_triangular << endl;
 	m_vi_Vertices.push_back(m_vi_Edges.size());
 
-	for(int i=0;i < row; i++) 
+	for(int i=0;i < row; i++)
 	{
 		m_vi_Edges.insert(m_vi_Edges.end(),nodeList[i].begin(),nodeList[i].end());
 		m_vi_Vertices.push_back(m_vi_Edges.size());
 	}
 
-	if(b_getValue) 
+	if(b_getValue)
 	{
-		for(int i=0;i<row; i++) 
+		for(int i=0;i<row; i++)
 		{
 			m_vd_Values.insert(m_vd_Values.end(),valueList[i].begin(),valueList[i].end());
 		}
@@ -185,27 +185,23 @@ bool CGraphIO::ReadMatrixMarketAdjacencyGraph(string s_InputFile, float connStre
 	return true;
 }
 
-bool CGraphIO::ReadEigenAdjacencyMatrix(Eigen::MatrixXd adjMatrix, float connStrength) {
+bool CGraphIO::ReadEigenAdjacencyMatrix(Eigen::MatrixXd adjMatrix) {
 	map<int,vector<int> > nodeList;
-	map<int,vector<double> > valueList;
-	int col=0, row=0, rowIndex=0, colIndex=0;
-	int entry_counter = 0, num_of_entries = 0;
-	double value;
+	int col=0, row=0;
 
-	bool b_getValue = true;
 	int num_upper_triangular = 0;
 
 	row = adjMatrix.rows();
 	col = adjMatrix.cols();
 
-	for (size_t i = 0; i < row; i++) {
-		for (size_t j = 0; j < col; j++) {
+	for (size_t j = 0; j < col; j++) {
+		for (size_t i = j; i < row; i++) {
 
-			if (i == j) {
+			if (i == j || adjMatrix(i,j) == 0) {
 				continue;
-			} 
+			}
 
-			int exists = 0; 
+			int exists = 0;
 			for (int k = 0; k < nodeList[i].size(); k++) {
 				if (j == nodeList[i][k]) {
 					exists = 1;
@@ -216,46 +212,21 @@ bool CGraphIO::ReadEigenAdjacencyMatrix(Eigen::MatrixXd adjMatrix, float connStr
 			if (exists == 1) {
 				num_upper_triangular++;
 			} else {
-				if (b_getValue) {
-
-					value = adjMatrix(i,j);
-
-					if (value > connStrength) {
-						nodeList[i].push_back(j);
-						nodeList[j].push_back(i);
-					}
-				} else {
-					nodeList[i].push_back(j);
-					nodeList[j].push_back(i);
-				}
-
-				if (b_getValue && value > connStrength) {
-					valueList[i].push_back(value);
-					valueList[j].push_back(value);
-				}
+				nodeList[i].push_back(j);
+				nodeList[j].push_back(i);
 			}
 		}
 	}
 
-	//cout << "No. of upper triangular pruned: " << num_upper_triangular << endl;
 	m_vi_Vertices.push_back(m_vi_Edges.size());
 
-	for(int i=0;i < row; i++) 
+	for(int i=0;i < row; i++)
 	{
 		m_vi_Edges.insert(m_vi_Edges.end(),nodeList[i].begin(),nodeList[i].end());
 		m_vi_Vertices.push_back(m_vi_Edges.size());
 	}
 
-	if(b_getValue) 
-	{
-		for(int i=0;i<row; i++) 
-		{
-			m_vd_Values.insert(m_vd_Values.end(),valueList[i].begin(),valueList[i].end());
-		}
-	}
-
 	nodeList.clear();
-	valueList.clear();
 	CalculateVertexDegrees();
 	return true;
 }
@@ -321,7 +292,7 @@ string CGraphIO::getFileExtension(string fileName)
 		//get the fileExtension excluding the '.'
 		fileExtension = fileName.substr(result+1);
 		//remove the fileExtension from the fileName
-		//fileName = fileName.substr(0,result);	
+		//fileName = fileName.substr(0,result);
 	}
 
 	//3. get the name of the input file

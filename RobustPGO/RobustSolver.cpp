@@ -17,25 +17,25 @@ RobustSolver::RobustSolver(const RobustSolverParams& params) :
     break;
     case OutlierRemovalMethod::PCM2D :
     {
-      outlier_removal_ = std::make_unique<Pcm2D>(
+      outlier_removal_ = make_unique<Pcm2D>(
           params.pcm_odomThreshold, params.pcm_lcThreshold, params.specialSymbols);
     }
     break;
     case OutlierRemovalMethod::PCM3D :
     {
-      outlier_removal_ = std::make_unique<Pcm3D>(
+      outlier_removal_ = make_unique<Pcm3D>(
           params.pcm_odomThreshold, params.pcm_lcThreshold, params.specialSymbols);
     }
     break;
     case OutlierRemovalMethod::PCM_Simple2D:
     {
-      outlier_removal_ = std::make_unique<PcmSimple2D>(
+      outlier_removal_ = make_unique<PcmSimple2D>(
           params.pcmDist_transThreshold, params.pcmDist_rotThreshold, params.specialSymbols);
     }
     break;
     case OutlierRemovalMethod::PCM_Simple3D:
     {
-      outlier_removal_ = std::make_unique<PcmSimple3D>(
+      outlier_removal_ = make_unique<PcmSimple3D>(
           params.pcmDist_transThreshold, params.pcmDist_rotThreshold, params.specialSymbols);
     }
     break;

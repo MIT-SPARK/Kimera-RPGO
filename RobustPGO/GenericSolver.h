@@ -38,6 +38,8 @@ public:
   // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton
   // special symbols denote non odometry factors - perhaps semantics
 
+  virtual ~GenericSolver() = default;
+
   void update(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(),
               const gtsam::Values& values=gtsam::Values(),
               const gtsam::FactorIndices& factorsToRemove=gtsam::FactorIndices());

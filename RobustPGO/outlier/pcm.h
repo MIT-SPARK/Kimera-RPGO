@@ -64,6 +64,8 @@ public:
   }
   ~Pcm() = default;
   // initialize with odometry detect threshold and pairwise consistency threshold
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 private:
   double threshold1_;

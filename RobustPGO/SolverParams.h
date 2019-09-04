@@ -6,6 +6,8 @@ author: Yun Chang
 #ifndef SOLVERPARAMS_H
 #define SOLVERPARAMS_H
 
+#include <vector>
+
 namespace RobustPGO {
 
 enum class Solver { LM, GN };

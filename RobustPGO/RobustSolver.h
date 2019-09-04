@@ -37,7 +37,7 @@ class RobustSolver : public GenericSolver{
 public:
   RobustSolver(const RobustSolverParams& params);
 
-  ~RobustSolver() = default;
+  virtual ~RobustSolver() = default;
 
   /*! \brief Normal update call for Robust Solver
    *  add new factors and values and optimize, possibly after rejecting outliers.

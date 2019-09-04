@@ -10,8 +10,8 @@ namespace RobustPGO {
 
 GenericSolver::GenericSolver(Solver solvertype,
                              std::vector<char> special_symbols):
-  nfg_(gtsam::NonlinearFactorGraph()),
   values_(gtsam::Values()),
+  nfg_(gtsam::NonlinearFactorGraph()),
   solver_type_(solvertype),
   special_symbols_(special_symbols),
   debug_(true) {}

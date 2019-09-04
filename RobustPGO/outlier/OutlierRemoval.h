@@ -8,10 +8,16 @@ author: Yun Chang
 #ifndef OUTLIERREMOVAL_H
 #define OUTLIERREMOVAL_H
 
+#include <string>
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
+#include <gtsam/nonlinear/Values.h>
+
+
 namespace RobustPGO {
 
 class OutlierRemoval {
 public:
+	OutlierRemoval() = default;
 	virtual ~OutlierRemoval() = default;
 
 	/*! \brief Process new measurements and reject outliers

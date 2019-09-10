@@ -94,7 +94,7 @@ public:
    *  - returns: boolean of if optimization should be called or not
    */
   virtual bool removeOutliers(const gtsam::NonlinearFactorGraph& new_factors,
-      const gtsam::Values& new_values,
+                              const gtsam::Values& new_values,
       gtsam::NonlinearFactorGraph& output_nfg,
       gtsam::Values& output_values) override{
     // we first classify the current factors into the following categories:
@@ -205,7 +205,8 @@ protected:
   /*! \brief goes through the loop closures and updates the corresponding adjacency matrices,
    * in preparation for max clique
    */
-  void parseAndIncrementAdjMatrix(const gtsam::NonlinearFactorGraph& new_factors, const gtsam::Values output_values){
+  void parseAndIncrementAdjMatrix(const gtsam::NonlinearFactorGraph& new_factors, 
+                                  const gtsam::Values output_values){
     for (size_t i = 0; i < new_factors.size(); i++) {
       // iterate through the factors
       if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT> >(new_factors[i])) {
@@ -400,7 +401,7 @@ protected:
    * inputs are 2 loop closures (a,b) and (c,d), where a,b,c,d are keys
    */
   bool areLoopsConsistent(const gtsam::BetweenFactor<poseT>& a_lcBetween_b,
-      const gtsam::BetweenFactor<poseT>& c_lcBetween_d,
+                          const gtsam::BetweenFactor<poseT>& c_lcBetween_d,
       double& dist) {
     // check if two loop closures are consistent
     // say: loop closure 1 is (a,b)

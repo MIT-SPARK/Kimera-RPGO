@@ -24,7 +24,7 @@ bool GenericSolver::isSpecialSymbol(char symb) const {
 }
 
 bool GenericSolver::addAndCheckIfOptimize(const gtsam::NonlinearFactorGraph& nfg,
-      const gtsam::Values& values) {
+                                          const gtsam::Values& values) {
   // add new values and factors
   nfg_.add(nfg);
   values_.insert(values);

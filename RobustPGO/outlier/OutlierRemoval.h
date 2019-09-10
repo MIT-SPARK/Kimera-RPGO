@@ -29,9 +29,9 @@ public:
    *  - returns: boolean of if optimization should be called or not
    */
 	virtual bool removeOutliers(const gtsam::NonlinearFactorGraph& new_factors,
-				               const gtsam::Values& new_values,
-				               gtsam::NonlinearFactorGraph& nfg,
-				               gtsam::Values& values) = 0;
+				                const gtsam::Values& new_values,
+				                gtsam::NonlinearFactorGraph& nfg,
+				                gtsam::Values& values) = 0;
 
 	/*! \brief Save any data in the outlier removal process
    *  - folder_path: path to directory to save results in

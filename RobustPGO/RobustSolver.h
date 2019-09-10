@@ -53,13 +53,14 @@ public:
    *  - values: linearization point for new variables
    */
   void forceUpdate(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(),
-              const gtsam::Values& values=gtsam::Values());
+                   const gtsam::Values& values=gtsam::Values());
 
   /*! \brief add an odometry edge
    * odom_factor: a gtsam::NonlinearFactorGraph with a single factor
    * odom_values: a gtsam::Values with a single value
    */
-  void addOdometry(const gtsam::NonlinearFactorGraph& odom_factor, const gtsam::Values& odom_values);
+  void addOdometry(const gtsam::NonlinearFactorGraph& odom_factor, 
+                   const gtsam::Values& odom_values);
 
   /*! \brief Used with Add and Load to connect factor graph to between or prior factor
    *  Sorts through the factors, separate out the odometry, the landmark measurements,
@@ -68,8 +69,9 @@ public:
    *  - values: linearization point of graph to be connected
    *  - key0: Lowest key of the graph to be connected (root of odometry)
    */
-  void updateBatch(gtsam::NonlinearFactorGraph factors,
-      const gtsam::Values& values, const gtsam::Key& key0);
+  void updateBatch(const gtsam::NonlinearFactorGraph& factors,
+                   const gtsam::Values& values, 
+                   const gtsam::Key& key0);
 
 private:
   std::unique_ptr<OutlierRemoval> outlier_removal_; // outlier removal method;
@@ -102,8 +104,9 @@ public:
    *  - prior: the prior factor anchoring the graph, associated with the first value (lowest key ex. 0, or a0, etc. )
    */
   template<class T>
-  void loadGraph(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values,
-      const gtsam::PriorFactor<T>& prior) {
+  void loadGraph(const gtsam::NonlinearFactorGraph& factors, 
+                 const gtsam::Values& values,
+                 const gtsam::PriorFactor<T>& prior) {
     gtsam::NonlinearFactorGraph prior_factor;
     gtsam::Values prior_values;
     prior_factor.add(prior);
@@ -139,8 +142,9 @@ public:
    *    in the exisitng graph.
    */
   template<class T>
-  void addGraph(const gtsam::NonlinearFactorGraph& factors, const gtsam::Values& values,
-      const gtsam::BetweenFactor<T>& connector) {
+  void addGraph(const gtsam::NonlinearFactorGraph& factors,  
+                const gtsam::Values& values,
+                const gtsam::BetweenFactor<T>& connector) {
     gtsam::Key key0 = connector.back();
     gtsam::NonlinearFactorGraph connect_factor;
     gtsam::Values connect_values;

@@ -39,6 +39,10 @@ public:
 
   virtual ~RobustSolver() = default;
 
+  size_t getNumLC() { return outlier_removal_->getNumLC(); }
+
+  size_t getNumLCInliers() { return outlier_removal_->getNumLCInliers(); }
+
   /*! \brief Normal update call for Robust Solver
    *  add new factors and values and optimize, possibly after rejecting outliers.
    *  - nfg: new factors

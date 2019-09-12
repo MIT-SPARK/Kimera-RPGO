@@ -85,6 +85,9 @@ private:
 
 public:
 
+  size_t getNumLC() { return nfg_lc_.size(); }
+  size_t getNumLCInliers() { return nfg_good_lc_.size(); }
+
   /*! \brief Process new measurements and reject outliers
    *  process the new measurements and update the "good set" of measurements
    *  - new_factors: factors from the new measurements

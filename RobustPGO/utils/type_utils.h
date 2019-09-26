@@ -3,10 +3,12 @@
 #ifndef TYPE_UTILS_H
 #define TYPE_UTILS_H
 
-#include "RobustPGO/logger.h"
+#include <memory>
 
 #include <gtsam/base/Vector.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
+
+#include "RobustPGO/logger.h"
 
 namespace RobustPGO {
 

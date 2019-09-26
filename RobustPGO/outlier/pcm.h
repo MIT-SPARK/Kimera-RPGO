@@ -15,16 +15,11 @@ author: Yun Chang, Luca Carlone
 #include <math.h>
 #include <iomanip>
 
-#include <gtsam/base/Vector.h>
-#include <gtsam/base/Lie.h>
 #include <gtsam/linear/NoiseModel.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam/slam/PriorFactor.h>
 #include <gtsam/slam/BetweenFactor.h>
-#include <gtsam/sam/RangeFactor.h>
-#include <gtsam/slam/InitializePose3.h>
-#include <gtsam/nonlinear/NonlinearConjugateGradientOptimizer.h>
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/geometry/Pose2.h>

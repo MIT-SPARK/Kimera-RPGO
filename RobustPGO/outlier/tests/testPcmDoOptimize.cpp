@@ -8,6 +8,7 @@
 #include <random>
 
 #include "RobustPGO/outlier/pcm.h"
+#include <gtsam/sam/RangeFactor.h>
 
 using namespace RobustPGO;
 

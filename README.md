@@ -1,4 +1,4 @@
-RobustPGO
+Kimera-RPGO
 ======================================
 This is a work in progress repository for robust backend optimization. Many features are still under developing and changing on a daily basis.
 

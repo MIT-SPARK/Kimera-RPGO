@@ -36,10 +36,10 @@ public:
 
   size_t size() { return nfg_.size(); }
 
-  inline const gtsam::Values calculateEstimate() const { return values_; }
-  inline const gtsam::Values calculateBestEstimate() const { return values_; }
-  inline const gtsam::Values getLinearizationPoint() const { return values_; }
-  inline const gtsam::NonlinearFactorGraph getFactorsUnsafe() const { return nfg_; }
+  inline gtsam::Values calculateEstimate() const { return values_; }
+  inline gtsam::Values calculateBestEstimate() const { return values_; }
+  inline gtsam::Values getLinearizationPoint() const { return values_; }
+  inline gtsam::NonlinearFactorGraph getFactorsUnsafe() const { return nfg_; }
 
   void print() const {
     values_.print("");

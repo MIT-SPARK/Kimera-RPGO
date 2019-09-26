@@ -6,6 +6,10 @@ author: Yun Chang, Luca Carlone
 
 #include "RobustPGO/GenericSolver.h"
 
+#include <gtsam/nonlinear/GaussNewtonOptimizer.h>
+#include <gtsam/nonlinear/DoglegOptimizer.h>
+#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
+
 namespace RobustPGO {
 
 GenericSolver::GenericSolver(Solver solvertype,

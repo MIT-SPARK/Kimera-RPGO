@@ -26,7 +26,7 @@ void Simulate(gtsam::GraphAndValues gv,
   gtsam::NonlinearFactorGraph nfg = *gv.first;
   gtsam::Values values = *gv.second;
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo = std::make_unique<RobustSolver>(params);
 
   size_t dim = getDim<T>();
 

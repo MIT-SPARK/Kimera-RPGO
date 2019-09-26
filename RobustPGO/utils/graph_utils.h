@@ -3,14 +3,12 @@
 #ifndef GRAPH_UTILS_TYPES_H
 #define GRAPH_UTILS_TYPES_H
 
-#include <gtsam/inference/Symbol.h>
-
-#include "RobustPGO/max_clique_finder/findClique.h"
-#include "RobustPGO/logger.h"
-
 #include <map>
 #include <vector>
 #include <unordered_map>
+
+#include <gtsam/inference/Symbol.h>
+#include <eigen3/Eigen/Dense>
 
 namespace RobustPGO {
 

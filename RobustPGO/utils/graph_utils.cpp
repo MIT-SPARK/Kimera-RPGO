@@ -1,6 +1,7 @@
 // Authors: Yun Chang
 
 #include "RobustPGO/utils/graph_utils.h"
+#include "RobustPGO/max_clique_finder/findClique.h"
 
 namespace RobustPGO {
 

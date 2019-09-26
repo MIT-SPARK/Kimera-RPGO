@@ -1,20 +1,20 @@
 /*
-Generic solver class
+Example file to perform robust optimization on g2o files
 author: Yun Chang
 */
+
+#include <stdlib.h>
+#include <memory>
+
+#include <gtsam/slam/dataset.h>
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/geometry/Pose2.h>
 
 #include "RobustPGO/RobustSolver.h"
 #include "RobustPGO/SolverParams.h"
 #include "RobustPGO/logger.h"
 #include "RobustPGO/utils/type_utils.h"
 #include "RobustPGO/utils/geometry_utils.h"
-
-#include <gtsam/slam/dataset.h>
-#include <gtsam/geometry/Pose3.h>
-#include <gtsam/geometry/Pose2.h>
-
-#include <stdlib.h>
-#include <memory>
 
 using namespace RobustPGO;
 

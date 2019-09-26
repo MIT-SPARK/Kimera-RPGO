@@ -1,11 +1,11 @@
 Kimera-RPGO
 ======================================
-This is a work in progress repository for robust backend optimization. Many features are still under developing and changing on a daily basis.
+This is a repository for robust backend optimization. It is still a work in progress. Many features are still under developing and changing on a daily basis.
 
 ## Dependencies
 
 *[GTSAM](https://github.com/borglab/gtsam)*
-(Note that the BUILD_WITH_MARCH_NATIVE flag caused me some problems on a particular machine. )
+(Note that the BUILD_WITH_MARCH_NATIVE flag caused some problems on some machines. )
 
 Clone GTSAM to your preferred location:
 ```bash
@@ -26,8 +26,8 @@ Enabling this and the `#define SLOW_BUT_CORRECT_BETWEENFACTOR` in LaserLoopCLosu
 
 ## Build
 ```bash
-git clone git@github.com:MIT-SPARK/RobustPGO.git
-cd RobustPGO
+git clone git@github.com:MIT-SPARK/Kimera-RPGO.git
+cd Kimera-RPGO
 mkdir build
 cd build
 cmake ..

@@ -36,10 +36,10 @@ public:
 
   size_t size() { return nfg_.size(); }
 
-  gtsam::Values calculateEstimate() { return values_; }
-  gtsam::Values calculateBestEstimate() { return values_; }
-  gtsam::Values getLinearizationPoint() { return values_; }
-  gtsam::NonlinearFactorGraph getFactorsUnsafe(){ return nfg_; }
+  inline const gtsam::Values calculateEstimate() const { return values_; }
+  inline const gtsam::Values calculateBestEstimate() const { return values_; }
+  inline const gtsam::Values getLinearizationPoint() const { return values_; }
+  inline const gtsam::NonlinearFactorGraph getFactorsUnsafe() const { return nfg_; }
 
   void print() const {
     values_.print("");
@@ -48,7 +48,8 @@ public:
   void setQuiet() { debug_ = false; }
 
 protected:
-  bool addAndCheckIfOptimize(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(),
+  bool addAndCheckIfOptimize(
+      const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(),
       const gtsam::Values& values=gtsam::Values());
 
 protected:

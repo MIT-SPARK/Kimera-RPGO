@@ -34,6 +34,8 @@ public:
   void removeFactorsNoUpdate(
       gtsam::FactorIndices factorsToRemove = gtsam::FactorIndices());
 
+  size_t size() { return nfg_.size(); }
+
   gtsam::Values calculateEstimate() { return values_; }
   gtsam::Values calculateBestEstimate() { return values_; }
   gtsam::Values getLinearizationPoint() { return values_; }

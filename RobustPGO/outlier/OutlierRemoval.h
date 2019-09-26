@@ -20,6 +20,9 @@ public:
 	OutlierRemoval() = default;
 	virtual ~OutlierRemoval() = default;
 
+  virtual size_t getNumLC() {}
+  virtual size_t getNumLCInliers() {}
+
 	/*! \brief Process new measurements and reject outliers
    *  process the new measurements and update the "good set" of measurements
    *  - new_factors: factors from the new measurements

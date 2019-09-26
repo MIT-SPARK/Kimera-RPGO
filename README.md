@@ -62,7 +62,7 @@ This can also be used as a standalone experimental tool. A read g2o function can
 ./RpgoReadG2o 3d <g2o-file> <odom-check-threshold> <pcm-threshold> <optional:folder-to-save-g2o> <optional:v to toggle verbosity>
 ```
 
-Example, do `./RpgoReadG2o 3d /home/user/Desktop/in.g2o 1.0 1.0 /home/user/Desktop/out.g2o v`
+Example, do `./RpgoReadG2o 3d /home/user/Desktop/in.g2o 1.0 1.0 /home/user/Desktop/out/ v`
 
 ## Example
 ```cpp

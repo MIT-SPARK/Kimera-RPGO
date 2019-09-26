@@ -6,26 +6,14 @@ author: Yun Chang, Luca Carlone
 #ifndef ROBUSTSOLVER_H
 #define ROBUSTSOLVER_H
 
-#include <gtsam/base/Vector.h>
-#include <gtsam/geometry/Pose3.h>
-#include <gtsam/geometry/Rot3.h>
-#include <gtsam/linear/NoiseModel.h>
-#include <gtsam/nonlinear/ISAM2.h>
-#include <gtsam/nonlinear/GaussNewtonOptimizer.h>
-#include <gtsam/nonlinear/DoglegOptimizer.h>
-#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/Values.h>
-#include <gtsam/slam/InitializePose3.h>
-#include <gtsam/nonlinear/NonlinearConjugateGradientOptimizer.h>
-#include <gtsam/inference/Symbol.h>
-#include <gtsam/slam/dataset.h>
+#include <gtsam/slam/PriorFactor.h>
+#include <gtsam/slam/BetweenFactor.h>
 
 #include "RobustPGO/GenericSolver.h"
-#include "RobustPGO/logger.h"
 #include "RobustPGO/outlier/OutlierRemoval.h"
 #include "RobustPGO/SolverParams.h"
-#include "RobustPGO/outlier/pcm.h"
 
 namespace RobustPGO {
 
@@ -89,13 +77,7 @@ public:
    *  Saves the resulting g2o file and also the data saved in the outlier removal method.
    *  - folder_path: the directory to save the results.
    */
-  void saveData(std::string folder_path) const {
-    std::string g2o_file_path = folder_path + "/result.g2o";
-    gtsam::writeG2o(nfg_, values_, g2o_file_path);
-    if (outlier_removal_) {
-      outlier_removal_->saveData(folder_path);
-    }
-  }
+  void saveData(std::string folder_path) const;
 
   /*! \brief Load a factor graph with a prior
    *  NOTE: PROJECT SPECIFIC MAY INCLUDED SPECIFIC ASSUMPTIONS

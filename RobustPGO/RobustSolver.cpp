@@ -5,6 +5,14 @@ author: Yun Chang, Luca Carlone
 
 #include "RobustPGO/RobustSolver.h"
 
+#include <gtsam/nonlinear/GaussNewtonOptimizer.h>
+#include <gtsam/nonlinear/DoglegOptimizer.h>
+#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
+#include <gtsam/slam/dataset.h>
+
+#include "RobustPGO/logger.h"
+#include "RobustPGO/outlier/pcm.h"
+
 namespace RobustPGO {
 
 RobustSolver::RobustSolver(const RobustSolverParams& params) :
@@ -217,4 +225,13 @@ void RobustSolver::updateBatch(const gtsam::NonlinearFactorGraph& factors,
   optimize(); // optimize once after loading
 }
 
+void RobustSolver::saveData(std::string folder_path) const {
+  std::string g2o_file_path = folder_path + "/result.g2o";
+  gtsam::writeG2o(nfg_, values_, g2o_file_path);
+  if (outlier_removal_) {
+    outlier_removal_->saveData(folder_path);
+  }
 }
+
+}
+

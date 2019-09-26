@@ -8,8 +8,13 @@
 #include <random>
 #include <memory>
 
+#include <gtsam/slam/dataset.h>
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/inference/Symbol.h>
+
 #include "RobustPGO/RobustSolver.h"
 #include "RobustPGO/SolverParams.h"
+#include "RobustPGO/utils/type_utils.h"
 #include "test_config.h"
 
 using namespace RobustPGO;

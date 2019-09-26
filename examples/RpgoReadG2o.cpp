@@ -6,6 +6,8 @@ author: Yun Chang
 #include "RobustPGO/RobustSolver.h"
 #include "RobustPGO/SolverParams.h"
 #include "RobustPGO/logger.h"
+#include "RobustPGO/utils/type_utils.h"
+#include "RobustPGO/utils/geometry_utils.h"
 
 #include <gtsam/slam/dataset.h>
 #include <gtsam/geometry/Pose3.h>

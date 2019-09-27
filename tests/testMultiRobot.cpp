@@ -31,7 +31,8 @@ TEST(RobustSolver, multiRobotPcm) {
   RobustSolverParams params;
   params.setPcm3DParams(3.0, 0.05, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo =
+      RobustPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel &noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);
@@ -205,7 +206,8 @@ TEST(RobustSolver, multiRobotPcmSimple) {
   RobustSolverParams params;
   params.setPcmSimple3DParams(0.04, 0.01, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo =
+      RobustPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel &noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);

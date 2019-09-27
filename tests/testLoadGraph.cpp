@@ -32,7 +32,8 @@ TEST(RobustSolver, Load1) {
   RobustSolverParams params;
   params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo =
+      RobustPGO::make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel &noise =
@@ -66,7 +67,8 @@ TEST(RobustSolver, Add1) {
   RobustSolverParams params;
   params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo =
+      RobustPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel &noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
@@ -132,7 +134,8 @@ TEST(RobustSolver, Load2) {
   std::vector<char> special_symbs{'l', 'u'}; // for landmarks
   params.specialSymbols = special_symbs;
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo =
+      RobustPGO::make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel &noise =
@@ -165,7 +168,8 @@ TEST(RobustSolver, Add2) {
   RobustSolverParams params;
   params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo =
+      RobustPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel &noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
@@ -231,7 +235,8 @@ TEST(RobustSolver, Load1NoPrior) {
   RobustSolverParams params;
   params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo =
+      RobustPGO::make_unique<RobustSolver>(params);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
 
@@ -259,7 +264,8 @@ TEST(RobustSolver, NoRejectLoad) {
   RobustSolverParams params;
   params.setNoRejection(Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo =
+      RobustPGO::make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel &noise =
@@ -292,7 +298,8 @@ TEST(RobustSolver, NoRejectAdd) {
   RobustSolverParams params;
   params.setNoRejection(Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo =
+      RobustPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel &noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
@@ -358,7 +365,8 @@ TEST(RobustSolver, Load1PcmSimple) {
   RobustSolverParams params;
   params.setPcmSimple3DParams(0.001, 0.0001, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo =
+      RobustPGO::make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel &noise =
@@ -392,7 +400,8 @@ TEST(RobustSolver, Add1PcmSimple) {
   RobustSolverParams params;
   params.setPcmSimple3DParams(0.001, 0.0001, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo =
+      RobustPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel &noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
@@ -459,7 +468,8 @@ TEST(RobustSolver, Load2PcmSimple) {
   RobustSolverParams params;
   params.setPcmSimple3DParams(100.0, 100.0, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo =
+      RobustPGO::make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel &noise =
@@ -492,7 +502,8 @@ TEST(RobustSolver, Add2PcmSimple) {
   RobustSolverParams params;
   params.setPcmSimple3DParams(100.0, 100.0, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo =
+      RobustPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel &noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
@@ -558,7 +569,8 @@ TEST(RobustSolver, Load1NoPriorPcmSimple) {
   RobustSolverParams params;
   params.setPcmSimple3DParams(100.0, 100.0, Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo =
+      RobustPGO::make_unique<RobustSolver>(params);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
 

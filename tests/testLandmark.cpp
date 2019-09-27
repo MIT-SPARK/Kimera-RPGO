@@ -25,7 +25,8 @@ TEST(RobustSolver, LandmarkPcm) {
   std::vector<char> special_symbs{'l'}; // for landmarks
   params.specialSymbols = special_symbs;
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo =
+      RobustPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel &noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);
@@ -183,7 +184,8 @@ TEST(RobustSolver, LandmarkPcmSimple) {
   std::vector<char> special_symbs{'l'}; // for landmarks
   params.specialSymbols = special_symbs;
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo =
+      RobustPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel &noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);
@@ -339,7 +341,8 @@ TEST(RobustSolver, LandmarkNoReject) {
   RobustSolverParams params;
   params.setNoRejection(Verbosity::QUIET);
 
-  std::unique_ptr<RobustSolver> pgo = make_unique<RobustSolver>(params);
+  std::unique_ptr<RobustSolver> pgo =
+      RobustPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel &noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);

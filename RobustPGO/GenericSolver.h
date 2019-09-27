@@ -6,63 +6,50 @@ author: Yun Chang, Luca Carlone
 #ifndef GENERICSOLVER_H
 #define GENERICSOLVER_H
 
+#include <vector>
+
 // enables correct operations of GTSAM (correct Jacobians)
 #define SLOW_BUT_CORRECT_BETWEENFACTOR
-
-#include <gtsam/base/Vector.h>
-#include <gtsam/geometry/Pose3.h>
-#include <gtsam/geometry/Rot3.h>
-#include <gtsam/linear/NoiseModel.h>
-#include <gtsam/nonlinear/ISAM2.h>
-#include <gtsam/nonlinear/GaussNewtonOptimizer.h>
-#include <gtsam/nonlinear/DoglegOptimizer.h>
-#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/Values.h>
-#include <gtsam/slam/PriorFactor.h>
-#include <gtsam/slam/BetweenFactor.h>
-#include <gtsam/slam/InitializePose3.h>
-#include <gtsam/nonlinear/NonlinearConjugateGradientOptimizer.h>
-#include <gtsam/inference/Symbol.h>
-#include <gtsam/slam/dataset.h>
 
-#include "RobustPGO/logger.h"
 #include "RobustPGO/SolverParams.h"
+#include "RobustPGO/logger.h"
 
 namespace RobustPGO {
 
 class GenericSolver {
 public:
-  GenericSolver(Solver solvertype=Solver::LM,
-                std::vector<char> special_symbols=std::vector<char>());
+  GenericSolver(Solver solvertype = Solver::LM,
+                std::vector<char> special_symbols = std::vector<char>());
   // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton
   // special symbols denote non odometry factors - perhaps semantics
 
   virtual ~GenericSolver() = default;
 
-  void update(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(),
-              const gtsam::Values& values=gtsam::Values(),
-              const gtsam::FactorIndices& factorsToRemove=gtsam::FactorIndices());
+  void
+  update(const gtsam::NonlinearFactorGraph &nfg = gtsam::NonlinearFactorGraph(),
+         const gtsam::Values &values = gtsam::Values(),
+         const gtsam::FactorIndices &factorsToRemove = gtsam::FactorIndices());
 
   void removeFactorsNoUpdate(
       gtsam::FactorIndices factorsToRemove = gtsam::FactorIndices());
 
   size_t size() { return nfg_.size(); }
 
-  gtsam::Values calculateEstimate() { return values_; }
-  gtsam::Values calculateBestEstimate() { return values_; }
-  gtsam::Values getLinearizationPoint() { return values_; }
-  gtsam::NonlinearFactorGraph getFactorsUnsafe(){ return nfg_; }
+  inline gtsam::Values calculateEstimate() const { return values_; }
+  inline gtsam::Values calculateBestEstimate() const { return values_; }
+  inline gtsam::Values getLinearizationPoint() const { return values_; }
+  inline gtsam::NonlinearFactorGraph getFactorsUnsafe() const { return nfg_; }
 
-  void print() const {
-    values_.print("");
-  }
+  void print() const { values_.print(""); }
 
   void setQuiet() { debug_ = false; }
 
 protected:
-  bool addAndCheckIfOptimize(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(),
-      const gtsam::Values& values=gtsam::Values());
+  bool addAndCheckIfOptimize(
+      const gtsam::NonlinearFactorGraph &nfg = gtsam::NonlinearFactorGraph(),
+      const gtsam::Values &values = gtsam::Values());
 
 protected:
   bool isSpecialSymbol(char symb) const;
@@ -73,6 +60,6 @@ protected:
   bool debug_;
 };
 
-}
+} // namespace RobustPGO
 
 #endif

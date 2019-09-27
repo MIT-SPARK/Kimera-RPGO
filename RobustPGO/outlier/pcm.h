@@ -68,22 +68,28 @@ private:
   double threshold1_;
   double threshold2_;
 
-  gtsam::NonlinearFactorGraph
-      nfg_odom_; // NonlinearFactorGraph storing all odometry factors
-  gtsam::NonlinearFactorGraph
-      nfg_special_; // NonlinearFactorGraph storing all NonBetweenFactors
-  gtsam::NonlinearFactorGraph
-      nfg_lc_; // NonlinearFactorGraph storing all loop closure measurements
-  gtsam::NonlinearFactorGraph
-      nfg_good_lc_; // NonlinearFactorGraph storing the inliers found at last
-                    // max clique query
-  gtsam::Matrix
-      lc_adjacency_matrix_; // adjacency matrix storing the consistency of each
-                            // pair of loop closures
-  gtsam::Matrix lc_distance_matrix_; // matrix storing distances between each
-                                     // pairs of loop closures
+  // NonlinearFactorGraph storing all odometry factors
+  gtsam::NonlinearFactorGraph nfg_odom_;
 
-  Trajectory<poseT, T> trajectory_odom_; // trajectory storing keys and poses
+  // NonlinearFactorGraph storing all NonBetweenFactors
+  gtsam::NonlinearFactorGraph nfg_special_;
+
+  // NonlinearFactorGraph storing all loop closure measurements
+  gtsam::NonlinearFactorGraph nfg_lc_;
+
+  // NonlinearFactorGraph storing the inliers found at last
+  // max clique query
+  gtsam::NonlinearFactorGraph nfg_good_lc_;
+
+  // adjacency matrix storing the consistency of each
+  // pair of loop closures
+  gtsam::Matrix lc_adjacency_matrix_;
+
+  // matrix storing distances between each pairs of loop closures
+  gtsam::Matrix lc_distance_matrix_;
+
+  // trajectory storing keys and poses
+  Trajectory<poseT, T> trajectory_odom_;
 
   std::vector<char>
       special_symbols_; // these are the symbols corresponding to landmarks

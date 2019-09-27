@@ -13,23 +13,24 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/Values.h>
 
-#include "RobustPGO/logger.h"
 #include "RobustPGO/SolverParams.h"
+#include "RobustPGO/logger.h"
 
 namespace RobustPGO {
 
 class GenericSolver {
 public:
-  GenericSolver(Solver solvertype=Solver::LM,
-                std::vector<char> special_symbols=std::vector<char>());
+  GenericSolver(Solver solvertype = Solver::LM,
+                std::vector<char> special_symbols = std::vector<char>());
   // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton
   // special symbols denote non odometry factors - perhaps semantics
 
   virtual ~GenericSolver() = default;
 
-  void update(const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(),
-              const gtsam::Values& values=gtsam::Values(),
-              const gtsam::FactorIndices& factorsToRemove=gtsam::FactorIndices());
+  void
+  update(const gtsam::NonlinearFactorGraph &nfg = gtsam::NonlinearFactorGraph(),
+         const gtsam::Values &values = gtsam::Values(),
+         const gtsam::FactorIndices &factorsToRemove = gtsam::FactorIndices());
 
   void removeFactorsNoUpdate(
       gtsam::FactorIndices factorsToRemove = gtsam::FactorIndices());
@@ -41,16 +42,14 @@ public:
   inline gtsam::Values getLinearizationPoint() const { return values_; }
   inline gtsam::NonlinearFactorGraph getFactorsUnsafe() const { return nfg_; }
 
-  void print() const {
-    values_.print("");
-  }
+  void print() const { values_.print(""); }
 
   void setQuiet() { debug_ = false; }
 
 protected:
   bool addAndCheckIfOptimize(
-      const gtsam::NonlinearFactorGraph& nfg=gtsam::NonlinearFactorGraph(),
-      const gtsam::Values& values=gtsam::Values());
+      const gtsam::NonlinearFactorGraph &nfg = gtsam::NonlinearFactorGraph(),
+      const gtsam::Values &values = gtsam::Values());
 
 protected:
   bool isSpecialSymbol(char symb) const;
@@ -61,6 +60,6 @@ protected:
   bool debug_;
 };
 
-}
+} // namespace RobustPGO
 
 #endif

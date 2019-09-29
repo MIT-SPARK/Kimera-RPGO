@@ -1,5 +1,5 @@
-# Add source code for RobustPGO
-target_sources(RobustPGO
+# Add source code for KimeraRPGO
+target_sources(KimeraRPGO
 	PRIVATE
 		"${CMAKE_CURRENT_LIST_DIR}/findClique.h"
 		"${CMAKE_CURRENT_LIST_DIR}/findClique.cpp"
@@ -8,4 +8,4 @@ target_sources(RobustPGO
 		"${CMAKE_CURRENT_LIST_DIR}/graphIO.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/utils.cpp"
 )
-target_include_directories(RobustPGO PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+target_include_directories(KimeraRPGO PRIVATE ${CMAKE_CURRENT_LIST_DIR})

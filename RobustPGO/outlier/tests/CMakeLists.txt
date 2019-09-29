@@ -1,1 +1,0 @@
-gtsamAddTestsGlob(OutlierTests "test*.cpp" "" RobustPGO)

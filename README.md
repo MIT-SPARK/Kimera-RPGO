@@ -38,7 +38,7 @@ make
 This repository can be used as an optimization backend. A sample setup looks something like below. The default solver is LM.
 ```cpp
 // Set up
-// set up RobustPGO solver
+// set up KimeraRPGO solver
 RobustSolverParams params;
 params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
 // Verbosity levels are QUIET, UPDATE, and, VERBOSE in order of increasing number of messages (the default is UPDATE)
@@ -46,7 +46,7 @@ params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
 
 // To use GaussNewton instead of LM: params.solver = Solver::GN;
 
-std::unique_ptr<RobustSolver> pgo = RobustPGO::make_unique<RobustSolver>(params);
+std::unique_ptr<RobustSolver> pgo = KimeraRPGO::make_unique<RobustSolver>(params);
 //...
 //...
 
@@ -66,13 +66,13 @@ Example, do `./RpgoReadG2o 3d /home/user/Desktop/in.g2o 1.0 1.0 /home/user/Deskt
 
 ## Example
 ```cpp
-// set up RobustPGO solver
+// set up KimeraRPGO solver
 RobustSolverParams params;
 params.setPcm3DParams(<translation_threshold>, <rotation_threshold>);
 std::vector<char> special_symbs{'l', 'u'}; // for landmarks
 params.specialSymbols = special_symbs;
 
-std::unique_ptr<RobustSolver> pgo = RobustPGO::make_unique<RobustSolver>(params); // initiate pgo solver
+std::unique_ptr<RobustSolver> pgo = KimeraRPGO::make_unique<RobustSolver>(params); // initiate pgo solver
 
 // When using it normally
 pgo->update(new_factor, new_values);
@@ -89,5 +89,5 @@ pgo->addGraph(nfg, values, between_factor);
 RobustSolverParams params;
 params.setNoRejection();
 
-std::unique_ptr<RobustSolver> pgo = RobustPGO::make_unique<RobustSolver>(params); // initiate pgo solver
+std::unique_ptr<RobustSolver> pgo = KimeraRPGO::make_unique<RobustSolver>(params); // initiate pgo solver
 ```

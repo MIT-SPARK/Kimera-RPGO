@@ -1,11 +1,12 @@
 // Authors: Yun Chang
 
-#include "RobustPGO/utils/graph_utils.h"
-#include "RobustPGO/max_clique_finder/findClique.h"
+#include "KimeraRPGO/utils/graph_utils.h"
+#include "KimeraRPGO/max_clique_finder/findClique.h"
 
-namespace RobustPGO {
+namespace KimeraRPGO {
 
-int findMaxClique(const Eigen::MatrixXd adjMatrix, std::vector<int>& max_clique) {
+int findMaxClique(const Eigen::MatrixXd adjMatrix,
+                  std::vector<int> &max_clique) {
   // Compute maximum clique
   FMC::CGraphIO gio;
   gio.ReadEigenAdjacencyMatrix(adjMatrix);
@@ -14,7 +15,8 @@ int findMaxClique(const Eigen::MatrixXd adjMatrix, std::vector<int>& max_clique)
   return max_clique_size;
 }
 
-int findMaxCliqueHeu(const Eigen::MatrixXd adjMatrix, std::vector<int>& max_clique) {
+int findMaxCliqueHeu(const Eigen::MatrixXd adjMatrix,
+                     std::vector<int> &max_clique) {
   // Compute maximum clique (heuristic inexact version)
   FMC::CGraphIO gio;
   gio.ReadEigenAdjacencyMatrix(adjMatrix);
@@ -23,4 +25,4 @@ int findMaxCliqueHeu(const Eigen::MatrixXd adjMatrix, std::vector<int>& max_cliq
   return max_clique_size;
 }
 
-}
+} // namespace KimeraRPGO

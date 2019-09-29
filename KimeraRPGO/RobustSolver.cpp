@@ -1,19 +1,19 @@
 /*
-Generic solver class
+Robust solver class
 author: Yun Chang, Luca Carlone
 */
 
-#include "RobustPGO/RobustSolver.h"
+#include "KimeraRPGO/RobustSolver.h"
 
 #include <gtsam/nonlinear/DoglegOptimizer.h>
 #include <gtsam/nonlinear/GaussNewtonOptimizer.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 #include <gtsam/slam/dataset.h>
 
-#include "RobustPGO/logger.h"
-#include "RobustPGO/outlier/pcm.h"
+#include "KimeraRPGO/logger.h"
+#include "KimeraRPGO/outlier/pcm.h"
 
-namespace RobustPGO {
+namespace KimeraRPGO {
 
 RobustSolver::RobustSolver(const RobustSolverParams &params)
     : GenericSolver(params.solver, params.specialSymbols) {
@@ -22,22 +22,22 @@ RobustSolver::RobustSolver(const RobustSolverParams &params)
     outlier_removal_ = nullptr; // only returns optimize true or optimize false
   } break;
   case OutlierRemovalMethod::PCM2D: {
-    outlier_removal_ = RobustPGO::make_unique<Pcm2D>(params.pcm_odomThreshold,
-                                                     params.pcm_lcThreshold,
-                                                     params.specialSymbols);
+    outlier_removal_ = KimeraRPGO::make_unique<Pcm2D>(params.pcm_odomThreshold,
+                                                      params.pcm_lcThreshold,
+                                                      params.specialSymbols);
   } break;
   case OutlierRemovalMethod::PCM3D: {
-    outlier_removal_ = RobustPGO::make_unique<Pcm3D>(params.pcm_odomThreshold,
-                                                     params.pcm_lcThreshold,
-                                                     params.specialSymbols);
+    outlier_removal_ = KimeraRPGO::make_unique<Pcm3D>(params.pcm_odomThreshold,
+                                                      params.pcm_lcThreshold,
+                                                      params.specialSymbols);
   } break;
   case OutlierRemovalMethod::PCM_Simple2D: {
-    outlier_removal_ = RobustPGO::make_unique<PcmSimple2D>(
+    outlier_removal_ = KimeraRPGO::make_unique<PcmSimple2D>(
         params.pcmDist_transThreshold, params.pcmDist_rotThreshold,
         params.specialSymbols);
   } break;
   case OutlierRemovalMethod::PCM_Simple3D: {
-    outlier_removal_ = RobustPGO::make_unique<PcmSimple3D>(
+    outlier_removal_ = KimeraRPGO::make_unique<PcmSimple3D>(
         params.pcmDist_transThreshold, params.pcmDist_rotThreshold,
         params.specialSymbols);
   } break;
@@ -230,4 +230,4 @@ void RobustSolver::saveData(std::string folder_path) const {
   }
 }
 
-} // namespace RobustPGO
+} // namespace KimeraRPGO

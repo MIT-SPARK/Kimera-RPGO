@@ -8,7 +8,7 @@ author: Yun Chang
 
 #include <vector>
 
-namespace RobustPGO {
+namespace KimeraRPGO {
 
 enum class Solver { LM, GN };
 
@@ -109,5 +109,5 @@ public:
   double pcmDist_rotThreshold;
 };
 
-} // namespace RobustPGO
+} // namespace KimeraRPGO
 #endif

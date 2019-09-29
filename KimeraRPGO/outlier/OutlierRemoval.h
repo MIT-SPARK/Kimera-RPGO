@@ -1,7 +1,7 @@
 /*
 Outlier removal class
 Provide a set of outlier removal methods
-along with interface to robustPGO
+along with interface to KimeraRPGO
 author: Yun Chang
 */
 
@@ -12,7 +12,7 @@ author: Yun Chang
 #include <gtsam/nonlinear/Values.h>
 #include <string>
 
-namespace RobustPGO {
+namespace KimeraRPGO {
 
 class OutlierRemoval {
 public:
@@ -49,5 +49,5 @@ protected:
   bool debug_ = true;
 };
 
-} // namespace RobustPGO
+} // namespace KimeraRPGO
 #endif

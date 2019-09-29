@@ -24,13 +24,13 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/slam/PriorFactor.h>
 
-#include "KimeraRPGO/logger.h"
-#include "KimeraRPGO/outlier/OutlierRemoval.h"
-#include "KimeraRPGO/utils/geometry_utils.h"
-#include "KimeraRPGO/utils/graph_utils.h"
-#include "KimeraRPGO/utils/type_utils.h"
+#include "RobustPGO/logger.h"
+#include "RobustPGO/outlier/OutlierRemoval.h"
+#include "RobustPGO/utils/geometry_utils.h"
+#include "RobustPGO/utils/graph_utils.h"
+#include "RobustPGO/utils/type_utils.h"
 
-namespace KimeraRPGO {
+namespace RobustPGO {
 
 /* ------------------------------------------------------------------------ */
 // Defines the behaviour of this backend.
@@ -718,6 +718,6 @@ typedef Pcm<gtsam::Pose3, PoseWithCovariance> Pcm3D;
 typedef Pcm<gtsam::Pose2, PoseWithNode> PcmSimple2D;
 typedef Pcm<gtsam::Pose3, PoseWithNode> PcmSimple3D;
 
-} // namespace KimeraRPGO
+} // namespace RobustPGO
 
 #endif

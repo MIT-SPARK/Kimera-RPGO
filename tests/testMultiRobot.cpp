@@ -11,12 +11,12 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/inference/Symbol.h>
 
-#include "KimeraRPGO/RobustSolver.h"
-#include "KimeraRPGO/SolverParams.h"
-#include "KimeraRPGO/utils/type_utils.h"
+#include "RobustPGO/RobustSolver.h"
+#include "RobustPGO/SolverParams.h"
+#include "RobustPGO/utils/type_utils.h"
 #include "test_config.h"
 
-using namespace KimeraRPGO;
+using namespace RobustPGO;
 
 /* ************************************************************************* */
 TEST(RobustSolver, multiRobotPcm) {
@@ -27,12 +27,12 @@ TEST(RobustSolver, multiRobotPcm) {
   b -->-->-->
             V
           <--            */
-  // set up KimeraRPGO solver
+  // set up RobustPGO solver
   RobustSolverParams params;
   params.setPcm3DParams(3.0, 0.05, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      RobustPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel &noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);
@@ -202,12 +202,12 @@ TEST(RobustSolver, multiRobotPcmSimple) {
   b -->-->-->
             V
           <--            */
-  // set up KimeraRPGO solver
+  // set up RobustPGO solver
   RobustSolverParams params;
   params.setPcmSimple3DParams(0.04, 0.01, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      RobustPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel &noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);

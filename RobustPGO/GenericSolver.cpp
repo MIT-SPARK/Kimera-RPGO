@@ -4,13 +4,13 @@ No outlier removal in this class
 author: Yun Chang, Luca Carlone
 */
 
-#include "KimeraRPGO/GenericSolver.h"
+#include "RobustPGO/GenericSolver.h"
 
 #include <gtsam/nonlinear/DoglegOptimizer.h>
 #include <gtsam/nonlinear/GaussNewtonOptimizer.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 
-namespace KimeraRPGO {
+namespace RobustPGO {
 
 GenericSolver::GenericSolver(Solver solvertype,
                              std::vector<char> special_symbols)
@@ -93,4 +93,4 @@ void GenericSolver::removeFactorsNoUpdate(
   }
 }
 
-} // namespace KimeraRPGO
+} // namespace RobustPGO

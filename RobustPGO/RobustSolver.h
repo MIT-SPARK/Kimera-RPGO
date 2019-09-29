@@ -11,11 +11,11 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/slam/PriorFactor.h>
 
-#include "KimeraRPGO/GenericSolver.h"
-#include "KimeraRPGO/SolverParams.h"
-#include "KimeraRPGO/outlier/OutlierRemoval.h"
+#include "RobustPGO/GenericSolver.h"
+#include "RobustPGO/SolverParams.h"
+#include "RobustPGO/outlier/OutlierRemoval.h"
 
-namespace KimeraRPGO {
+namespace RobustPGO {
 
 /*! \brief RobustSolver type.
  *  Main backend solver that can do outlier rejection
@@ -151,5 +151,5 @@ public:
   }
 };
 
-} // namespace KimeraRPGO
+} // namespace RobustPGO
 #endif

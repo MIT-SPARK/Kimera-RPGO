@@ -7,9 +7,9 @@
 #include <CppUnitLite/TestHarness.h>
 #include <random>
 
-#include "KimeraRPGO/outlier/pcm.h"
+#include "RobustPGO/outlier/pcm.h"
 
-using namespace KimeraRPGO;
+using namespace RobustPGO;
 
 /* ************************************************************************* */
 TEST(Pcm, OdometryCheck) {

@@ -1,0 +1,1 @@
+gtsamAddTestsGlob(graph_utils "test*.cpp" "" "RobustPGO")

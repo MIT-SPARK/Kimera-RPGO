@@ -12,12 +12,12 @@
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/slam/dataset.h>
 
-#include "KimeraRPGO/RobustSolver.h"
-#include "KimeraRPGO/SolverParams.h"
-#include "KimeraRPGO/utils/type_utils.h"
+#include "RobustPGO/RobustSolver.h"
+#include "RobustPGO/SolverParams.h"
+#include "RobustPGO/utils/type_utils.h"
 #include "test_config.h"
 
-using namespace KimeraRPGO;
+using namespace RobustPGO;
 
 /* ************************************************************************* */
 TEST(RobustSolver, Load1) {
@@ -28,12 +28,12 @@ TEST(RobustSolver, Load1) {
   boost::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up KimeraRPGO solver
+  // set up RobustPGO solver
   RobustSolverParams params;
   params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      RobustPGO::make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel &noise =
@@ -63,12 +63,12 @@ TEST(RobustSolver, Add1) {
   boost::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up KimeraRPGO solver
+  // set up RobustPGO solver
   RobustSolverParams params;
   params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      RobustPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel &noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
@@ -128,14 +128,14 @@ TEST(RobustSolver, Load2) {
   boost::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up KimeraRPGO solver
+  // set up RobustPGO solver
   RobustSolverParams params;
   params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET);
   std::vector<char> special_symbs{'l', 'u'}; // for landmarks
   params.specialSymbols = special_symbs;
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      RobustPGO::make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel &noise =
@@ -164,12 +164,12 @@ TEST(RobustSolver, Add2) {
   boost::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up KimeraRPGO solver
+  // set up RobustPGO solver
   RobustSolverParams params;
   params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      RobustPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel &noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
@@ -231,12 +231,12 @@ TEST(RobustSolver, Load1NoPrior) {
   gtsam::NonlinearFactorGraph nfg = *gv.first;
   gtsam::Values values = *gv.second;
 
-  // set up KimeraRPGO solver
+  // set up RobustPGO solver
   RobustSolverParams params;
   params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      RobustPGO::make_unique<RobustSolver>(params);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
 
@@ -260,12 +260,12 @@ TEST(RobustSolver, NoRejectLoad) {
   boost::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up KimeraRPGO solver
+  // set up RobustPGO solver
   RobustSolverParams params;
   params.setNoRejection(Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      RobustPGO::make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel &noise =
@@ -294,12 +294,12 @@ TEST(RobustSolver, NoRejectAdd) {
   boost::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up KimeraRPGO solver
+  // set up RobustPGO solver
   RobustSolverParams params;
   params.setNoRejection(Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      RobustPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel &noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
@@ -361,12 +361,12 @@ TEST(RobustSolver, Load1PcmSimple) {
   boost::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up KimeraRPGO solver
+  // set up RobustPGO solver
   RobustSolverParams params;
   params.setPcmSimple3DParams(0.001, 0.0001, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      RobustPGO::make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel &noise =
@@ -396,12 +396,12 @@ TEST(RobustSolver, Add1PcmSimple) {
   boost::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up KimeraRPGO solver
+  // set up RobustPGO solver
   RobustSolverParams params;
   params.setPcmSimple3DParams(0.001, 0.0001, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      RobustPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel &noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
@@ -464,12 +464,12 @@ TEST(RobustSolver, Load2PcmSimple) {
   boost::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up KimeraRPGO solver
+  // set up RobustPGO solver
   RobustSolverParams params;
   params.setPcmSimple3DParams(100.0, 100.0, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      RobustPGO::make_unique<RobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel &noise =
@@ -498,12 +498,12 @@ TEST(RobustSolver, Add2PcmSimple) {
   boost::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up KimeraRPGO solver
+  // set up RobustPGO solver
   RobustSolverParams params;
   params.setPcmSimple3DParams(100.0, 100.0, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      RobustPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel &noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
@@ -565,12 +565,12 @@ TEST(RobustSolver, Load1NoPriorPcmSimple) {
   gtsam::NonlinearFactorGraph nfg = *gv.first;
   gtsam::Values values = *gv.second;
 
-  // set up KimeraRPGO solver
+  // set up RobustPGO solver
   RobustSolverParams params;
   params.setPcmSimple3DParams(100.0, 100.0, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      RobustPGO::make_unique<RobustSolver>(params);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
 

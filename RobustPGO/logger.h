@@ -11,7 +11,7 @@ author: Yun Chang
 #include <sstream>
 using namespace std;
 
-namespace KimeraRPGO {
+namespace RobustPGO {
 
 enum log_level_t {
   WARNING,
@@ -45,6 +45,6 @@ template <log_level_t level> log_impl::formatted_log_t log(const char *msg) {
   return log_impl::formatted_log_t(level, msg);
 }
 
-} // namespace KimeraRPGO
+} // namespace RobustPGO
 
 #endif

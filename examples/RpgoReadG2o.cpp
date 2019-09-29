@@ -10,13 +10,13 @@ author: Yun Chang
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/slam/dataset.h>
 
-#include "KimeraRPGO/RobustSolver.h"
-#include "KimeraRPGO/SolverParams.h"
-#include "KimeraRPGO/logger.h"
-#include "KimeraRPGO/utils/geometry_utils.h"
-#include "KimeraRPGO/utils/type_utils.h"
+#include "RobustPGO/RobustSolver.h"
+#include "RobustPGO/SolverParams.h"
+#include "RobustPGO/logger.h"
+#include "RobustPGO/utils/geometry_utils.h"
+#include "RobustPGO/utils/type_utils.h"
 
-using namespace KimeraRPGO;
+using namespace RobustPGO;
 
 /* Usage: ./RpgoReadG2o 2d <some-2d-g2o-file> <odom-threshold> <pcm-threshold>
    <output-g2o-file> <verbosity> [or]   ./RpgoReadG2o 3d <some-3d-g2o-file>
@@ -29,7 +29,7 @@ void Simulate(gtsam::GraphAndValues gv, RobustSolverParams params,
   gtsam::Values values = *gv.second;
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      RobustPGO::make_unique<RobustSolver>(params);
 
   size_t dim = getDim<T>();
 

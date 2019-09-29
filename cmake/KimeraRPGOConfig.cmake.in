@@ -1,7 +1,7 @@
-get_filename_component(RobustPGO_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+get_filename_component(KimeraRPGO_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 include(CMakeFindDependencyMacro)
 
-list(APPEND CMAKE_MODULE_PATH ${RobustPGO_CMAKE_DIR})
+list(APPEND CMAKE_MODULE_PATH ${KimeraRPGO_CMAKE_DIR})
 
 find_dependency(Boost REQUIRED)
 if(NOT TARGET Boost::boost)
@@ -14,6 +14,6 @@ find_dependency(GTSAM REQUIRED)
 
 list(REMOVE_AT CMAKE_MODULE_PATH -1)
 
-if(NOT TARGET RobustPGO)
-  include("${RobustPGO_CMAKE_DIR}/RobustPGOTargets.cmake")
+if(NOT TARGET KimeraRPGO)
+  include("${KimeraRPGO_CMAKE_DIR}/KimeraRPGOTargets.cmake")
 endif()

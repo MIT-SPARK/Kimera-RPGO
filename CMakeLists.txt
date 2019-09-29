@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.5)
-project(RobustPGO VERSION 1.0 LANGUAGES CXX)
+project(KimeraRPGO VERSION 1.0 LANGUAGES CXX)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -24,27 +24,27 @@ endif()
 
 ###########################################################################
 # Compile
-add_library(RobustPGO SHARED
-  RobustPGO/logger.h
-  RobustPGO/GenericSolver.cpp
-  RobustPGO/RobustSolver.cpp
-  RobustPGO/SolverParams.h )
+add_library(KimeraRPGO SHARED
+  KimeraRPGO/logger.h
+  KimeraRPGO/GenericSolver.cpp
+  KimeraRPGO/RobustSolver.cpp
+  KimeraRPGO/SolverParams.h )
 
 # Add source code for max clique finder
-include(RobustPGO/max_clique_finder/CMakeLists.txt)
+include(KimeraRPGO/max_clique_finder/CMakeLists.txt)
 # Add source for outlier rejection stuff
-include(RobustPGO/outlier/CMakeLists.txt)
+include(KimeraRPGO/outlier/CMakeLists.txt)
 # Add source for utils
-include(RobustPGO/utils/CMakeLists.txt)
+include(KimeraRPGO/utils/CMakeLists.txt)
 
-target_link_libraries(RobustPGO
+target_link_libraries(KimeraRPGO
   PUBLIC
     Boost::boost
     gtsam
     gtsam_unstable
 )
 
-target_include_directories(RobustPGO
+target_include_directories(KimeraRPGO
   PUBLIC
     ${GTSAM_INCLUDE_DIR}
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
@@ -53,33 +53,33 @@ target_include_directories(RobustPGO
 ###########################################################################
 # Define executables
 add_executable(RpgoReadG2o examples/RpgoReadG2o.cpp)
-target_link_libraries(RpgoReadG2o RobustPGO)
+target_link_libraries(RpgoReadG2o KimeraRPGO)
 
 ###########################################################################
 # Tests
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/UnitTesting.cmake)
 add_subdirectory(tests)
-add_subdirectory(RobustPGO/outlier/tests)
-add_subdirectory(RobustPGO/utils/tests)
+add_subdirectory(KimeraRPGO/outlier/tests)
+add_subdirectory(KimeraRPGO/utils/tests)
 set(TEST_DATA_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
 configure_file(tests/test_config.h.in tests/test_config.h)
 
 ###########################################################################
 # Installation
-set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/RobustPGO)
+set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/KimeraRPGO)
 
 include(CMakePackageConfigHelpers)
-write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/RobustPGOConfigVersion.cmake
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfigVersion.cmake
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY AnyNewerVersion
 )
 
-# Create RobustPGOConfig.cmake with extra info from RobustPGOConfig.cmake.in
-# This file is necessary to find_package the library RobustPGO.
-configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/RobustPGOConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/RobustPGOConfig.cmake
+# Create KimeraRPGOConfig.cmake with extra info from KimeraRPGOConfig.cmake.in
+# This file is necessary to find_package the library KimeraRPGO.
+configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/KimeraRPGOConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfig.cmake
     INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
 )
 
-export(TARGETS RobustPGO FILE RobustPGOTargets.cmake)
-export(PACKAGE RobustPGO)
+export(TARGETS KimeraRPGO FILE KimeraRPGOTargets.cmake)
+export(PACKAGE KimeraRPGO)

@@ -7,10 +7,10 @@
 #include <CppUnitLite/TestHarness.h>
 #include <random>
 
-#include "RobustPGO/outlier/pcm.h"
+#include "KimeraRPGO/outlier/pcm.h"
 #include <gtsam/sam/RangeFactor.h>
 
-using namespace RobustPGO;
+using namespace KimeraRPGO;
 
 /* ************************************************************************* */
 TEST(PcmDoOptimize, Odometry) {

@@ -13,10 +13,10 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/Values.h>
 
-#include "RobustPGO/SolverParams.h"
-#include "RobustPGO/logger.h"
+#include "KimeraRPGO/SolverParams.h"
+#include "KimeraRPGO/logger.h"
 
-namespace RobustPGO {
+namespace KimeraRPGO {
 
 class GenericSolver {
 public:
@@ -60,6 +60,6 @@ protected:
   bool debug_;
 };
 
-} // namespace RobustPGO
+} // namespace KimeraRPGO
 
 #endif

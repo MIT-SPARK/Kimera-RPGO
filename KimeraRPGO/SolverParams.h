@@ -3,8 +3,8 @@ Robust Solver Params class
 author: Yun Chang
 */
 
-#ifndef SOLVERPARAMS_H
-#define SOLVERPARAMS_H
+#ifndef KIMERARPGO_SOLVERPARAMS_H_
+#define KIMERARPGO_SOLVERPARAMS_H_
 
 #include <vector>
 
@@ -14,7 +14,7 @@ enum class Solver { LM, GN };
 
 // TODO(Luca): OutlierRemoval should not care about 2D or 3D
 enum class OutlierRemovalMethod {
-  NONE, // no outlier rejection
+  NONE,  // no outlier rejection
   PCM2D,
   PCM3D,
   PCM_Simple2D,
@@ -24,14 +24,17 @@ enum class OutlierRemovalMethod {
 enum class Verbosity { UPDATE, QUIET, VERBOSE };
 
 struct RobustSolverParams {
-public:
+ public:
   RobustSolverParams()
-      : solver(Solver::LM), // TODO(Luca): default should be GN (faster, but we
-                            // can keep LM for subt)
-        outlierRemovalMethod(OutlierRemovalMethod::PCM3D), specialSymbols(),
-        verbosity(Verbosity::UPDATE), pcm_odomThreshold(10.0),
-        pcm_lcThreshold(5.0), pcmDist_transThreshold(0.05), // 5cm
-        pcmDist_rotThreshold(0.005) {}                      // <0.5degrees
+      : solver(Solver::LM),  // TODO(Luca): default should be GN (faster, but we
+                             // can keep LM for subt)
+        outlierRemovalMethod(OutlierRemovalMethod::PCM3D),
+        specialSymbols(),
+        verbosity(Verbosity::UPDATE),
+        pcm_odomThreshold(10.0),
+        pcm_lcThreshold(5.0),
+        pcmDist_transThreshold(0.05),   // 5cm
+        pcmDist_rotThreshold(0.005) {}  // <0.5degrees
 
   /*! \brief For RobustSolver to not do outlier rejection at all
    */
@@ -46,7 +49,8 @@ public:
    * lcThreshold: max allowable M distance deviation between pairs of
    * measurements
    */
-  void setPcm2DParams(double odomThreshold, double lcThreshold,
+  void setPcm2DParams(double odomThreshold,
+                      double lcThreshold,
                       Verbosity verbos = Verbosity::UPDATE) {
     outlierRemovalMethod = OutlierRemovalMethod::PCM2D;
     pcm_odomThreshold = odomThreshold;
@@ -60,7 +64,8 @@ public:
    * lcThreshold: max allowable M distance deviation between pairs of
    * measurements
    */
-  void setPcm3DParams(double odomThreshold, double lcThreshold,
+  void setPcm3DParams(double odomThreshold,
+                      double lcThreshold,
                       Verbosity verbos = Verbosity::UPDATE) {
     outlierRemovalMethod = OutlierRemovalMethod::PCM3D;
     pcm_odomThreshold = odomThreshold;
@@ -73,7 +78,8 @@ public:
    * transThreshold: Estimated max drift in translation per node (in meters)
    * rotThreshold: Estimated max drift in rotation per node (in radians)
    */
-  void setPcmSimple2DParams(double transThreshold, double rotThreshold,
+  void setPcmSimple2DParams(double transThreshold,
+                            double rotThreshold,
                             Verbosity verbos = Verbosity::UPDATE) {
     outlierRemovalMethod = OutlierRemovalMethod::PCM_Simple2D;
     pcmDist_transThreshold = transThreshold;
@@ -86,7 +92,8 @@ public:
    * transThreshold: Estimated max drift in translation per node (in meters)
    * rotThreshold: Estimated max drift in rotation per node (in radians)
    */
-  void setPcmSimple3DParams(double transThreshold, double rotThreshold,
+  void setPcmSimple3DParams(double transThreshold,
+                            double rotThreshold,
                             Verbosity verbos = Verbosity::UPDATE) {
     outlierRemovalMethod = OutlierRemovalMethod::PCM_Simple3D;
     pcmDist_transThreshold = transThreshold;
@@ -109,5 +116,5 @@ public:
   double pcmDist_rotThreshold;
 };
 
-} // namespace KimeraRPGO
-#endif
+}  // namespace KimeraRPGO
+#endif  // KIMERARPGO_SOLVERPARAMS_H_

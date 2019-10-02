@@ -1,35 +1,36 @@
 // Authors: Yun Chang
 
-#ifndef GRAPH_UTILS_TYPES_H
-#define GRAPH_UTILS_TYPES_H
+#ifndef KIMERARPGO_UTILS_GRAPH_UTILS_H_
+#define KIMERARPGO_UTILS_GRAPH_UTILS_H_
 
 #include <map>
 #include <unordered_map>
 #include <vector>
 
-#include <eigen3/Eigen/Dense>
 #include <gtsam/inference/Symbol.h>
+#include <eigen3/Eigen/Dense>
 
 namespace KimeraRPGO {
 
 int findMaxClique(const Eigen::MatrixXd adjMatrix,
-                  std::vector<int> &max_clique);
+                  std::vector<int>& max_clique);
 
 int findMaxCliqueHeu(const Eigen::MatrixXd adjMatrix,
-                     std::vector<int> &max_clique);
+                     std::vector<int>& max_clique);
 
 /** \struct Trajectory
  *  \brief Structure defining a robot trajectory
  *  This helps support having multiple robots (centralized, however)
  */
-template <class poseT, template <class> class T> struct Trajectory {
+template <class poseT, template <class> class T>
+struct Trajectory {
   std::unordered_map<gtsam::Key, T<poseT>> poses;
 
   /** \brief Get transform (along with node number and covariance)
    *  between two keys in trajectory
    *  from key_a to key_b
    */
-  T<poseT> getBetween(const gtsam::Key &key_a, const gtsam::Key &key_b) {
+  T<poseT> getBetween(const gtsam::Key& key_a, const gtsam::Key& key_b) {
     gtsam::Symbol symb_key_a(key_a);
     gtsam::Symbol symb_key_b(key_b);
     if (symb_key_a.chr() == symb_key_b.chr()) {
@@ -53,6 +54,6 @@ template <class poseT, template <class> class T> struct Trajectory {
   }
 };
 
-} // namespace KimeraRPGO
+}  // namespace KimeraRPGO
 
-#endif
+#endif  // KIMERARPGO_UTILS_GRAPH_UTILS_H_

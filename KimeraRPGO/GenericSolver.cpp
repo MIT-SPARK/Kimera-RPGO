@@ -14,20 +14,22 @@ namespace KimeraRPGO {
 
 GenericSolver::GenericSolver(Solver solvertype,
                              std::vector<char> special_symbols)
-    : values_(gtsam::Values()), nfg_(gtsam::NonlinearFactorGraph()),
-      solver_type_(solvertype), special_symbols_(special_symbols),
+    : values_(gtsam::Values()),
+      nfg_(gtsam::NonlinearFactorGraph()),
+      solver_type_(solvertype),
+      special_symbols_(special_symbols),
       debug_(true) {}
 
 bool GenericSolver::isSpecialSymbol(char symb) const {
   for (size_t i = 0; i < special_symbols_.size(); i++) {
-    if (special_symbols_[i] == symb)
-      return true;
+    if (special_symbols_[i] == symb) return true;
   }
   return false;
 }
 
 bool GenericSolver::addAndCheckIfOptimize(
-    const gtsam::NonlinearFactorGraph &nfg, const gtsam::Values &values) {
+    const gtsam::NonlinearFactorGraph& nfg,
+    const gtsam::Values& values) {
   // add new values and factors
   nfg_.add(nfg);
   values_.insert(values);
@@ -46,9 +48,9 @@ bool GenericSolver::addAndCheckIfOptimize(
   return true;
 }
 
-void GenericSolver::update(const gtsam::NonlinearFactorGraph &nfg,
-                           const gtsam::Values &values,
-                           const gtsam::FactorIndices &factorsToRemove) {
+void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
+                           const gtsam::Values& values,
+                           const gtsam::FactorIndices& factorsToRemove) {
   // remove factors
   bool remove_factors = false;
   if (factorsToRemove.size() > 0) {
@@ -93,4 +95,4 @@ void GenericSolver::removeFactorsNoUpdate(
   }
 }
 
-} // namespace KimeraRPGO
+}  // namespace KimeraRPGO

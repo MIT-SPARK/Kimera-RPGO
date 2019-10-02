@@ -34,7 +34,7 @@ TEST(RobustSolver, multiRobotPcm) {
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
 
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);
 
   gtsam::NonlinearFactorGraph nfg;
@@ -61,7 +61,7 @@ TEST(RobustSolver, multiRobotPcm) {
     gtsam::Values odom_val_a, odom_val_b;
     gtsam::NonlinearFactorGraph odom_factor_a, odom_factor_b;
     gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 0, 0));
-    static const gtsam::SharedNoiseModel &noiseOdom =
+    static const gtsam::SharedNoiseModel& noiseOdom =
         gtsam::noiseModel::Isotropic::Variance(6, 0.1);
     gtsam::Key key_a_prev = gtsam::Symbol('a', i);
     gtsam::Key key_b_prev = gtsam::Symbol('b', i);
@@ -71,10 +71,10 @@ TEST(RobustSolver, multiRobotPcm) {
     odom_val_a.insert(key_a_new, odom);
     odom_val_b.insert(key_b_new, odom);
 
-    odom_factor_a.add(gtsam::BetweenFactor<gtsam::Pose3>(key_a_prev, key_a_new,
-                                                         odom, noiseOdom));
-    odom_factor_b.add(gtsam::BetweenFactor<gtsam::Pose3>(key_b_prev, key_b_new,
-                                                         odom, noiseOdom));
+    odom_factor_a.add(gtsam::BetweenFactor<gtsam::Pose3>(
+        key_a_prev, key_a_new, odom, noiseOdom));
+    odom_factor_b.add(gtsam::BetweenFactor<gtsam::Pose3>(
+        key_b_prev, key_b_new, odom, noiseOdom));
     pgo->update(odom_factor_a, odom_val_a);
     pgo->update(odom_factor_b, odom_val_b);
   }
@@ -88,15 +88,15 @@ TEST(RobustSolver, multiRobotPcm) {
     R.row(1) << 1, 0, 0;
     R.row(2) << 0, 0, 1;
     gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(1, 0, 0));
-    static const gtsam::SharedNoiseModel &noiseOdom =
+    static const gtsam::SharedNoiseModel& noiseOdom =
         gtsam::noiseModel::Isotropic::Variance(6, 0.1);
     gtsam::Key key_a_prev = gtsam::Symbol('a', i);
     gtsam::Key key_a_new = gtsam::Symbol('a', i + 1);
 
     odom_val_a.insert(key_a_new, odom);
 
-    odom_factor_a.add(gtsam::BetweenFactor<gtsam::Pose3>(key_a_prev, key_a_new,
-                                                         odom, noiseOdom));
+    odom_factor_a.add(gtsam::BetweenFactor<gtsam::Pose3>(
+        key_a_prev, key_a_new, odom, noiseOdom));
     pgo->update(odom_factor_a, odom_val_a);
   }
 
@@ -109,15 +109,15 @@ TEST(RobustSolver, multiRobotPcm) {
     R.row(1) << -1, 0, 0;
     R.row(2) << 0, 0, 1;
     gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(1, 0, 0));
-    static const gtsam::SharedNoiseModel &noiseOdom =
+    static const gtsam::SharedNoiseModel& noiseOdom =
         gtsam::noiseModel::Isotropic::Variance(6, 0.1);
     gtsam::Key key_b_prev = gtsam::Symbol('b', i);
     gtsam::Key key_b_new = gtsam::Symbol('b', i + 1);
 
     odom_val_b.insert(key_b_new, odom);
 
-    odom_factor_b.add(gtsam::BetweenFactor<gtsam::Pose3>(key_b_prev, key_b_new,
-                                                         odom, noiseOdom));
+    odom_factor_b.add(gtsam::BetweenFactor<gtsam::Pose3>(
+        key_b_prev, key_b_new, odom, noiseOdom));
     pgo->update(odom_factor_b, odom_val_b);
   }
 
@@ -181,7 +181,9 @@ TEST(RobustSolver, multiRobotPcm) {
       a4, a1, gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(0, 3, 0)), noise));
   // bad lc
   lc_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a4, a2, gtsam::Pose3(gtsam::Rot3::Rz(-1.54), gtsam::Point3(0, 2, 0)),
+      a4,
+      a2,
+      gtsam::Pose3(gtsam::Rot3::Rz(-1.54), gtsam::Point3(0, 2, 0)),
       noise));
 
   pgo->update(lc_factors, gtsam::Values());
@@ -209,7 +211,7 @@ TEST(RobustSolver, multiRobotPcmSimple) {
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
 
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);
 
   gtsam::NonlinearFactorGraph nfg;
@@ -236,7 +238,7 @@ TEST(RobustSolver, multiRobotPcmSimple) {
     gtsam::Values odom_val_a, odom_val_b;
     gtsam::NonlinearFactorGraph odom_factor_a, odom_factor_b;
     gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 0, 0));
-    static const gtsam::SharedNoiseModel &noiseOdom =
+    static const gtsam::SharedNoiseModel& noiseOdom =
         gtsam::noiseModel::Isotropic::Variance(6, 0.1);
     gtsam::Key key_a_prev = gtsam::Symbol('a', i);
     gtsam::Key key_b_prev = gtsam::Symbol('b', i);
@@ -246,10 +248,10 @@ TEST(RobustSolver, multiRobotPcmSimple) {
     odom_val_a.insert(key_a_new, odom);
     odom_val_b.insert(key_b_new, odom);
 
-    odom_factor_a.add(gtsam::BetweenFactor<gtsam::Pose3>(key_a_prev, key_a_new,
-                                                         odom, noiseOdom));
-    odom_factor_b.add(gtsam::BetweenFactor<gtsam::Pose3>(key_b_prev, key_b_new,
-                                                         odom, noiseOdom));
+    odom_factor_a.add(gtsam::BetweenFactor<gtsam::Pose3>(
+        key_a_prev, key_a_new, odom, noiseOdom));
+    odom_factor_b.add(gtsam::BetweenFactor<gtsam::Pose3>(
+        key_b_prev, key_b_new, odom, noiseOdom));
     pgo->update(odom_factor_a, odom_val_a);
     pgo->update(odom_factor_b, odom_val_b);
   }
@@ -263,15 +265,15 @@ TEST(RobustSolver, multiRobotPcmSimple) {
     R.row(1) << 1, 0, 0;
     R.row(2) << 0, 0, 1;
     gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(1, 0, 0));
-    static const gtsam::SharedNoiseModel &noiseOdom =
+    static const gtsam::SharedNoiseModel& noiseOdom =
         gtsam::noiseModel::Isotropic::Variance(6, 0.1);
     gtsam::Key key_a_prev = gtsam::Symbol('a', i);
     gtsam::Key key_a_new = gtsam::Symbol('a', i + 1);
 
     odom_val_a.insert(key_a_new, odom);
 
-    odom_factor_a.add(gtsam::BetweenFactor<gtsam::Pose3>(key_a_prev, key_a_new,
-                                                         odom, noiseOdom));
+    odom_factor_a.add(gtsam::BetweenFactor<gtsam::Pose3>(
+        key_a_prev, key_a_new, odom, noiseOdom));
     pgo->update(odom_factor_a, odom_val_a);
   }
 
@@ -284,15 +286,15 @@ TEST(RobustSolver, multiRobotPcmSimple) {
     R.row(1) << -1, 0, 0;
     R.row(2) << 0, 0, 1;
     gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(1, 0, 0));
-    static const gtsam::SharedNoiseModel &noiseOdom =
+    static const gtsam::SharedNoiseModel& noiseOdom =
         gtsam::noiseModel::Isotropic::Variance(6, 0.1);
     gtsam::Key key_b_prev = gtsam::Symbol('b', i);
     gtsam::Key key_b_new = gtsam::Symbol('b', i + 1);
 
     odom_val_b.insert(key_b_new, odom);
 
-    odom_factor_b.add(gtsam::BetweenFactor<gtsam::Pose3>(key_b_prev, key_b_new,
-                                                         odom, noiseOdom));
+    odom_factor_b.add(gtsam::BetweenFactor<gtsam::Pose3>(
+        key_b_prev, key_b_new, odom, noiseOdom));
     pgo->update(odom_factor_b, odom_val_b);
   }
 
@@ -356,7 +358,9 @@ TEST(RobustSolver, multiRobotPcmSimple) {
       a4, a1, gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(0, 3, 0)), noise));
   // bad lc
   lc_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a4, a2, gtsam::Pose3(gtsam::Rot3::Rz(-1.54), gtsam::Point3(0, 2, 0)),
+      a4,
+      a2,
+      gtsam::Pose3(gtsam::Rot3::Rz(-1.54), gtsam::Point3(0, 2, 0)),
       noise));
 
   pgo->update(lc_factors, gtsam::Values());

@@ -3,8 +3,8 @@ Generic backend solver class
 author: Yun Chang, Luca Carlone
 */
 
-#ifndef GENERICSOLVER_H
-#define GENERICSOLVER_H
+#ifndef KIMERARPGO_GENERICSOLVER_H_
+#define KIMERARPGO_GENERICSOLVER_H_
 
 #include <vector>
 
@@ -19,7 +19,7 @@ author: Yun Chang, Luca Carlone
 namespace KimeraRPGO {
 
 class GenericSolver {
-public:
+ public:
   GenericSolver(Solver solvertype = Solver::LM,
                 std::vector<char> special_symbols = std::vector<char>());
   // solvertype = 1 for LevenbergMarquardt, 2 for GaussNewton
@@ -27,10 +27,10 @@ public:
 
   virtual ~GenericSolver() = default;
 
-  void
-  update(const gtsam::NonlinearFactorGraph &nfg = gtsam::NonlinearFactorGraph(),
-         const gtsam::Values &values = gtsam::Values(),
-         const gtsam::FactorIndices &factorsToRemove = gtsam::FactorIndices());
+  void update(
+      const gtsam::NonlinearFactorGraph& nfg = gtsam::NonlinearFactorGraph(),
+      const gtsam::Values& values = gtsam::Values(),
+      const gtsam::FactorIndices& factorsToRemove = gtsam::FactorIndices());
 
   void removeFactorsNoUpdate(
       gtsam::FactorIndices factorsToRemove = gtsam::FactorIndices());
@@ -46,12 +46,12 @@ public:
 
   void setQuiet() { debug_ = false; }
 
-protected:
+ protected:
   bool addAndCheckIfOptimize(
-      const gtsam::NonlinearFactorGraph &nfg = gtsam::NonlinearFactorGraph(),
-      const gtsam::Values &values = gtsam::Values());
+      const gtsam::NonlinearFactorGraph& nfg = gtsam::NonlinearFactorGraph(),
+      const gtsam::Values& values = gtsam::Values());
 
-protected:
+ protected:
   bool isSpecialSymbol(char symb) const;
   gtsam::Values values_;
   gtsam::NonlinearFactorGraph nfg_;
@@ -60,6 +60,6 @@ protected:
   bool debug_;
 };
 
-} // namespace KimeraRPGO
+}  // namespace KimeraRPGO
 
-#endif
+#endif  // KIMERARPGO_GENERICSOLVER_H_

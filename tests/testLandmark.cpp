@@ -7,6 +7,7 @@
 #include <CppUnitLite/TestHarness.h>
 #include <memory>
 #include <random>
+#include <vector>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/inference/Symbol.h>
@@ -22,13 +23,13 @@ using namespace KimeraRPGO;
 TEST(RobustSolver, LandmarkPcm) {
   RobustSolverParams params;
   params.setPcm3DParams(5.0, 2.5, Verbosity::QUIET);
-  std::vector<char> special_symbs{'l'}; // for landmarks
+  std::vector<char> special_symbs{'l'};  // for landmarks
   params.specialSymbols = special_symbs;
 
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
 
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);
 
   gtsam::NonlinearFactorGraph nfg;
@@ -45,7 +46,7 @@ TEST(RobustSolver, LandmarkPcm) {
     gtsam::Values odom_val;
     gtsam::NonlinearFactorGraph odom_factor;
     gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 0, 0));
-    static const gtsam::SharedNoiseModel &noiseOdom =
+    static const gtsam::SharedNoiseModel& noiseOdom =
         gtsam::noiseModel::Isotropic::Variance(6, 0.1);
     gtsam::Key key_prev = gtsam::Symbol('a', i);
     gtsam::Key key_new = gtsam::Symbol('a', i + 1);
@@ -66,7 +67,7 @@ TEST(RobustSolver, LandmarkPcm) {
     R.row(1) << 1, 0, 0;
     R.row(2) << 0, 0, 1;
     gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(1, 0, 0));
-    static const gtsam::SharedNoiseModel &noiseOdom =
+    static const gtsam::SharedNoiseModel& noiseOdom =
         gtsam::noiseModel::Isotropic::Variance(6, 0.1);
     gtsam::Key key_prev = gtsam::Symbol('a', i);
     gtsam::Key key_new = gtsam::Symbol('a', i + 1);
@@ -87,11 +88,15 @@ TEST(RobustSolver, LandmarkPcm) {
   gtsam::Key a5 = gtsam::Symbol('a', 5);
 
   lc_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a3, a2, gtsam::Pose3(gtsam::Rot3::Rz(-1.57), gtsam::Point3(0, 0.9, 0)),
+      a3,
+      a2,
+      gtsam::Pose3(gtsam::Rot3::Rz(-1.57), gtsam::Point3(0, 0.9, 0)),
       noise));
 
   lc_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a4, a1, gtsam::Pose3(gtsam::Rot3::Rz(3.14), gtsam::Point3(2.1, 1.1, 2.5)),
+      a4,
+      a1,
+      gtsam::Pose3(gtsam::Rot3::Rz(3.14), gtsam::Point3(2.1, 1.1, 2.5)),
       noise));
 
   pgo->update(lc_factors, gtsam::Values());
@@ -105,9 +110,9 @@ TEST(RobustSolver, LandmarkPcm) {
   // Now start adding landmarks
   // Add first observation
   gtsam::Vector6 ldmk_prec;
-  ldmk_prec.head<3>().setConstant(0); // rotation precision
+  ldmk_prec.head<3>().setConstant(0);  // rotation precision
   ldmk_prec.tail<3>().setConstant(25);
-  static const gtsam::SharedNoiseModel &lmk_noise =
+  static const gtsam::SharedNoiseModel& lmk_noise =
       gtsam::noiseModel::Diagonal::Precisions(ldmk_prec);
 
   gtsam::NonlinearFactorGraph landmark_factors;
@@ -181,13 +186,13 @@ TEST(RobustSolver, LandmarkPcm) {
 TEST(RobustSolver, LandmarkPcmSimple) {
   RobustSolverParams params;
   params.setPcmSimple3DParams(0.3, 0.05, Verbosity::QUIET);
-  std::vector<char> special_symbs{'l'}; // for landmarks
+  std::vector<char> special_symbs{'l'};  // for landmarks
   params.specialSymbols = special_symbs;
 
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
 
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);
 
   gtsam::NonlinearFactorGraph nfg;
@@ -204,7 +209,7 @@ TEST(RobustSolver, LandmarkPcmSimple) {
     gtsam::Values odom_val;
     gtsam::NonlinearFactorGraph odom_factor;
     gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 0, 0));
-    static const gtsam::SharedNoiseModel &noiseOdom =
+    static const gtsam::SharedNoiseModel& noiseOdom =
         gtsam::noiseModel::Isotropic::Variance(6, 0.1);
     gtsam::Key key_prev = gtsam::Symbol('a', i);
     gtsam::Key key_new = gtsam::Symbol('a', i + 1);
@@ -225,7 +230,7 @@ TEST(RobustSolver, LandmarkPcmSimple) {
     R.row(1) << 1, 0, 0;
     R.row(2) << 0, 0, 1;
     gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(1, 0, 0));
-    static const gtsam::SharedNoiseModel &noiseOdom =
+    static const gtsam::SharedNoiseModel& noiseOdom =
         gtsam::noiseModel::Isotropic::Variance(6, 0.1);
     gtsam::Key key_prev = gtsam::Symbol('a', i);
     gtsam::Key key_new = gtsam::Symbol('a', i + 1);
@@ -246,11 +251,15 @@ TEST(RobustSolver, LandmarkPcmSimple) {
   gtsam::Key a5 = gtsam::Symbol('a', 5);
 
   lc_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a3, a2, gtsam::Pose3(gtsam::Rot3::Rz(-1.57), gtsam::Point3(0, 0.9, 0)),
+      a3,
+      a2,
+      gtsam::Pose3(gtsam::Rot3::Rz(-1.57), gtsam::Point3(0, 0.9, 0)),
       noise));
 
   lc_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a4, a1, gtsam::Pose3(gtsam::Rot3::Rz(3.14), gtsam::Point3(2.1, 1.1, 2.5)),
+      a4,
+      a1,
+      gtsam::Pose3(gtsam::Rot3::Rz(3.14), gtsam::Point3(2.1, 1.1, 2.5)),
       noise));
 
   pgo->update(lc_factors, gtsam::Values());
@@ -264,9 +273,9 @@ TEST(RobustSolver, LandmarkPcmSimple) {
   // Now start adding landmarks
   // Add first observation
   gtsam::Vector6 ldmk_prec;
-  ldmk_prec.head<3>().setConstant(0); // rotation precision
+  ldmk_prec.head<3>().setConstant(0);  // rotation precision
   ldmk_prec.tail<3>().setConstant(25);
-  static const gtsam::SharedNoiseModel &lmk_noise =
+  static const gtsam::SharedNoiseModel& lmk_noise =
       gtsam::noiseModel::Diagonal::Precisions(ldmk_prec);
 
   gtsam::NonlinearFactorGraph landmark_factors;
@@ -344,7 +353,7 @@ TEST(RobustSolver, LandmarkNoReject) {
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
 
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);
 
   gtsam::NonlinearFactorGraph nfg;
@@ -361,7 +370,7 @@ TEST(RobustSolver, LandmarkNoReject) {
     gtsam::Values odom_val;
     gtsam::NonlinearFactorGraph odom_factor;
     gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 0, 0));
-    static const gtsam::SharedNoiseModel &noiseOdom =
+    static const gtsam::SharedNoiseModel& noiseOdom =
         gtsam::noiseModel::Isotropic::Variance(6, 0.1);
     gtsam::Key key_prev = gtsam::Symbol('a', i);
     gtsam::Key key_new = gtsam::Symbol('a', i + 1);
@@ -382,7 +391,7 @@ TEST(RobustSolver, LandmarkNoReject) {
     R.row(1) << 1, 0, 0;
     R.row(2) << 0, 0, 1;
     gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(1, 0, 0));
-    static const gtsam::SharedNoiseModel &noiseOdom =
+    static const gtsam::SharedNoiseModel& noiseOdom =
         gtsam::noiseModel::Isotropic::Variance(6, 0.1);
     gtsam::Key key_prev = gtsam::Symbol('a', i);
     gtsam::Key key_new = gtsam::Symbol('a', i + 1);
@@ -403,11 +412,15 @@ TEST(RobustSolver, LandmarkNoReject) {
   gtsam::Key a5 = gtsam::Symbol('a', 5);
 
   lc_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a3, a2, gtsam::Pose3(gtsam::Rot3::Rz(-1.57), gtsam::Point3(0, 0.9, 0)),
+      a3,
+      a2,
+      gtsam::Pose3(gtsam::Rot3::Rz(-1.57), gtsam::Point3(0, 0.9, 0)),
       noise));
 
   lc_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a4, a1, gtsam::Pose3(gtsam::Rot3::Rz(3.14), gtsam::Point3(2.1, 1.1, 2.5)),
+      a4,
+      a1,
+      gtsam::Pose3(gtsam::Rot3::Rz(3.14), gtsam::Point3(2.1, 1.1, 2.5)),
       noise));
 
   pgo->update(lc_factors, gtsam::Values());
@@ -421,9 +434,9 @@ TEST(RobustSolver, LandmarkNoReject) {
   // Now start adding landmarks
   // Add first observation
   gtsam::Vector6 ldmk_prec;
-  ldmk_prec.head<3>().setConstant(0); // rotation precision
+  ldmk_prec.head<3>().setConstant(0);  // rotation precision
   ldmk_prec.tail<3>().setConstant(25);
-  static const gtsam::SharedNoiseModel &lmk_noise =
+  static const gtsam::SharedNoiseModel& lmk_noise =
       gtsam::noiseModel::Diagonal::Precisions(ldmk_prec);
 
   gtsam::NonlinearFactorGraph landmark_factors;
@@ -448,7 +461,9 @@ TEST(RobustSolver, LandmarkNoReject) {
   R.row(1) << 1, 0, 0;
   R.row(2) << 0, 0, 1;
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a5, l0, gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(0, -1, 0)),
+      a5,
+      l0,
+      gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(0, -1, 0)),
       lmk_noise));
   pgo->update(landmark_factors, landmark_values);
 

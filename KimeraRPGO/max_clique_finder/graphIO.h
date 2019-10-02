@@ -1,38 +1,36 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * */
 /*   Description:  an I/O library for reading a graph
- */
-/*                                                                           		   */
-/*                                                                           		   */
+
+
+
 /*   Authors: Md. Mostofa Ali Patwary and Bharath Pattabiraman */
 /*            EECS Department, Northwestern University */
 /*            email: {mpatwary,bpa342}@eecs.northwestern.edu */
-/*                                                                           		   */
+
 /*   Copyright, 2014, Northwestern University */
 /*   See COPYRIGHT notice in top-level directory. */
-/*                                                                           		   */
+
 /*   Please site the following publication if you use this package: */
 /*   Bharath Pattabiraman, Md. Mostofa Ali Patwary, Assefaw H. Gebremedhin2,
- */
+
 /*   Wei-keng Liao, and Alok Choudhary. */
 /*   "Fast Algorithms for the Maximum Clique Problem on Massive Graphs with */
 /*   Applications to Overlapping Community Detection"
- */
-/*   http://arxiv.org/abs/1411.7460
- */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * * * * * * */
+
+/*   http://arxiv.org/abs/1411.7460 */
 
 #ifndef _graphIO_
 #define _graphIO_
 
-#include <eigen3/Eigen/Dense>
 #include <float.h>
+#include <string.h>
+#include <eigen3/Eigen/Dense>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <sstream>
-#include <string.h>
+#include <string>
 #include <vector>
 
 #define LINE_LENGTH 256
@@ -43,7 +41,7 @@ namespace FMC {
 typedef std::vector<int> IntVector;
 
 class CGraphIO {
-public:
+ public:
   CGraphIO() {}
   virtual ~CGraphIO();
 
@@ -62,10 +60,10 @@ public:
   double GetAverageVertexDegree() { return m_d_AverageVertexDegree; }
   string GetInputFile() { return m_s_InputFile; }
 
-  vector<int> *GetVerticesPtr() { return &m_vi_Vertices; }
-  vector<int> *GetEdgesPtr() { return &m_vi_Edges; }
+  vector<int>* GetVerticesPtr() { return &m_vi_Vertices; }
+  vector<int>* GetEdgesPtr() { return &m_vi_Edges; }
 
-public:
+ public:
   int m_i_MaximumVertexDegree;
   int m_i_MinimumVertexDegree;
   double m_d_AverageVertexDegree;
@@ -77,5 +75,5 @@ public:
   vector<int> m_vi_Edges;
   vector<double> m_vd_Values;
 };
-} // namespace FMC
+}  // namespace FMC
 #endif

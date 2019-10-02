@@ -15,10 +15,10 @@ using namespace KimeraRPGO;
 TEST(Pcm, OdometryCheck) {
   // Here want to test carefully pcm
   // first test odometry check so set pcm thres high
-  OutlierRemoval *pcm = new Pcm3D(0.3, 100.0);
+  OutlierRemoval* pcm = new Pcm3D(0.3, 100.0);
   pcm->setQuiet();
 
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::NonlinearFactorGraph nfg;
@@ -40,7 +40,7 @@ TEST(Pcm, OdometryCheck) {
     R.row(1) << 1, 0, 0;
     R.row(2) << 0, 0, 1;
     gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(1, 0, 0));
-    static const gtsam::SharedNoiseModel &noiseOdom =
+    static const gtsam::SharedNoiseModel& noiseOdom =
         gtsam::noiseModel::Isotropic::Variance(6, 0.1);
     odom_val.insert(i + 1, odom);
     odom_factor.add(
@@ -56,7 +56,7 @@ TEST(Pcm, OdometryCheck) {
   gtsam::NonlinearFactorGraph lc_factor1;
   gtsam::Rot3 R_lc1 = gtsam::Rot3::Rz(1.51);
   gtsam::Pose3 lc1 = gtsam::Pose3(R_lc1, gtsam::Point3(0.8, 0, 0));
-  static const gtsam::SharedNoiseModel &noiseLc1 =
+  static const gtsam::SharedNoiseModel& noiseLc1 =
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);
   lc_factor1.add(gtsam::BetweenFactor<gtsam::Pose3>(3, 0, lc1, noiseLc1));
 
@@ -69,7 +69,7 @@ TEST(Pcm, OdometryCheck) {
   gtsam::NonlinearFactorGraph lc_factor2;
   gtsam::Rot3 R_lc2 = gtsam::Rot3::Rz(1.51);
   gtsam::Pose3 lc2 = gtsam::Pose3(R_lc2, gtsam::Point3(0.8, 0, 0));
-  static const gtsam::SharedNoiseModel &noiseLc2 =
+  static const gtsam::SharedNoiseModel& noiseLc2 =
       gtsam::noiseModel::Isotropic::Variance(6, 0.05);
   lc_factor2.add(gtsam::BetweenFactor<gtsam::Pose3>(3, 0, lc2, noiseLc2));
 
@@ -83,10 +83,10 @@ TEST(Pcm, OdometryCheck) {
 TEST(Pcm, ConsistencyCheck) {
   // Here want to test carefully pcm
   // test pcm check so set odom thres high
-  OutlierRemoval *pcm = new Pcm3D(100.0, 0.5);
+  OutlierRemoval* pcm = new Pcm3D(100.0, 0.5);
   // pcm->setQuiet();
 
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::NonlinearFactorGraph nfg;
@@ -108,7 +108,7 @@ TEST(Pcm, ConsistencyCheck) {
     R.row(1) << 1, 0, 0;
     R.row(2) << 0, 0, 1;
     gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(R), gtsam::Point3(1, 0, 0));
-    static const gtsam::SharedNoiseModel &noiseOdom =
+    static const gtsam::SharedNoiseModel& noiseOdom =
         gtsam::noiseModel::Isotropic::Variance(6, 0.1);
     odom_val.insert(i + 1, odom);
     odom_factor.add(
@@ -121,7 +121,7 @@ TEST(Pcm, ConsistencyCheck) {
     gtsam::Values odom_val;
     gtsam::NonlinearFactorGraph odom_factor;
     gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 0, 0));
-    static const gtsam::SharedNoiseModel &noiseOdom =
+    static const gtsam::SharedNoiseModel& noiseOdom =
         gtsam::noiseModel::Isotropic::Variance(6, 0.1);
     odom_val.insert(i + 1, odom);
     odom_factor.add(
@@ -137,7 +137,7 @@ TEST(Pcm, ConsistencyCheck) {
   gtsam::NonlinearFactorGraph lc_factor1;
   gtsam::Rot3 R_lc1 = gtsam::Rot3::Rz(3.1416);
   gtsam::Pose3 lc1 = gtsam::Pose3(R_lc1, gtsam::Point3(0, 0.9, 0));
-  static const gtsam::SharedNoiseModel &noiseLc =
+  static const gtsam::SharedNoiseModel& noiseLc =
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);
   lc_factor1.add(gtsam::BetweenFactor<gtsam::Pose3>(3, 0, lc1, noiseLc));
   pcm->removeOutliers(lc_factor1, gtsam::Values(), nfg, est);
@@ -181,12 +181,12 @@ TEST(Pcm, ConsistencyCheck) {
 
 /* ************************************************************************* */
 TEST(Pcm, OdometryCheck2D) {
-  // TODO
+  // TODO(Yun)
 }
 
 /* ************************************************************************* */
 TEST(Pcm, ConsistencyCheck2D) {
-  // TODO
+  // TODO(Yun)
 }
 
 /* ************************************************************************* */

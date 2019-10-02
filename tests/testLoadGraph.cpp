@@ -7,6 +7,8 @@
 #include <CppUnitLite/TestHarness.h>
 #include <memory>
 #include <random>
+#include <string>
+#include <vector>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/inference/Symbol.h>
@@ -36,7 +38,7 @@ TEST(RobustSolver, Load1) {
       KimeraRPGO::make_unique<RobustSolver>(params);
 
   // Create prior
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
@@ -70,13 +72,13 @@ TEST(RobustSolver, Add1) {
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
 
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init); // first load
+  pgo->loadGraph(*nfg, *values, init);  // first load
 
   // add graph
   // read g2o file for robot b
@@ -89,8 +91,8 @@ TEST(RobustSolver, Add1) {
   gtsam::Key init_key_b = gtsam::Symbol('b', 0);
   gtsam::Pose3 transform_ab = values->at<gtsam::Pose3>(init_key).between(
       values_b->at<gtsam::Pose3>(init_key_b));
-  gtsam::BetweenFactor<gtsam::Pose3> bridge(init_key, init_key_b, transform_ab,
-                                            noise);
+  gtsam::BetweenFactor<gtsam::Pose3> bridge(
+      init_key, init_key_b, transform_ab, noise);
 
   // add graph
   pgo->addGraph(*nfg_b, *values_b, bridge);
@@ -131,14 +133,14 @@ TEST(RobustSolver, Load2) {
   // set up KimeraRPGO solver
   RobustSolverParams params;
   params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET);
-  std::vector<char> special_symbs{'l', 'u'}; // for landmarks
+  std::vector<char> special_symbs{'l', 'u'};  // for landmarks
   params.specialSymbols = special_symbs;
 
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
 
   // Create prior
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
@@ -171,13 +173,13 @@ TEST(RobustSolver, Add2) {
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
 
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init); // first load
+  pgo->loadGraph(*nfg, *values, init);  // first load
 
   // add graph
   // read g2o file for robot b
@@ -190,8 +192,8 @@ TEST(RobustSolver, Add2) {
   gtsam::Key init_key_b = gtsam::Symbol('b', 0);
   gtsam::Pose3 transform_ab = values->at<gtsam::Pose3>(init_key).between(
       values_b->at<gtsam::Pose3>(init_key_b));
-  gtsam::BetweenFactor<gtsam::Pose3> bridge(init_key, init_key_b, transform_ab,
-                                            noise);
+  gtsam::BetweenFactor<gtsam::Pose3> bridge(
+      init_key, init_key_b, transform_ab, noise);
 
   // add graph
   pgo->addGraph(*nfg_b, *values_b, bridge);
@@ -268,7 +270,7 @@ TEST(RobustSolver, NoRejectLoad) {
       KimeraRPGO::make_unique<RobustSolver>(params);
 
   // Create prior
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
@@ -301,13 +303,13 @@ TEST(RobustSolver, NoRejectAdd) {
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
 
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init); // first load
+  pgo->loadGraph(*nfg, *values, init);  // first load
 
   // add graph
   // read g2o file for robot b
@@ -320,8 +322,8 @@ TEST(RobustSolver, NoRejectAdd) {
   gtsam::Key init_key_b = gtsam::Symbol('b', 0);
   gtsam::Pose3 transform_ab = values->at<gtsam::Pose3>(init_key).between(
       values_b->at<gtsam::Pose3>(init_key_b));
-  gtsam::BetweenFactor<gtsam::Pose3> bridge(init_key, init_key_b, transform_ab,
-                                            noise);
+  gtsam::BetweenFactor<gtsam::Pose3> bridge(
+      init_key, init_key_b, transform_ab, noise);
 
   // add graph
   pgo->addGraph(*nfg_b, *values_b, bridge);
@@ -369,7 +371,7 @@ TEST(RobustSolver, Load1PcmSimple) {
       KimeraRPGO::make_unique<RobustSolver>(params);
 
   // Create prior
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
@@ -403,13 +405,13 @@ TEST(RobustSolver, Add1PcmSimple) {
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
 
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init); // first load
+  pgo->loadGraph(*nfg, *values, init);  // first load
 
   // add graph
   // read g2o file for robot b
@@ -422,8 +424,8 @@ TEST(RobustSolver, Add1PcmSimple) {
   gtsam::Key init_key_b = gtsam::Symbol('b', 0);
   gtsam::Pose3 transform_ab = values->at<gtsam::Pose3>(init_key).between(
       values_b->at<gtsam::Pose3>(init_key_b));
-  gtsam::BetweenFactor<gtsam::Pose3> bridge(init_key, init_key_b, transform_ab,
-                                            noise);
+  gtsam::BetweenFactor<gtsam::Pose3> bridge(
+      init_key, init_key_b, transform_ab, noise);
 
   // add graph
   pgo->addGraph(*nfg_b, *values_b, bridge);
@@ -472,7 +474,7 @@ TEST(RobustSolver, Load2PcmSimple) {
       KimeraRPGO::make_unique<RobustSolver>(params);
 
   // Create prior
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
@@ -505,13 +507,13 @@ TEST(RobustSolver, Add2PcmSimple) {
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
 
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init); // first load
+  pgo->loadGraph(*nfg, *values, init);  // first load
 
   // add graph
   // read g2o file for robot b
@@ -524,8 +526,8 @@ TEST(RobustSolver, Add2PcmSimple) {
   gtsam::Key init_key_b = gtsam::Symbol('b', 0);
   gtsam::Pose3 transform_ab = values->at<gtsam::Pose3>(init_key).between(
       values_b->at<gtsam::Pose3>(init_key_b));
-  gtsam::BetweenFactor<gtsam::Pose3> bridge(init_key, init_key_b, transform_ab,
-                                            noise);
+  gtsam::BetweenFactor<gtsam::Pose3> bridge(
+      init_key, init_key_b, transform_ab, noise);
 
   // add graph
   pgo->addGraph(*nfg_b, *values_b, bridge);

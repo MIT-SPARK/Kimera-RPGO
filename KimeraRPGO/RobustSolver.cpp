@@ -5,6 +5,8 @@ author: Yun Chang, Luca Carlone
 
 #include "KimeraRPGO/RobustSolver.h"
 
+#include <vector>
+
 #include <gtsam/nonlinear/DoglegOptimizer.h>
 #include <gtsam/nonlinear/GaussNewtonOptimizer.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
@@ -15,55 +17,59 @@ author: Yun Chang, Luca Carlone
 
 namespace KimeraRPGO {
 
-RobustSolver::RobustSolver(const RobustSolverParams &params)
+RobustSolver::RobustSolver(const RobustSolverParams& params)
     : GenericSolver(params.solver, params.specialSymbols) {
   switch (params.outlierRemovalMethod) {
-  case OutlierRemovalMethod::NONE: {
-    outlier_removal_ = nullptr; // only returns optimize true or optimize false
-  } break;
-  case OutlierRemovalMethod::PCM2D: {
-    outlier_removal_ = KimeraRPGO::make_unique<Pcm2D>(params.pcm_odomThreshold,
-                                                      params.pcm_lcThreshold,
-                                                      params.specialSymbols);
-  } break;
-  case OutlierRemovalMethod::PCM3D: {
-    outlier_removal_ = KimeraRPGO::make_unique<Pcm3D>(params.pcm_odomThreshold,
-                                                      params.pcm_lcThreshold,
-                                                      params.specialSymbols);
-  } break;
-  case OutlierRemovalMethod::PCM_Simple2D: {
-    outlier_removal_ = KimeraRPGO::make_unique<PcmSimple2D>(
-        params.pcmDist_transThreshold, params.pcmDist_rotThreshold,
-        params.specialSymbols);
-  } break;
-  case OutlierRemovalMethod::PCM_Simple3D: {
-    outlier_removal_ = KimeraRPGO::make_unique<PcmSimple3D>(
-        params.pcmDist_transThreshold, params.pcmDist_rotThreshold,
-        params.specialSymbols);
-  } break;
-  default: {
-    log<WARNING>("Undefined outlier removal method");
-    exit(EXIT_FAILURE);
-  }
+    case OutlierRemovalMethod::NONE: {
+      outlier_removal_ =
+          nullptr;  // only returns optimize true or optimize false
+    } break;
+    case OutlierRemovalMethod::PCM2D: {
+      outlier_removal_ =
+          KimeraRPGO::make_unique<Pcm2D>(params.pcm_odomThreshold,
+                                         params.pcm_lcThreshold,
+                                         params.specialSymbols);
+    } break;
+    case OutlierRemovalMethod::PCM3D: {
+      outlier_removal_ =
+          KimeraRPGO::make_unique<Pcm3D>(params.pcm_odomThreshold,
+                                         params.pcm_lcThreshold,
+                                         params.specialSymbols);
+    } break;
+    case OutlierRemovalMethod::PCM_Simple2D: {
+      outlier_removal_ =
+          KimeraRPGO::make_unique<PcmSimple2D>(params.pcmDist_transThreshold,
+                                               params.pcmDist_rotThreshold,
+                                               params.specialSymbols);
+    } break;
+    case OutlierRemovalMethod::PCM_Simple3D: {
+      outlier_removal_ =
+          KimeraRPGO::make_unique<PcmSimple3D>(params.pcmDist_transThreshold,
+                                               params.pcmDist_rotThreshold,
+                                               params.specialSymbols);
+    } break;
+    default: {
+      log<WARNING>("Undefined outlier removal method");
+      exit(EXIT_FAILURE);
+    }
   }
 
   // toggle verbosity
   switch (params.verbosity) {
-  case Verbosity::UPDATE: {
-    if (outlier_removal_)
-      outlier_removal_->setQuiet();
-  } break;
-  case Verbosity::QUIET: {
-    if (outlier_removal_)
-      outlier_removal_->setQuiet(); // set outlier removal quiet
-    setQuiet();                     // set solver quiet
-  } break;
-  case Verbosity::VERBOSE: {
-    log<INFO>("Starting RobustSolver.");
-  } break;
-  default: {
-    log<WARNING>("Unrecognized verbosity. Automatically setting to UPDATE. ");
-  }
+    case Verbosity::UPDATE: {
+      if (outlier_removal_) outlier_removal_->setQuiet();
+    } break;
+    case Verbosity::QUIET: {
+      if (outlier_removal_)
+        outlier_removal_->setQuiet();  // set outlier removal quiet
+      setQuiet();                      // set solver quiet
+    } break;
+    case Verbosity::VERBOSE: {
+      log<INFO>("Starting RobustSolver.");
+    } break;
+    default: {
+      log<WARNING>("Unrecognized verbosity. Automatically setting to UPDATE. ");
+    }
   }
 }
 
@@ -90,15 +96,14 @@ void RobustSolver::optimize() {
   }
 }
 
-void RobustSolver::update(const gtsam::NonlinearFactorGraph &nfg,
-                          const gtsam::Values &values) {
-
+void RobustSolver::update(const gtsam::NonlinearFactorGraph& nfg,
+                          const gtsam::Values& values) {
   // loop closures/outlier rejection
   bool process_lc;
   if (outlier_removal_) {
     process_lc = outlier_removal_->removeOutliers(nfg, values, nfg_, values_);
   } else {
-    process_lc = addAndCheckIfOptimize(nfg, values); // use default process
+    process_lc = addAndCheckIfOptimize(nfg, values);  // use default process
   }
 
   // optimize
@@ -107,9 +112,8 @@ void RobustSolver::update(const gtsam::NonlinearFactorGraph &nfg,
   }
 }
 
-void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph &nfg,
-                               const gtsam::Values &values) {
-
+void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,
+                               const gtsam::Values& values) {
   if (outlier_removal_) {
     outlier_removal_->removeOutliers(nfg, values, nfg_, values_);
   } else {
@@ -119,8 +123,8 @@ void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph &nfg,
   optimize();
 }
 
-void RobustSolver::addOdometry(const gtsam::NonlinearFactorGraph &odom_factor,
-                               const gtsam::Values &odom_values) {
+void RobustSolver::addOdometry(const gtsam::NonlinearFactorGraph& odom_factor,
+                               const gtsam::Values& odom_values) {
   if (odom_factor.size() != 1 || odom_values.size() > 1) {
     log<WARNING>(
         "RobustSolver::addOdometry expects single factor and single value.");
@@ -132,12 +136,11 @@ void RobustSolver::addOdometry(const gtsam::NonlinearFactorGraph &odom_factor,
   }
 }
 
-void RobustSolver::updateBatch(const gtsam::NonlinearFactorGraph &factors,
-                               const gtsam::Values &values,
-                               const gtsam::Key &key0) {
-
+void RobustSolver::updateBatch(const gtsam::NonlinearFactorGraph& factors,
+                               const gtsam::Values& values,
+                               const gtsam::Key& key0) {
   // load graph assumes that the previous graph has been cleared
-  gtsam::Key current_key = key0; // initial key
+  gtsam::Key current_key = key0;  // initial key
   // note that as of now only deal with between factors)
   // first load the odometry
   // order a nonlinear factor graph as odometry first
@@ -161,12 +164,11 @@ void RobustSolver::updateBatch(const gtsam::NonlinearFactorGraph &factors,
         addOdometry(new_factors, new_values);
 
         current_key = current_key + 1;
-        update_factors[i].reset(); // delete factor from graph
+        update_factors[i].reset();  // delete factor from graph
         break;
       }
     }
-    if (end_of_odom)
-      extracted_odom = true;
+    if (end_of_odom) extracted_odom = true;
   }
 
   // now search for the special symbols (i.e. artifacts)
@@ -188,8 +190,8 @@ void RobustSolver::updateBatch(const gtsam::NonlinearFactorGraph &factors,
           // This is essentially addOdometry, but let's not call it that here?
           // Since what's happening in outlier_removal_ is different
           if (outlier_removal_) {
-            outlier_removal_->removeOutliers(new_factors, new_values, nfg_,
-                                             values_);
+            outlier_removal_->removeOutliers(
+                new_factors, new_values, nfg_, values_);
           } else {
             addAndCheckIfOptimize(new_factors, new_values);
           }
@@ -213,13 +215,13 @@ void RobustSolver::updateBatch(const gtsam::NonlinearFactorGraph &factors,
   }
 
   if (outlier_removal_) {
-    outlier_removal_->removeOutliers(new_factors, gtsam::Values(), nfg_,
-                                     values_);
+    outlier_removal_->removeOutliers(
+        new_factors, gtsam::Values(), nfg_, values_);
   } else {
     addAndCheckIfOptimize(new_factors, gtsam::Values());
   }
 
-  optimize(); // optimize once after loading
+  optimize();  // optimize once after loading
 }
 
 void RobustSolver::saveData(std::string folder_path) const {
@@ -230,4 +232,4 @@ void RobustSolver::saveData(std::string folder_path) const {
   }
 }
 
-} // namespace KimeraRPGO
+}  // namespace KimeraRPGO

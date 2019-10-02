@@ -6,19 +6,21 @@
 
 #include <CppUnitLite/TestHarness.h>
 #include <random>
+#include <vector>
 
-#include "KimeraRPGO/outlier/pcm.h"
 #include <gtsam/sam/RangeFactor.h>
+#include "KimeraRPGO/outlier/pcm.h"
 
-using namespace KimeraRPGO;
+using KimeraRPGO::OutlierRemoval;
+using KimeraRPGO::Pcm3D;
 
 /* ************************************************************************* */
 TEST(PcmDoOptimize, Odometry) {
   // test that when opdemtry edge is received added but return false
-  OutlierRemoval *pcm = new Pcm3D(1.0, 1.0);
+  OutlierRemoval* pcm = new Pcm3D(1.0, 1.0);
   pcm->setQuiet();
 
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::NonlinearFactorGraph nfg;
@@ -48,10 +50,10 @@ TEST(PcmDoOptimize, Odometry) {
 
 TEST(PcmDoOptimize, OdometryNoPrior) {
   // test that when opdemtry edge is received added but return false
-  OutlierRemoval *pcm = new Pcm3D(1.0, 1.0);
+  OutlierRemoval* pcm = new Pcm3D(1.0, 1.0);
   pcm->setQuiet();
 
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::NonlinearFactorGraph nfg;
@@ -79,10 +81,10 @@ TEST(PcmDoOptimize, OdometryNoPrior) {
 /* ************************************************************************* */
 TEST(PcmDoOptimize, LoopClosure) {
   // test that when loop closure edge is received added and return true
-  OutlierRemoval *pcm = new Pcm3D(1.0, 1.0);
+  OutlierRemoval* pcm = new Pcm3D(1.0, 1.0);
   pcm->setQuiet();
 
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::NonlinearFactorGraph nfg;
@@ -103,7 +105,7 @@ TEST(PcmDoOptimize, LoopClosure) {
 
   // and aother odom
   vals = gtsam::Values();
-  factors = gtsam::NonlinearFactorGraph(); // reset
+  factors = gtsam::NonlinearFactorGraph();  // reset
   gtsam::Pose3 odom2 = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(-1, 0, 0));
   vals.insert(2, odom.compose(odom2));
   factors.add(gtsam::BetweenFactor<gtsam::Pose3>(1, 2, odom2, noise));
@@ -113,7 +115,7 @@ TEST(PcmDoOptimize, LoopClosure) {
   EXPECT(est.size() == size_t(3));
 
   // loop closure
-  factors = gtsam::NonlinearFactorGraph(); // reset
+  factors = gtsam::NonlinearFactorGraph();  // reset
   factors.add(gtsam::BetweenFactor<gtsam::Pose3>(2, 0, gtsam::Pose3(), noise));
   bool do_optimize = pcm->removeOutliers(factors, gtsam::Values(), nfg, est);
 
@@ -128,11 +130,11 @@ TEST(PcmDoOptimize, landmarks) {
   // test optimize condition for landmarks
   // first observation: do_optimize = false
   // repeated observatio: do_optimize = true
-  std::vector<char> special_symbs{'l', 'u'}; // for landmarks
-  OutlierRemoval *pcm = new Pcm3D(10.0, 10.0, special_symbs);
+  std::vector<char> special_symbs{'l', 'u'};  // for landmarks
+  OutlierRemoval* pcm = new Pcm3D(10.0, 10.0, special_symbs);
   pcm->setQuiet();
 
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::NonlinearFactorGraph nfg;
@@ -158,7 +160,7 @@ TEST(PcmDoOptimize, landmarks) {
   EXPECT(do_optimize == false);
 
   // add odometry
-  vals = gtsam::Values(); // reset
+  vals = gtsam::Values();  // reset
   factors = gtsam::NonlinearFactorGraph();
   gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 0, 0));
   vals.insert(1, odom);
@@ -170,7 +172,7 @@ TEST(PcmDoOptimize, landmarks) {
   EXPECT(do_optimize == false);
 
   // add landmark recurrence
-  vals = gtsam::Values(); // reset
+  vals = gtsam::Values();  // reset
   factors = gtsam::NonlinearFactorGraph();
   gtsam::Pose3 meas2 = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, 1, 0));
   factors.add(
@@ -187,11 +189,11 @@ TEST(PcmDoOptimize, Beacon) {
   // test optimize condition for Beacon
   // first observation: do_optimize = false
   // repeated observatio: do_optimize = true
-  std::vector<char> special_symbs{'l', 'u'}; // for landmarks
-  OutlierRemoval *pcm = new Pcm3D(1.0, 1.0, special_symbs);
+  std::vector<char> special_symbs{'l', 'u'};  // for landmarks
+  OutlierRemoval* pcm = new Pcm3D(1.0, 1.0, special_symbs);
   pcm->setQuiet();
 
-  static const gtsam::SharedNoiseModel &noise =
+  static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::NonlinearFactorGraph nfg;
@@ -217,18 +219,18 @@ TEST(PcmDoOptimize, Beacon) {
   gtsam::Vector6 prior_precisions;
   prior_precisions.head<3>().setConstant(10.0);
   prior_precisions.tail<3>().setConstant(0.0);
-  static const gtsam::SharedNoiseModel &prior_noise =
+  static const gtsam::SharedNoiseModel& prior_noise =
       gtsam::noiseModel::Diagonal::Precisions(prior_precisions);
-  factors.add(gtsam::PriorFactor<gtsam::Pose3>(Beacon_key, gtsam::Pose3(),
-                                               prior_noise));
+  factors.add(gtsam::PriorFactor<gtsam::Pose3>(
+      Beacon_key, gtsam::Pose3(), prior_noise));
 
   double meas1 = 1.4;
-  static const gtsam::SharedNoiseModel &rnoise =
+  static const gtsam::SharedNoiseModel& rnoise =
       gtsam::noiseModel::Isotropic::Variance(1, 0.01);
 
   vals.insert(Beacon_key, meas1);
-  factors.add(gtsam::RangeFactor<gtsam::Pose3, gtsam::Pose3>(0, Beacon_key,
-                                                             meas1, rnoise));
+  factors.add(gtsam::RangeFactor<gtsam::Pose3, gtsam::Pose3>(
+      0, Beacon_key, meas1, rnoise));
 
   do_optimize = pcm->removeOutliers(factors, vals, nfg, est);
 
@@ -237,7 +239,7 @@ TEST(PcmDoOptimize, Beacon) {
   EXPECT(do_optimize == true);
 
   // add odometry
-  vals = gtsam::Values(); // reset
+  vals = gtsam::Values();  // reset
   factors = gtsam::NonlinearFactorGraph();
   gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 0, 0));
   vals.insert(1, odom);
@@ -249,11 +251,11 @@ TEST(PcmDoOptimize, Beacon) {
   EXPECT(do_optimize == false);
 
   // add Beacon recurrence
-  vals = gtsam::Values(); // reset
+  vals = gtsam::Values();  // reset
   factors = gtsam::NonlinearFactorGraph();
   double meas2 = 1;
-  factors.add(gtsam::RangeFactor<gtsam::Pose3, gtsam::Pose3>(1, Beacon_key,
-                                                             meas2, rnoise));
+  factors.add(gtsam::RangeFactor<gtsam::Pose3, gtsam::Pose3>(
+      1, Beacon_key, meas2, rnoise));
   do_optimize = pcm->removeOutliers(factors, vals, nfg, est);
 
   // EXPECT(nfg.size()==size_t(4));

@@ -26,20 +26,20 @@
 #include "findClique.h"
 
 namespace FMC {
-bool fexists(const char *filename) {
+bool fexists(const char* filename) {
   ifstream ifile(filename);
   return ifile.is_open();
 }
 
-double wtime() // returns wall time in seconds
+double wtime()  // returns wall time in seconds
 {
   timeval tv;
   gettimeofday(&tv, NULL);
   return (double)tv.tv_sec + (double)tv.tv_usec / 1000000;
 }
 
-void usage(char *argv0) {
-  const char *params =
+void usage(char* argv0) {
+  const char* params =
       "Usage: %s [options...] inputfile\n"
       "OPTIONS:\n"
       "\t-t algorithm type\t: 0 for exact, 1 for heuristic(default)\n"
@@ -50,7 +50,7 @@ void usage(char *argv0) {
   exit(-1);
 }
 
-int getDegree(vector<int> *ptrVtx, int idx) {
+int getDegree(vector<int>* ptrVtx, int idx) {
   return ((*ptrVtx)[idx + 1] - (*ptrVtx)[idx]);
 }
-} // namespace FMC
+}  // namespace FMC

@@ -1,7 +1,7 @@
-// Authors: Pierre-Yves Lajoie, Yun Chang
+// Authors: Yun Chang
 
-#ifndef GEOM_UTILS_TYPES_H
-#define GEOM_UTILS_TYPES_H
+#ifndef KIMERARPGO_UTILS_GEOMETRY_UTILS_H_
+#define KIMERARPGO_UTILS_GEOMETRY_UTILS_H_
 
 // enables correct operations of GTSAM (correct Jacobians)
 #define SLOW_BUT_CORRECT_BETWEENFACTOR
@@ -24,21 +24,24 @@ namespace KimeraRPGO {
 
 /** \getting the dimensions of various Lie types
  *   \simple helper functions */
-template <class T> static const size_t getRotationDim() {
+template <class T>
+static const size_t getRotationDim() {
   // get rotation dimension of some gtsam object
   BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<T>));
   T sample_object;
   return sample_object.rotation().dimension;
 }
 
-template <class T> static const size_t getTranslationDim() {
+template <class T>
+static const size_t getTranslationDim() {
   // get translation dimension of some gtsam object
   BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<T>));
   T sample_object;
   return sample_object.translation().dimension;
 }
 
-template <class T> static const size_t getDim() {
+template <class T>
+static const size_t getDim() {
   // get overall dimension of some gtsam object
   BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<T>));
   T sample_object;
@@ -49,10 +52,11 @@ template <class T> static const size_t getDim() {
  *  \brief Structure to store a pose and its covariance data
  *  \currently supports gtsam::Pose2 and gtsam::Pose3
  */
-template <class T> struct PoseWithCovariance {
+template <class T>
+struct PoseWithCovariance {
   /* variables ------------------------------------------------ */
   /* ---------------------------------------------------------- */
-  T pose; // ex. gtsam::Pose3
+  T pose;  // ex. gtsam::Pose3
   gtsam::Matrix covariance_matrix;
   bool rotation_info = true;
 
@@ -60,7 +64,8 @@ template <class T> struct PoseWithCovariance {
   PoseWithCovariance() {
     pose = T();
     const size_t dim = getDim<T>();
-    gtsam::Matrix covar = Eigen::MatrixXd::Zero(dim, dim); // initialize as zero
+    gtsam::Matrix covar =
+        Eigen::MatrixXd::Zero(dim, dim);  // initialize as zero
     covariance_matrix = covar;
   }
 
@@ -71,17 +76,18 @@ template <class T> struct PoseWithCovariance {
   }
 
   /* construct from gtsam prior factor ------------------------ */
-  PoseWithCovariance(const gtsam::PriorFactor<T> &prior_factor) {
+  explicit PoseWithCovariance(const gtsam::PriorFactor<T>& prior_factor) {
     T value = prior_factor.prior();
     const size_t dim = getDim<T>();
-    gtsam::Matrix covar = Eigen::MatrixXd::Zero(dim, dim); // initialize as zero
+    gtsam::Matrix covar =
+        Eigen::MatrixXd::Zero(dim, dim);  // initialize as zero
 
     pose = value;
     covariance_matrix = covar;
   }
 
   /* construct from gtsam between factor  --------------------- */
-  PoseWithCovariance(const gtsam::BetweenFactor<T> &between_factor) {
+  explicit PoseWithCovariance(const gtsam::BetweenFactor<T>& between_factor) {
     pose = between_factor.measured();
     gtsam::Matrix covar =
         boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>(
@@ -97,7 +103,7 @@ template <class T> struct PoseWithCovariance {
       rotation_info = false;
       // only keep translation part
       Eigen::MatrixXd temp = Eigen::MatrixXd::Zero(
-          dim, dim); // TODO: I wonder if this can cause issues: ...
+          dim, dim);  // TODO(Yun): I wonder if this can cause issues: ...
       // ... later you invert this matrix, which now contains a bunch of zero
       // (it is not full rank)
       temp.block(r_dim, r_dim, t_dim, t_dim) =
@@ -109,7 +115,7 @@ template <class T> struct PoseWithCovariance {
 
   /* method to combine two poses (along with their covariances) */
   /* ---------------------------------------------------------- */
-  PoseWithCovariance compose(const PoseWithCovariance &other) const {
+  PoseWithCovariance compose(const PoseWithCovariance& other) const {
     PoseWithCovariance<T> out;
     gtsam::Matrix Ha, Hb;
 
@@ -117,8 +123,7 @@ template <class T> struct PoseWithCovariance {
     out.covariance_matrix = Ha * covariance_matrix * Ha.transpose() +
                             Hb * other.covariance_matrix * Hb.transpose();
 
-    if (!rotation_info || !other.rotation_info)
-      out.rotation_info = false;
+    if (!rotation_info || !other.rotation_info) out.rotation_info = false;
     return out;
   }
 
@@ -128,18 +133,16 @@ template <class T> struct PoseWithCovariance {
     PoseWithCovariance<T> out;
     out.pose = pose.inverse();
     out.covariance_matrix = covariance_matrix;
-    if (!rotation_info)
-      out.rotation_info = false;
+    if (!rotation_info) out.rotation_info = false;
     return out;
   }
 
   /* method to find the transform between two poses ------------ */
   /* ----------------------------------------------------------- */
-  PoseWithCovariance between(const PoseWithCovariance &other) const {
-
+  PoseWithCovariance between(const PoseWithCovariance& other) const {
     PoseWithCovariance<T> out;
     gtsam::Matrix Ha, Hb;
-    out.pose = pose.between(other.pose, Ha, Hb); // returns between in a frame
+    out.pose = pose.between(other.pose, Ha, Hb);  // returns between in a frame
 
     out.covariance_matrix =
         other.covariance_matrix - Ha * covariance_matrix * Ha.transpose();
@@ -151,7 +154,7 @@ template <class T> struct PoseWithCovariance {
     }
 
     if (!pos_semi_def) {
-      other.pose.between(pose, Ha, Hb); // returns between in a frame
+      other.pose.between(pose, Ha, Hb);  // returns between in a frame
       out.covariance_matrix =
           covariance_matrix - Ha * other.covariance_matrix * Ha.transpose();
 
@@ -161,8 +164,7 @@ template <class T> struct PoseWithCovariance {
       //   log<WARNING>("Warning: Covariance matrix between two poses not PSD");
       // }
     }
-    if (!rotation_info || !other.rotation_info)
-      out.rotation_info = false;
+    if (!rotation_info || !other.rotation_info) out.rotation_info = false;
     return out;
   }
 
@@ -187,12 +189,13 @@ template <class T> struct PoseWithCovariance {
  *  \brief Structure to store a pose and its distance (number of nodes) from
  * start \currently supports gtsam::Pose2 and gtsam::Pose3
  */
-template <class T> struct PoseWithNode {
+template <class T>
+struct PoseWithNode {
   /* variables ------------------------------------------------ */
   /* ---------------------------------------------------------- */
-  T pose;                    // ex. gtsam::Pose3
-  int node;                  // node away from prior
-  bool rotation_info = true; // to deal with no rotation info case
+  T pose;                     // ex. gtsam::Pose3
+  int node;                   // node away from prior
+  bool rotation_info = true;  // to deal with no rotation info case
 
   /* default constructor -------------------------------------- */
   PoseWithNode() {
@@ -207,14 +210,14 @@ template <class T> struct PoseWithNode {
   }
 
   /* construct from gtsam prior factor ------------------------ */
-  PoseWithNode(const gtsam::PriorFactor<T> &prior_factor) {
+  explicit PoseWithNode(const gtsam::PriorFactor<T>& prior_factor) {
     T value = prior_factor.prior();
     pose = value;
     node = 0;
   }
 
   /* construct from gtsam between factor  --------------------- */
-  PoseWithNode(const gtsam::BetweenFactor<T> &between_factor) {
+  explicit PoseWithNode(const gtsam::BetweenFactor<T>& between_factor) {
     pose = between_factor.measured();
     gtsam::Matrix covar =
         boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>(
@@ -234,14 +237,13 @@ template <class T> struct PoseWithNode {
 
   /* method to combine two poses (along with their node numbers) */
   /* ---------------------------------------------------------- */
-  PoseWithNode compose(const PoseWithNode &other) const {
+  PoseWithNode compose(const PoseWithNode& other) const {
     PoseWithNode<T> out;
 
     out.pose = pose.compose(other.pose);
     out.node = node + other.node;
 
-    if (!rotation_info || !other.rotation_info)
-      out.rotation_info = false;
+    if (!rotation_info || !other.rotation_info) out.rotation_info = false;
     return out;
   }
 
@@ -253,21 +255,19 @@ template <class T> struct PoseWithNode {
     out.pose = pose.inverse();
     out.node = node;
 
-    if (!rotation_info)
-      out.rotation_info = false;
+    if (!rotation_info) out.rotation_info = false;
     return out;
   }
 
   /* method to find the transform between two poses ------------ */
   /* ----------------------------------------------------------- */
-  PoseWithNode between(const PoseWithNode &other) const {
+  PoseWithNode between(const PoseWithNode& other) const {
     PoseWithNode<T> out;
-    out.pose = pose.between(other.pose); // returns between in a frame
+    out.pose = pose.between(other.pose);  // returns between in a frame
 
     out.node = abs(other.node - node);
 
-    if (!rotation_info || !other.rotation_info)
-      out.rotation_info = false;
+    if (!rotation_info || !other.rotation_info) out.rotation_info = false;
     return out;
   }
 
@@ -280,14 +280,13 @@ template <class T> struct PoseWithNode {
 
   double avg_rot_norm() const {
     // calculate mahalanobis norm
-    if (!rotation_info)
-      return 0;
+    if (!rotation_info) return 0;
     gtsam::Vector log = T::Logmap(pose);
     const int r_dim = getRotationDim<T>();
     return std::sqrt(log.head(r_dim).transpose() * log.head(r_dim)) / node;
   }
 };
 
-} // namespace KimeraRPGO
+}  // namespace KimeraRPGO
 
-#endif
+#endif  // KIMERARPGO_UTILS_GEOMETRY_UTILS_H_

@@ -23,7 +23,11 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * */
 
-#include "graphIO.h"
+#include "KimeraRPGO/max_clique_finder/graphIO.h"
+
+#include <map>
+#include <string>
+#include <vector>
 
 namespace FMC {
 CGraphIO::~CGraphIO() {
@@ -67,7 +71,7 @@ bool CGraphIO::ReadMatrixMarketAdjacencyGraph(string s_InputFile,
   char crd[LINE_LENGTH];
   char data_type[LINE_LENGTH];
   char storage_scheme[LINE_LENGTH];
-  char *p;
+  char* p;
   bool b_getValue = true;
   int num_upper_triangular = 0;
 
@@ -75,7 +79,12 @@ bool CGraphIO::ReadMatrixMarketAdjacencyGraph(string s_InputFile,
   getline(in, line);
   strcpy(data, line.c_str());
 
-  if (sscanf(data, "%s %s %s %s %s", banner, mtx, crd, data_type,
+  if (sscanf(data,
+             "%s %s %s %s %s",
+             banner,
+             mtx,
+             crd,
+             data_type,
              storage_scheme) != 5) {
     cout << "Matrix file banner is missing!!!" << endl;
     return false;
@@ -85,11 +94,10 @@ bool CGraphIO::ReadMatrixMarketAdjacencyGraph(string s_InputFile,
   for (p = data_type; *p != '\0'; *p = tolower(*p), p++)
     ;
 
-  if (strcmp(data_type, "pattern") == 0)
-    b_getValue = false;
+  if (strcmp(data_type, "pattern") == 0) b_getValue = false;
 
   getline(in, line);
-  while (line.size() > 0 && line[0] == '%') // ignore comment line
+  while (line.size() > 0 && line[0] == '%')  // ignore comment line
     getline(in, line);
 
   in2.str(line);
@@ -104,8 +112,8 @@ bool CGraphIO::ReadMatrixMarketAdjacencyGraph(string s_InputFile,
 
   while (!in.eof() &&
          entry_counter <
-             num_of_entries) // there should be (num_of_entries+1) lines in the
-                             // input file (excluding the comments)
+             num_of_entries)  // there should be (num_of_entries+1) lines in the
+                              // input file (excluding the comments)
   {
     getline(in, line);
     entry_counter++;
@@ -171,8 +179,8 @@ bool CGraphIO::ReadMatrixMarketAdjacencyGraph(string s_InputFile,
 
   if (b_getValue) {
     for (int i = 0; i < row; i++) {
-      m_vd_Values.insert(m_vd_Values.end(), valueList[i].begin(),
-                         valueList[i].end());
+      m_vd_Values.insert(
+          m_vd_Values.end(), valueList[i].begin(), valueList[i].end());
     }
   }
 
@@ -193,7 +201,6 @@ bool CGraphIO::ReadEigenAdjacencyMatrix(Eigen::MatrixXd adjMatrix) {
 
   for (size_t j = 0; j < col; j++) {
     for (size_t i = j; i < row; i++) {
-
       if (i == j || adjMatrix(i, j) == 0) {
         continue;
       }
@@ -285,4 +292,4 @@ string CGraphIO::getFileExtension(string fileName) {
 
   return fileExtension;
 }
-} // namespace FMC
+}  // namespace FMC

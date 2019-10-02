@@ -5,8 +5,8 @@ along with interface to KimeraRPGO
 author: Yun Chang
 */
 
-#ifndef OUTLIERREMOVAL_H
-#define OUTLIERREMOVAL_H
+#ifndef KIMERARPGO_OUTLIER_OUTLIERREMOVAL_H_
+#define KIMERARPGO_OUTLIER_OUTLIERREMOVAL_H_
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/Values.h>
@@ -15,7 +15,7 @@ author: Yun Chang
 namespace KimeraRPGO {
 
 class OutlierRemoval {
-public:
+ public:
   OutlierRemoval() = default;
   virtual ~OutlierRemoval() = default;
 
@@ -31,10 +31,10 @@ public:
    *removal
    *  - returns: boolean of if optimization should be called or not
    */
-  virtual bool removeOutliers(const gtsam::NonlinearFactorGraph &new_factors,
-                              const gtsam::Values &new_values,
-                              gtsam::NonlinearFactorGraph &nfg,
-                              gtsam::Values &values) = 0;
+  virtual bool removeOutliers(const gtsam::NonlinearFactorGraph& new_factors,
+                              const gtsam::Values& new_values,
+                              gtsam::NonlinearFactorGraph& nfg,
+                              gtsam::Values& values) = 0;
 
   /*! \brief Save any data in the outlier removal process
    *  - folder_path: path to directory to save results in
@@ -45,9 +45,9 @@ public:
    */
   void setQuiet() { debug_ = false; }
 
-protected:
+ protected:
   bool debug_ = true;
 };
 
-} // namespace KimeraRPGO
-#endif
+}  // namespace KimeraRPGO
+#endif  // KIMERARPGO_OUTLIER_OUTLIERREMOVAL_H_

@@ -83,3 +83,18 @@ configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/KimeraRPGOConfig.c
 
 export(TARGETS KimeraRPGO FILE KimeraRPGOTargets.cmake)
 export(PACKAGE KimeraRPGO)
+
+include(GNUInstallDirs)
+install(TARGETS KimeraRPGO
+    EXPORT kimera-rpgo-export
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(EXPORT kimera-rpgo-export
+  FILE
+    KimeraRPGOTargets.cmake
+    #NAMESPACE
+    #NAKimeraRPGO::
+  DESTINATION
+    ${CMAKE_INSTALL_LIBDIR}/cmake/KimeraRPGO
+)

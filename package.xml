@@ -8,6 +8,9 @@
   <license>BSD</license>
 
   <buildtool_depend>cmake</buildtool_depend>
+
+  <build_depend>gtsam</build_depend>
+
   <export>
     <!-- Specify that this is not really a catkin package-->
     <build_type>cmake</build_type>

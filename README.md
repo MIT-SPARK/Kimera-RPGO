@@ -2,6 +2,24 @@ Kimera-RPGO
 ======================================
 This is a repository for robust backend optimization. It is still a work in progress. Many features are still under developing and changing on a daily basis.
 
+## Publications
+
+We kindly ask to cite our paper if you find this library useful:
+
+ - A. Rosinol, M. Abate, Y. Chang, L. Carlone. [**Kimera: an Open-Source Library for Real-Time Metric-Semantic Localization and Mapping**](https://arxiv.org/abs/1910.02490). arXiv preprint [arXiv:1910.02490](https://arxiv.org/abs/1910.02490).
+ ```
+ @misc{Rosinol19arxiv-Kimera,
+   title = {Kimera: an Open-Source Library for Real-Time Metric-Semantic Localization and Mapping},
+   author = {Rosinol, Antoni and Abate, Marcus and Chang, Yun and Carlone, Luca},
+   year = {2019},
+   eprint = {1910.02490},
+   archiveprefix = {arXiv},
+   primaryclass = {cs.RO},
+   url = {https://github.com/MIT-SPARK/Kimera},
+   pdf = {https://arxiv.org/pdf/1910.02490.pdf}
+ }
+```
+
 ## Dependencies
 
 *[GTSAM](https://github.com/borglab/gtsam)*

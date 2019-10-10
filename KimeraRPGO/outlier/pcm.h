@@ -123,33 +123,29 @@ class Pcm : public OutlierRemoval {
     // that are not handled: the rangefactors for example (uwb)
 
     // ==============================================================================
-    // initialize trajectory for PCM if empty: requires either a single value or
-    // a prior factor
+    // initialize trajectory for PCM if empty
     if (trajectory_odom_.poses.size() == 0) {
-      if (new_values.size() == 1 &&
-          new_factors.size() == 0) {  // single value no prior case
-        if (debug_) log<INFO>("Initializing without prior");
-        initialize(new_values.keys()[0]);
-        output_values.insert(new_values);
-        return false;  // nothing to optimize yet
-      } else if (boost::dynamic_pointer_cast<gtsam::PriorFactor<poseT>>(
-                     new_factors[0])) {  // prior factor case
+      if (boost::dynamic_pointer_cast<gtsam::PriorFactor<poseT>>(
+              new_factors[0])) {
+        // first factor is a prior: initialize with prior factor
         if (debug_) log<INFO>("Initializing with prior");
         gtsam::PriorFactor<poseT> prior_factor =
             *boost::dynamic_pointer_cast<gtsam::PriorFactor<poseT>>(
                 new_factors[0]);
         initializeWithPrior(prior_factor);
         output_values.insert(new_values);
-        output_nfg.add(new_factors);  // assumption is that there is only one
-                                      // factor in new_factors
-        return false;                 // noothing to optimize yet
-      } else {                        // unknow case, fail
-        log<WARNING>(
-            "Unhandled initialization: first time PCM is called, it "
-            "needs a particular input");
+        output_nfg.add(new_factors);
+
+      } else if (new_values.size() > 0) {
+        // first value is not a factor: initialize based on first value
+        if (debug_) log<INFO>("Initializing without prior");
+        initialize(new_values.keys()[0]);
+        output_values.insert(new_values);
+
+      } else {  // unknow case, fail
+        log<WARNING>("PCM: Failed to initialize.");
         return false;
       }
-      if (debug_) log<INFO>("Initialized trajectory");
     }
 
     // ==============================================================================

@@ -42,11 +42,11 @@ TEST(RobustSolver, Load1) {
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
-  gtsam::PriorFactor<gtsam::Pose3> init(
+  gtsam::PriorFactor<gtsam::Pose3> init_factor(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
 
-  // Load graph using prior
-  pgo->loadGraph(*nfg, *values, init);
+  nfg->add(init_factor);
+  pgo->update(*nfg, *values);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
@@ -78,7 +78,8 @@ TEST(RobustSolver, Add1) {
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init);  // first load
+  nfg->add(init);
+  pgo->update(*nfg, *values);  // first load
 
   // add graph
   // read g2o file for robot b
@@ -94,8 +95,14 @@ TEST(RobustSolver, Add1) {
   gtsam::BetweenFactor<gtsam::Pose3> bridge(
       init_key, init_key_b, transform_ab, noise);
 
+  gtsam::NonlinearFactorGraph bridge_factor;
+  gtsam::Values bridge_value;
+  bridge_factor.add(bridge);
+  bridge_value.insert(init_key_b, values_b->at(init_key_b));
+
   // add graph
-  pgo->addGraph(*nfg_b, *values_b, bridge);
+  pgo->addOdometry(bridge_factor, bridge_value);
+  pgo->update(*nfg_b, *values_b);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
@@ -146,9 +153,9 @@ TEST(RobustSolver, Load2) {
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-
+  nfg->add(init);
   // Load graph using prior
-  pgo->loadGraph(*nfg, *values, init);
+  pgo->update(*nfg, *values);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
@@ -179,7 +186,8 @@ TEST(RobustSolver, Add2) {
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init);  // first load
+  nfg->add(init);
+  pgo->update(*nfg, *values);  // first load
 
   // add graph
   // read g2o file for robot b
@@ -195,8 +203,14 @@ TEST(RobustSolver, Add2) {
   gtsam::BetweenFactor<gtsam::Pose3> bridge(
       init_key, init_key_b, transform_ab, noise);
 
+  gtsam::NonlinearFactorGraph bridge_factor;
+  gtsam::Values bridge_value;
+  bridge_factor.add(bridge);
+  bridge_value.insert(init_key_b, values_b->at(init_key_b));
+
   // add graph
-  pgo->addGraph(*nfg_b, *values_b, bridge);
+  pgo->addOdometry(bridge_factor, bridge_value);
+  pgo->update(*nfg_b, *values_b);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
@@ -240,10 +254,8 @@ TEST(RobustSolver, Load1NoPrior) {
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
 
-  gtsam::Key init_key = gtsam::Symbol('a', 0);
-
   // Load graph using prior
-  pgo->loadGraph<gtsam::Pose3>(nfg, values, init_key);
+  pgo->update(nfg, values);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
@@ -276,9 +288,9 @@ TEST(RobustSolver, NoRejectLoad) {
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-
-  // Load graph using prior
-  pgo->loadGraph(*nfg, *values, init);
+  // add prior factor
+  nfg->add(init);
+  pgo->update(*nfg, *values);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
@@ -309,7 +321,8 @@ TEST(RobustSolver, NoRejectAdd) {
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init);  // first load
+  nfg->add(init);
+  pgo->update(*nfg, *values);  // first load
 
   // add graph
   // read g2o file for robot b
@@ -325,8 +338,14 @@ TEST(RobustSolver, NoRejectAdd) {
   gtsam::BetweenFactor<gtsam::Pose3> bridge(
       init_key, init_key_b, transform_ab, noise);
 
+  gtsam::NonlinearFactorGraph bridge_factor;
+  gtsam::Values bridge_value;
+  bridge_factor.add(bridge);
+  bridge_value.insert(init_key_b, values_b->at(init_key_b));
+
   // add graph
-  pgo->addGraph(*nfg_b, *values_b, bridge);
+  pgo->addOdometry(bridge_factor, bridge_value);
+  pgo->update(*nfg_b, *values_b);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
@@ -379,7 +398,8 @@ TEST(RobustSolver, Load1PcmSimple) {
       init_key, values->at<gtsam::Pose3>(init_key), noise);
 
   // Load graph using prior
-  pgo->loadGraph(*nfg, *values, init);
+  nfg->add(init);
+  pgo->update(*nfg, *values);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
@@ -411,7 +431,8 @@ TEST(RobustSolver, Add1PcmSimple) {
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init);  // first load
+  nfg->add(init);
+  pgo->update(*nfg, *values);  // first load
 
   // add graph
   // read g2o file for robot b
@@ -427,8 +448,14 @@ TEST(RobustSolver, Add1PcmSimple) {
   gtsam::BetweenFactor<gtsam::Pose3> bridge(
       init_key, init_key_b, transform_ab, noise);
 
+  gtsam::NonlinearFactorGraph bridge_factor;
+  gtsam::Values bridge_value;
+  bridge_factor.add(bridge);
+  bridge_value.insert(init_key_b, values_b->at(init_key_b));
+
   // add graph
-  pgo->addGraph(*nfg_b, *values_b, bridge);
+  pgo->addOdometry(bridge_factor, bridge_value);
+  pgo->update(*nfg_b, *values_b);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
@@ -482,7 +509,8 @@ TEST(RobustSolver, Load2PcmSimple) {
       init_key, values->at<gtsam::Pose3>(init_key), noise);
 
   // Load graph using prior
-  pgo->loadGraph(*nfg, *values, init);
+  nfg->add(init);
+  pgo->update(*nfg, *values);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
@@ -513,7 +541,8 @@ TEST(RobustSolver, Add2PcmSimple) {
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init);  // first load
+  nfg->add(init);
+  pgo->update(*nfg, *values);  // first load
 
   // add graph
   // read g2o file for robot b
@@ -529,8 +558,14 @@ TEST(RobustSolver, Add2PcmSimple) {
   gtsam::BetweenFactor<gtsam::Pose3> bridge(
       init_key, init_key_b, transform_ab, noise);
 
+  gtsam::NonlinearFactorGraph bridge_factor;
+  gtsam::Values bridge_value;
+  bridge_factor.add(bridge);
+  bridge_value.insert(init_key_b, values_b->at(init_key_b));
+
   // add graph
-  pgo->addGraph(*nfg_b, *values_b, bridge);
+  pgo->addOdometry(bridge_factor, bridge_value);
+  pgo->update(*nfg_b, *values_b);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
@@ -574,10 +609,8 @@ TEST(RobustSolver, Load1NoPriorPcmSimple) {
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
 
-  gtsam::Key init_key = gtsam::Symbol('a', 0);
-
   // Load graph using prior
-  pgo->loadGraph<gtsam::Pose3>(nfg, values, init_key);
+  pgo->update(nfg, values);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();

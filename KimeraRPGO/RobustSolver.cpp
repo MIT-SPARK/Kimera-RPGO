@@ -96,8 +96,8 @@ void RobustSolver::optimize() {
   }
 }
 
-void RobustSolver::update(const gtsam::NonlinearFactorGraph& nfg,
-                          const gtsam::Values& values) {
+void RobustSolver::updateOnce(const gtsam::NonlinearFactorGraph& nfg,
+                              const gtsam::Values& values) {
   // loop closures/outlier rejection
   bool process_lc;
   if (outlier_removal_) {
@@ -136,15 +136,42 @@ void RobustSolver::addOdometry(const gtsam::NonlinearFactorGraph& odom_factor,
   }
 }
 
-void RobustSolver::updateBatch(const gtsam::NonlinearFactorGraph& factors,
-                               const gtsam::Values& values,
-                               const gtsam::Key& key0) {
-  // load graph assumes that the previous graph has been cleared
-  gtsam::Key current_key = key0;  // initial key
-  // note that as of now only deal with between factors)
+void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
+                          const gtsam::Values& values) {
+  // If no values and only loop closures, can just update
+  if (values.size() == 0) {
+    updateOnce(factors, values);
+    return;
+  }
+
+  // Else do a batch update
+  gtsam::Key current_key;  // Find initial key
+  bool do_optimize = false;
+  bool extracted_odom = false;
+  if (values_.size() == 0) {
+    // Uninitialized
+    gtsam::Values init_vals;
+    current_key = values.keys().front();
+    init_vals.insert(current_key, values.at(current_key));
+    // Add first value as initialization
+    if (outlier_removal_) {
+      outlier_removal_->removeOutliers(
+          gtsam::NonlinearFactorGraph(), init_vals, nfg_, values_);
+    } else {
+      addAndCheckIfOptimize(gtsam::NonlinearFactorGraph(), init_vals);
+    }
+
+  } else if (values_.exists(values.keys().front() - 1)) {
+    // Find initial key
+    current_key = values.keys().front() - 1;
+  } else if (values_.exists(values.keys().front())) {
+    current_key = values.keys().front();
+  } else {
+    extracted_odom = true;  // no odom to extract
+  }
+
   // first load the odometry
   // order a nonlinear factor graph as odometry first
-  bool extracted_odom = false;
   gtsam::NonlinearFactorGraph update_factors = factors;
   while (!extracted_odom) {
     bool end_of_odom = true;
@@ -176,7 +203,8 @@ void RobustSolver::updateBatch(const gtsam::NonlinearFactorGraph& factors,
   for (size_t i = 0; i < update_factors.size(); i++) {
     if (update_factors[i] != NULL) {
       gtsam::Symbol symb(update_factors[i]->back());
-      if (isSpecialSymbol(symb.chr())) {
+      if (isSpecialSymbol(symb.chr()) &&
+          values.exists(update_factors[i]->back())) {
         // check that landmark have not previously been seen
         if (std::find(landmarks.begin(), landmarks.end(), symb) ==
             landmarks.end()) {
@@ -187,13 +215,12 @@ void RobustSolver::updateBatch(const gtsam::NonlinearFactorGraph& factors,
           new_factors.add(update_factors[i]);
           landmarks.push_back(symb);
 
-          // This is essentially addOdometry, but let's not call it that here?
-          // Since what's happening in outlier_removal_ is different
+          // This is essentially addOdometry
           if (outlier_removal_) {
-            outlier_removal_->removeOutliers(
+            do_optimize = outlier_removal_->removeOutliers(
                 new_factors, new_values, nfg_, values_);
           } else {
-            addAndCheckIfOptimize(new_factors, new_values);
+            do_optimize = addAndCheckIfOptimize(new_factors, new_values);
           }
 
           update_factors[i].reset();
@@ -215,14 +242,15 @@ void RobustSolver::updateBatch(const gtsam::NonlinearFactorGraph& factors,
   }
 
   if (outlier_removal_) {
-    outlier_removal_->removeOutliers(
+    do_optimize = outlier_removal_->removeOutliers(
         new_factors, gtsam::Values(), nfg_, values_);
   } else {
-    addAndCheckIfOptimize(new_factors, gtsam::Values());
+    do_optimize = addAndCheckIfOptimize(new_factors, gtsam::Values());
   }
 
-  optimize();  // optimize once after loading
-}
+  if (do_optimize) optimize();  // optimize once after loading
+  return;
+}  // namespace KimeraRPGO
 
 void RobustSolver::saveData(std::string folder_path) const {
   std::string g2o_file_path = folder_path + "/result.g2o";

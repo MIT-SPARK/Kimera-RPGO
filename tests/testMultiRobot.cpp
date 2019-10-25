@@ -54,7 +54,7 @@ TEST(RobustSolver, multiRobotPcm) {
   init_vals_b.insert(init_key_b, tf_ab);
   init_factors_b.add(
       gtsam::BetweenFactor<gtsam::Pose3>(init_key_a, init_key_b, tf_ab, noise));
-  pgo->addOdometry(init_factors_b, init_vals_b);
+  pgo->update(init_factors_b, init_vals_b);
 
   // add odometries (4 more)
   for (size_t i = 0; i < 3; i++) {
@@ -231,7 +231,7 @@ TEST(RobustSolver, multiRobotPcmSimple) {
   init_vals_b.insert(init_key_b, tf_ab);
   init_factors_b.add(
       gtsam::BetweenFactor<gtsam::Pose3>(init_key_a, init_key_b, tf_ab, noise));
-  pgo->addOdometry(init_factors_b, init_vals_b);
+  pgo->update(init_factors_b, init_vals_b);
 
   // add odometries (4 more)
   for (size_t i = 0; i < 3; i++) {

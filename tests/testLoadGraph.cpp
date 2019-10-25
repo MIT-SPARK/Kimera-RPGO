@@ -101,7 +101,7 @@ TEST(RobustSolver, Add1) {
   bridge_value.insert(init_key_b, values_b->at(init_key_b));
 
   // add graph
-  pgo->addOdometry(bridge_factor, bridge_value);
+  pgo->update(bridge_factor, bridge_value);
   pgo->update(*nfg_b, *values_b);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
@@ -209,7 +209,7 @@ TEST(RobustSolver, Add2) {
   bridge_value.insert(init_key_b, values_b->at(init_key_b));
 
   // add graph
-  pgo->addOdometry(bridge_factor, bridge_value);
+  pgo->update(bridge_factor, bridge_value);
   pgo->update(*nfg_b, *values_b);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
@@ -344,7 +344,7 @@ TEST(RobustSolver, NoRejectAdd) {
   bridge_value.insert(init_key_b, values_b->at(init_key_b));
 
   // add graph
-  pgo->addOdometry(bridge_factor, bridge_value);
+  pgo->update(bridge_factor, bridge_value);
   pgo->update(*nfg_b, *values_b);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
@@ -454,7 +454,7 @@ TEST(RobustSolver, Add1PcmSimple) {
   bridge_value.insert(init_key_b, values_b->at(init_key_b));
 
   // add graph
-  pgo->addOdometry(bridge_factor, bridge_value);
+  pgo->update(bridge_factor, bridge_value);
   pgo->update(*nfg_b, *values_b);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
@@ -564,7 +564,7 @@ TEST(RobustSolver, Add2PcmSimple) {
   bridge_value.insert(init_key_b, values_b->at(init_key_b));
 
   // add graph
-  pgo->addOdometry(bridge_factor, bridge_value);
+  pgo->update(bridge_factor, bridge_value);
   pgo->update(*nfg_b, *values_b);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();

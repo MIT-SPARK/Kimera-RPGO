@@ -139,7 +139,7 @@ void RobustSolver::addOdometry(const gtsam::NonlinearFactorGraph& odom_factor,
 void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
                           const gtsam::Values& values) {
   // If no values and only loop closures, can just update
-  if (values.size() == 0) {
+  if (values.size() == 0 || (values.size() == 1 && factors.size() == 1)) {
     updateOnce(factors, values);
     return;
   }

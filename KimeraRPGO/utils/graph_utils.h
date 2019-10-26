@@ -8,7 +8,7 @@
 #include <vector>
 
 #include <gtsam/inference/Symbol.h>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 namespace KimeraRPGO {
 

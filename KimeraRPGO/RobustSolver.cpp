@@ -144,67 +144,53 @@ void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
     return;
   }
 
-  // Else do a batch update
-  gtsam::Key current_key;  // Find initial key
-  bool do_optimize = false;
-  bool extracted_odom = false;
-  if (values_.size() == 0) {
-    // Uninitialized
-    gtsam::Values init_vals;
-    current_key = values.keys().front();
-    init_vals.insert(current_key, values.at(current_key));
-    // Add first value as initialization
-    if (outlier_removal_) {
-      outlier_removal_->removeOutliers(
-          gtsam::NonlinearFactorGraph(), init_vals, nfg_, values_);
-    } else {
-      addAndCheckIfOptimize(gtsam::NonlinearFactorGraph(), init_vals);
-    }
+  // Sort ito different categories 
+  std::unordered_map<char, gtsam::NonlinearFactorGraph> intra_robot_graphs; 
+  gtsam::NonlinearFactorGraph landmark_factors; 
+  gtsam::NonlinearFactorGraph inter_robot_factors; 
 
-  } else if (values_.exists(values.keys().front() - 1)) {
-    // Find initial key
-    current_key = values.keys().front() - 1;
-  } else if (values_.exists(values.keys().front())) {
-    current_key = values.keys().front();
-  } else {
-    extracted_odom = true;  // no odom to extract
-  }
-
-  // first load the odometry
-  // order a nonlinear factor graph as odometry first
-  gtsam::NonlinearFactorGraph update_factors = factors;
-  while (!extracted_odom) {
-    bool end_of_odom = true;
-    for (size_t i = 0; i < update_factors.size(); i++) {
-      // search through
-      if (update_factors[i] != NULL && update_factors[i]->keys().size() == 2 &&
-          update_factors[i]->front() == current_key &&
-          update_factors[i]->back() == current_key + 1) {
-        end_of_odom = false;
-
-        gtsam::Values new_values;
-        gtsam::NonlinearFactorGraph new_factors;
-        // assumes key0 is already in the graph/values
-        new_values.insert(current_key + 1, values.at(current_key + 1));
-        new_factors.add(update_factors[i]);
-
-        addOdometry(new_factors, new_values);
-
-        current_key = current_key + 1;
-        update_factors[i].reset();  // delete factor from graph
-        break;
+  for (size_t i = 0; i < factors.size(); i++) {
+    if (factors[i] != NULL) {
+      if (factors[i]->keys().size() == 1) {
+        // prior factor 
+      } else if (factor[i]->keys().size() == 2) {
+        gtsam::Symbol symb_front(factors[i]->front());
+        gtsam::Symbol symb_baack(factors[i]->back());
+        if (symb_front.chr() != symb_back.chr()) {
+          // check if the prefixes on the two keys are the same 
+          if (isSpecialSymbol(symb_front.chr()) || isSpecialSymbol(symb_back.chr())) {
+            // if one of them is a special symbol, must be a landmark factor 
+            landmark_factors.add(factors[i]);
+          } else {
+            // if not a landmark factor and connects two diferent prefixes: intterrobot LC 
+            inter_robot_factors.add(factors[i]);
+          }
+        } else {
+          // check if prefix already exists 
+          if (intra_robot_graphs.find(symb_front.chr()) == intra_robot_graphs.end()) {
+            // not yet exists, create new 
+            gtsam::NonlinearFactorGraph new_graph; 
+            new_graph.add(factors[i]);
+            intra_robot_graphs[symb_front.chr()] = new_graph;
+          } else {
+            // already exists add to graph 
+            intra_robot_graphs[symb_front.chr()].add(factors[i]);
+          }
+        }
       }
     }
-    if (end_of_odom) extracted_odom = true;
+  }
+
+  for (auto it = intra_robot_graphs.begin(); it != intra_robot_graphs.end(); ++it) {
+    // TODO(Yun) what to do with values? 
+    do_optimize = updateIntrarobot(); 
   }
 
   // now search for the special symbols (i.e. artifacts)
   std::vector<gtsam::Key> landmarks;
-  for (size_t i = 0; i < update_factors.size(); i++) {
+  for (size_t i = 0; i < landmark_factors.size(); i++) {
     if (update_factors[i] != NULL) {
-      gtsam::Symbol symb(update_factors[i]->back());
-      if (isSpecialSymbol(symb.chr()) &&
-          values.exists(update_factors[i]->back())) {
+      if (values.exists(update_factors[i]->back())) {
         // check that landmark have not previously been seen
         if (std::find(landmarks.begin(), landmarks.end(), symb) ==
             landmarks.end()) {

@@ -6,6 +6,7 @@ author: Yun Chang, Luca Carlone
 #include "KimeraRPGO/RobustSolver.h"
 
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <gtsam/nonlinear/DoglegOptimizer.h>
@@ -17,6 +18,8 @@ author: Yun Chang, Luca Carlone
 #include "KimeraRPGO/outlier/pcm.h"
 
 namespace KimeraRPGO {
+
+typedef std::pair<gtsam::NonlinearFactorGraph, gtsam::Values> GraphAndValues;
 
 RobustSolver::RobustSolver(const RobustSolverParams& params)
     : GenericSolver(params.solver, params.specialSymbols) {
@@ -221,7 +224,7 @@ void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
   }
 
   // Sort ito different categories
-  std::unordered_map<char, gtsam::NonlinearFactorGraph> intra_robot_graphs;
+  std::unordered_map<char, GraphAndValues> intra_robot_graphs;
   gtsam::NonlinearFactorGraph landmark_factors;
   gtsam::NonlinearFactorGraph inter_robot_factors;
 
@@ -257,11 +260,21 @@ void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
               intra_robot_graphs.end()) {
             // not yet exists, create new
             gtsam::NonlinearFactorGraph new_graph;
+            gtsam::Values new_values;
             new_graph.add(factors[i]);
-            intra_robot_graphs[symb_front.chr()] = new_graph;
+            new_values.insert(factors[i]->front(),
+                              values.at(factors[i]->front()));
+            new_values.insert(factors[i]->back(),
+                              values.at(factors[i]->back()));
+            intra_robot_graphs[symb_front.chr()].first = new_graph;
+            intra_robot_graphs[symb_front.chr()].second = new_values;
           } else {
             // already exists add to graph
-            intra_robot_graphs[symb_front.chr()].add(factors[i]);
+            intra_robot_graphs[symb_front.chr()].first.add(factors[i]);
+            intra_robot_graphs[symb_front.chr()].second.tryInsert(
+                factors[i]->front(), values.at(factors[i]->front()));
+            intra_robot_graphs[symb_front.chr()].second.tryInsert(
+                factors[i]->back(), values.at(factors[i]->back()));
           }
         }
       }
@@ -272,7 +285,7 @@ void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
 
   for (auto it = intra_robot_graphs.begin(); it != intra_robot_graphs.end();
        ++it) {
-    do_optimize = updateSingleRobot(it->second, values);
+    do_optimize = updateSingleRobot(it->second.first, it->second.second);
   }
 
   // Add the landmark factors

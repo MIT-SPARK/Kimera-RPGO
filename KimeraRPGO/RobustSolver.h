@@ -43,7 +43,8 @@ class RobustSolver : public GenericSolver {
    */
   void updateOnce(
       const gtsam::NonlinearFactorGraph& nfg = gtsam::NonlinearFactorGraph(),
-      const gtsam::Values& values = gtsam::Values());
+      const gtsam::Values& values = gtsam::Values(),
+      bool optimize = false);
 
   /*! \brief Update call that bypasses outlier rejection.
    *  add new factors and values and optimize, without rejecting outliers.
@@ -60,6 +61,15 @@ class RobustSolver : public GenericSolver {
    */
   void addOdometry(const gtsam::NonlinearFactorGraph& odom_factor,
                    const gtsam::Values& odom_values);
+
+  /*! \brief Sorts through the factors, separate out the
+   * odometry and loop closures. Here we assume single robot (consistent prefix)
+   * no landmarks and odometry is in an incremental increasing manner.
+   *  - factors: the factors of the graph to be added
+   *  - values: linearization point of graph to be connected
+   */
+  bool updateSingleRobot(const gtsam::NonlinearFactorGraph& factors,
+                         const gtsam::Values& values);
 
   /*! \brief Update function. Sorts through the factors, separate out the
    * odometry, the landmark measurements, and loop closures, then

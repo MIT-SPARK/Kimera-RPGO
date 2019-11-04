@@ -12,7 +12,6 @@ ENDIF()
 
 ###########################################################################
 # Find GTSAM
-find_package(TBB 4.4 COMPONENTS tbb tbbmalloc)
 find_package(GTSAM REQUIRED)
 if (NOT GTSAM_FOUND)
   message(FATAL_ERROR "This program requires the GTSAM library.")
@@ -46,8 +45,6 @@ include(KimeraRPGO/utils/CMakeLists.txt)
 target_link_libraries(KimeraRPGO
   PUBLIC
     Boost::boost
-    tbb
-    tbbmalloc
     gtsam
     gtsam_unstable
 )

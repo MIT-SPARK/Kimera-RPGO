@@ -25,7 +25,7 @@
 
 #include <float.h>
 #include <string.h>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <fstream>
 #include <iostream>
 #include <map>

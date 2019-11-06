@@ -13,22 +13,39 @@
 
 namespace KimeraRPGO {
 
-struct LandmarkMeasurements {
+struct Measurements {
   gtsam::NonlinearFactorGraph factors;
   gtsam::NonlinearFactorGraph consistent_factors;
   gtsam::Matrix adj_matrix;
   gtsam::Matrix dist_matrix;
 
-  LandmarkMeasurements(
+  Measurements(
       gtsam::NonlinearFactorGraph new_factors = gtsam::NonlinearFactorGraph())
       : factors(new_factors), consistent_factors(new_factors) {
     if (new_factors.size() > 1) {
       log<WARNING>(
-          "Unexpected behavior: initializing landmark with more than "
+          "Unexpected behavior: initializing Measurement struct with more than "
           "one factor.");
     }
     adj_matrix = Eigen::MatrixXd::Zero(1, 1);
     dist_matrix = Eigen::MatrixXd::Zero(1, 1);
+  }
+};
+
+// struct storing the involved parties (ex robot a and robot b)
+struct ObservationId {
+  char id1;
+  char id2;
+
+  ObservationId(char first, char second) {
+    id1 = first;
+    id2 = second;
+  }
+
+  bool operator==(const ObservationId& a, const ObservationId& b) {
+    if (a.id1 == b.id1 && a.id2 == b.id2) return true;
+    if (a.id2 == b.id1 && a.id1 == b.id2) return true;
+    return false;
   }
 };
 

@@ -96,22 +96,6 @@ void RobustSolver::optimize() {
   }
 }
 
-void RobustSolver::updateOnce(const gtsam::NonlinearFactorGraph& nfg,
-                              const gtsam::Values& values) {
-  // loop closures/outlier rejection
-  bool process_lc;
-  if (outlier_removal_) {
-    process_lc = outlier_removal_->removeOutliers(nfg, values, nfg_, values_);
-  } else {
-    process_lc = addAndCheckIfOptimize(nfg, values);  // use default process
-  }
-
-  // optimize
-  if (process_lc) {
-    optimize();
-  }
-}
-
 void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,
                                const gtsam::Values& values) {
   if (outlier_removal_) {
@@ -123,115 +107,14 @@ void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,
   optimize();
 }
 
-void RobustSolver::addOdometry(const gtsam::NonlinearFactorGraph& odom_factor,
-                               const gtsam::Values& odom_values) {
-  if (odom_factor.size() != 1 || odom_values.size() > 1) {
-    log<WARNING>(
-        "RobustSolver::addOdometry expects single factor and single value.");
-  }
-  if (outlier_removal_) {
-    outlier_removal_->removeOutliers(odom_factor, odom_values, nfg_, values_);
-  } else {
-    addAndCheckIfOptimize(odom_factor, odom_values);
-  }
-}
-
 void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
                           const gtsam::Values& values) {
-  // If no values and only loop closures, can just update
-  if (values.size() == 0 || (values.size() == 1 && factors.size() == 1)) {
-    updateOnce(factors, values);
-    return;
-  }
-
-  // Sort ito different categories 
-  std::unordered_map<char, gtsam::NonlinearFactorGraph> intra_robot_graphs; 
-  gtsam::NonlinearFactorGraph landmark_factors; 
-  gtsam::NonlinearFactorGraph inter_robot_factors; 
-
-  for (size_t i = 0; i < factors.size(); i++) {
-    if (factors[i] != NULL) {
-      if (factors[i]->keys().size() == 1) {
-        // prior factor 
-      } else if (factor[i]->keys().size() == 2) {
-        gtsam::Symbol symb_front(factors[i]->front());
-        gtsam::Symbol symb_baack(factors[i]->back());
-        if (symb_front.chr() != symb_back.chr()) {
-          // check if the prefixes on the two keys are the same 
-          if (isSpecialSymbol(symb_front.chr()) || isSpecialSymbol(symb_back.chr())) {
-            // if one of them is a special symbol, must be a landmark factor 
-            landmark_factors.add(factors[i]);
-          } else {
-            // if not a landmark factor and connects two diferent prefixes: intterrobot LC 
-            inter_robot_factors.add(factors[i]);
-          }
-        } else {
-          // check if prefix already exists 
-          if (intra_robot_graphs.find(symb_front.chr()) == intra_robot_graphs.end()) {
-            // not yet exists, create new 
-            gtsam::NonlinearFactorGraph new_graph; 
-            new_graph.add(factors[i]);
-            intra_robot_graphs[symb_front.chr()] = new_graph;
-          } else {
-            // already exists add to graph 
-            intra_robot_graphs[symb_front.chr()].add(factors[i]);
-          }
-        }
-      }
-    }
-  }
-
-  for (auto it = intra_robot_graphs.begin(); it != intra_robot_graphs.end(); ++it) {
-    // TODO(Yun) what to do with values? 
-    do_optimize = updateIntrarobot(); 
-  }
-
-  // now search for the special symbols (i.e. artifacts)
-  std::vector<gtsam::Key> landmarks;
-  for (size_t i = 0; i < landmark_factors.size(); i++) {
-    if (update_factors[i] != NULL) {
-      if (values.exists(update_factors[i]->back())) {
-        // check that landmark have not previously been seen
-        if (std::find(landmarks.begin(), landmarks.end(), symb) ==
-            landmarks.end()) {
-          gtsam::Values new_values;
-          gtsam::NonlinearFactorGraph new_factors;
-          new_values.insert(update_factors[i]->back(),
-                            values.at(update_factors[i]->back()));
-          new_factors.add(update_factors[i]);
-          landmarks.push_back(symb);
-
-          // This is essentially addOdometry
-          if (outlier_removal_) {
-            do_optimize = outlier_removal_->removeOutliers(
-                new_factors, new_values, nfg_, values_);
-          } else {
-            do_optimize = addAndCheckIfOptimize(new_factors, new_values);
-          }
-
-          update_factors[i].reset();
-        }
-      }
-    }
-  }
-
-  // add the other non-odom loop closures
-  gtsam::NonlinearFactorGraph new_factors;
-  for (size_t i = 0; i < factors.size(); i++) {
-    if (update_factors[i] != NULL) {
-      // if (debug_) {
-      //   std::cout << "loop closure: " << factors[i]->front() << ">" <<
-      //   factors[i]->back() << std::endl;
-      // }
-      new_factors.add(update_factors[i]);
-    }
-  }
-
+  bool do_optimize;
   if (outlier_removal_) {
     do_optimize = outlier_removal_->removeOutliers(
-        new_factors, gtsam::Values(), nfg_, values_);
+        factors, values, nfg_, values_);
   } else {
-    do_optimize = addAndCheckIfOptimize(new_factors, gtsam::Values());
+    do_optimize = addAndCheckIfOptimize(factors, values);
   }
 
   if (do_optimize) optimize();  // optimize once after loading

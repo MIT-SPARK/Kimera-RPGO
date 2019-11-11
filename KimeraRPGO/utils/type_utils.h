@@ -3,6 +3,7 @@
 #ifndef KIMERARPGO_UTILS_TYPE_UTILS_H_
 #define KIMERARPGO_UTILS_TYPE_UTILS_H_
 
+#include <functional>
 #include <memory>
 #include <utility>
 
@@ -42,9 +43,9 @@ struct ObservationId {
     id2 = second;
   }
 
-  bool operator==(const ObservationId& a, const ObservationId& b) {
-    if (a.id1 == b.id1 && a.id2 == b.id2) return true;
-    if (a.id2 == b.id1 && a.id1 == b.id2) return true;
+  bool operator==(const ObservationId& other) const {
+    if (id1 == other.id1 && id2 == other.id2) return true;
+    if (id2 == other.id1 && id1 == other.id2) return true;
     return false;
   }
 };
@@ -56,5 +57,17 @@ std::unique_ptr<T> make_unique(Args&&... args) {
 }
 
 }  // namespace KimeraRPGO
+
+namespace std {
+// hash function for ObservationId
+template <>
+struct hash<KimeraRPGO::ObservationId> {
+  std::size_t operator()(const KimeraRPGO::ObservationId& id) const {
+    using std::hash;
+    return hash<char>()(id.id1) + hash<char>()(id.id2) +
+           hash<char>()(id.id1) * hash<char>()(id.id2);
+  }
+};
+}  // namespace std
 
 #endif  // KIMERARPGO_UTILS_TYPE_UTILS_H_

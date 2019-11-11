@@ -272,6 +272,10 @@ class Pcm : public OutlierRemoval {
             odom_consistent = true;
           }
           if (odom_consistent) {
+            if (debug_)
+              log<INFO>("loop closure between keys %1% and %2%") %
+                  gtsam::DefaultKeyFormatter(nfg_factor.front()) %
+                  gtsam::DefaultKeyFormatter(nfg_factor.back());
             ObservationId obs_id(symbfrnt.chr(), symbback.chr());
             // detect which inter or intra robot loop closure this belongs to
             loop_closures_[obs_id].factors.add(nfg_factor);
@@ -510,7 +514,6 @@ class Pcm : public OutlierRemoval {
       Measurements new_measurements;
       loop_closures_[id] = new_measurements;
     }
-    loop_closures_[id].factors.add(factor);
     size_t num_lc =
         loop_closures_[id].factors.size();  // number of loop closures so far,
                                             // including the one we just added
@@ -629,7 +632,6 @@ class Pcm : public OutlierRemoval {
    */
   void findInliers() {
     if (debug_) log<INFO>("total loop closures registered: %1%") % total_lc_;
-
     total_good_lc_ = 0;
     // iterate through loop closures and find inliers
     std::unordered_map<ObservationId, Measurements>::iterator it =

@@ -120,7 +120,7 @@ class Pcm : public OutlierRemoval {
       return false;
     }
 
-    bool doOptimize = false;
+    bool do_optimize = false;
     // ==============================================================================
     gtsam::NonlinearFactorGraph loop_closure_factors;
     for (size_t i = 0; i < new_factors.size(); i++) {
@@ -139,8 +139,8 @@ class Pcm : public OutlierRemoval {
         gtsam::Key to_key = new_factors[i]->back();
         gtsam::Symbol from_symb(from_key);
         gtsam::Symbol to_symb(to_key);
-        if (isSpecialSymbol(from_symb) ||
-            isSpecialSymbol(to_symb)) {  // is it a landmark observation
+        if (isSpecialSymbol(from_symb.chr()) ||
+            isSpecialSymbol(to_symb.chr())) {  // is it a landmark observation
           // if includes values, it is the first observation
           if (new_values.exists(from_key) || new_values.exists(to_key)) {
             type = FactorType::FIRST_LANDMARK_OBSERVATION;
@@ -175,6 +175,7 @@ class Pcm : public OutlierRemoval {
           newMeasurement.consistent_factors.add(new_factors[i]);
           gtsam::Symbol symb(new_values.keys()[0]);
           landmarks_[symb] = newMeasurement;
+          total_lc_++;
         } break;
         case FactorType::LOOP_CLOSURE: {
           // add the the loop closure factors and process them together
@@ -182,11 +183,13 @@ class Pcm : public OutlierRemoval {
         } break;
         case FactorType::NONBETWEEN_FACTORS: {
           nfg_special_.add(new_factors);
+          do_optimize = true;
         } break;
         default:  // the remainders are specical loop closure cases, includes
                   // the "UNCLASSIFIED" case
         {
           nfg_special_.add(new_factors);
+          do_optimize = true;
         }
       }  // end switch
 
@@ -196,11 +199,11 @@ class Pcm : public OutlierRemoval {
         // output values is just used to sanity check the keys
         findInliers();
         // Find inliers with Pairwise consistent measurement set maximization
-        doOptimize = true;
+        do_optimize = true;
       }
 
       output_nfg = buildGraphToOptimize();
-      return doOptimize;
+      return do_optimize;
     }
 
   }  // end reject outliers
@@ -662,10 +665,10 @@ class Pcm : public OutlierRemoval {
       // update inliers, or consistent factors, according to max clique result
       for (size_t i = 0; i < num_inliers; i++) {
         it_ldmrk->second.consistent_factors.add(
-            it->second.factors[inliers_idx[i]]);
+            it_ldmrk->second.factors[inliers_idx[i]]);
       }
       it_ldmrk++;
-      total_good_lc_ + num_inliers;
+      total_good_lc_ = total_good_lc_ + num_inliers;
     }
     if (debug_) log<INFO>("number of inliers: %1%") % total_good_lc_;
   }

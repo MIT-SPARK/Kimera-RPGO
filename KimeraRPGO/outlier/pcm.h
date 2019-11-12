@@ -182,30 +182,27 @@ class Pcm : public OutlierRemoval {
           loop_closure_factors.add(new_factors[i]);
         } break;
         case FactorType::NONBETWEEN_FACTORS: {
-          nfg_special_.add(new_factors);
+          nfg_special_.add(new_factors[i]);
           do_optimize = true;
         } break;
         default:  // the remainders are specical loop closure cases, includes
                   // the "UNCLASSIFIED" case
         {
-          nfg_special_.add(new_factors);
+          nfg_special_.add(new_factors[i]);
           do_optimize = true;
         }
       }  // end switch
-
-      if (loop_closure_factors.size() > 0) {
-        // update inliers
-        parseAndIncrementAdjMatrix(loop_closure_factors, output_values);
-        // output values is just used to sanity check the keys
-        findInliers();
-        // Find inliers with Pairwise consistent measurement set maximization
-        do_optimize = true;
-      }
-
-      output_nfg = buildGraphToOptimize();
-      return do_optimize;
     }
-
+    if (loop_closure_factors.size() > 0) {
+      // update inliers
+      parseAndIncrementAdjMatrix(loop_closure_factors, output_values);
+      // output values is just used to sanity check the keys
+      findInliers();
+      // Find inliers with Pairwise consistent measurement set maximization
+      do_optimize = true;
+    }
+    output_nfg = buildGraphToOptimize();
+    return do_optimize;
   }  // end reject outliers
 
   /*! \brief save the PCM data
@@ -475,8 +472,18 @@ class Pcm : public OutlierRemoval {
     gtsam::Symbol symb_b = gtsam::Symbol(key_b);
     gtsam::Symbol symb_c = gtsam::Symbol(key_c);
     gtsam::Symbol symb_d = gtsam::Symbol(key_d);
+
+    // make sure a and c has same prefix (from same robot)
+    if (symb_a.chr() != symb_c.chr()) {
+      // switch c and d if needed
+      gtsam::Key temp = key_c;
+      key_c = key_d;
+      key_d = temp;
+      symb_c = gtsam::Symbol(key_c);
+      symb_d = gtsam::Symbol(key_d);
+    }
     // find odometry from a to c
-    if (symb_a.chr() != symb_b.chr()) {
+    if (symb_a.chr() != symb_c.chr()) {
       log<WARNING>("Attempting to get odometry between different trajectories");
     }
     T<poseT> a_odom_c =

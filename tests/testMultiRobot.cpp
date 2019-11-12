@@ -44,22 +44,16 @@ TEST(RobustSolver, multiRobotPcm) {
   gtsam::Key init_key_a = gtsam::Symbol('a', 0);
   gtsam::Values init_vals;
   init_vals.insert(init_key_a, gtsam::Pose3());
-  pgo->update(gtsam::NonlinearFactorGraph(), init_vals);
 
-  // make a between to b
   gtsam::Key init_key_b = gtsam::Symbol('b', 0);
-  gtsam::Values init_vals_b;
-  gtsam::NonlinearFactorGraph init_factors_b;
-  gtsam::Pose3 tf_ab = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0));
-  init_vals_b.insert(init_key_b, tf_ab);
-  init_factors_b.add(
-      gtsam::BetweenFactor<gtsam::Pose3>(init_key_a, init_key_b, tf_ab, noise));
-  pgo->update(init_factors_b, init_vals_b);
+  gtsam::Pose3 init_b = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0));
+  init_vals.insert(init_key_b, init_b);
+  pgo->update(gtsam::NonlinearFactorGraph(), init_vals);
 
   // add odometries (4 more)
   for (size_t i = 0; i < 3; i++) {
-    gtsam::Values odom_val_a, odom_val_b;
-    gtsam::NonlinearFactorGraph odom_factor_a, odom_factor_b;
+    gtsam::Values vals;
+    gtsam::NonlinearFactorGraph odom_factors;
     gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 0, 0));
     static const gtsam::SharedNoiseModel& noiseOdom =
         gtsam::noiseModel::Isotropic::Variance(6, 0.1);
@@ -68,15 +62,14 @@ TEST(RobustSolver, multiRobotPcm) {
     gtsam::Key key_a_new = gtsam::Symbol('a', i + 1);
     gtsam::Key key_b_new = gtsam::Symbol('b', i + 1);
 
-    odom_val_a.insert(key_a_new, odom);
-    odom_val_b.insert(key_b_new, odom);
+    vals.insert(key_a_new, odom);
+    vals.insert(key_b_new, odom);
 
-    odom_factor_a.add(gtsam::BetweenFactor<gtsam::Pose3>(
+    odom_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
         key_a_prev, key_a_new, odom, noiseOdom));
-    odom_factor_b.add(gtsam::BetweenFactor<gtsam::Pose3>(
+    odom_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
         key_b_prev, key_b_new, odom, noiseOdom));
-    pgo->update(odom_factor_a, odom_val_a);
-    pgo->update(odom_factor_b, odom_val_b);
+    pgo->update(odom_factors, vals);
   }
 
   // add more odometries a
@@ -144,18 +137,16 @@ TEST(RobustSolver, multiRobotPcm) {
   nfg = pgo->getFactorsUnsafe();
   est = pgo->calculateEstimate();
 
-  EXPECT(nfg.size() == size_t(13));
+  EXPECT(nfg.size() == size_t(12));
   EXPECT(est.size() == size_t(12));
 
-  // add a mixture of good and bad loop closures
-  // good lc
+  // add bad loop closures
   lc_factors = gtsam::NonlinearFactorGraph();
   gtsam::Key a2 = gtsam::Symbol('a', 2);
   gtsam::Key b2 = gtsam::Symbol('b', 2);
   lc_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
       a2, b2, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0)), noise));
 
-  // bad lc
   gtsam::Key a5 = gtsam::Symbol('a', 5);
   gtsam::Key b5 = gtsam::Symbol('b', 5);
   lc_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
@@ -166,7 +157,7 @@ TEST(RobustSolver, multiRobotPcm) {
   nfg = pgo->getFactorsUnsafe();
   est = pgo->calculateEstimate();
 
-  EXPECT(nfg.size() == size_t(14));
+  EXPECT(nfg.size() == size_t(12));
   EXPECT(est.size() == size_t(12));
 
   // add a good and bad single robot loop closures
@@ -191,7 +182,7 @@ TEST(RobustSolver, multiRobotPcm) {
   nfg = pgo->getFactorsUnsafe();
   est = pgo->calculateEstimate();
 
-  EXPECT(nfg.size() == size_t(15));
+  EXPECT(nfg.size() == size_t(13));
   EXPECT(est.size() == size_t(12));
 }
 
@@ -221,22 +212,16 @@ TEST(RobustSolver, multiRobotPcmSimple) {
   gtsam::Key init_key_a = gtsam::Symbol('a', 0);
   gtsam::Values init_vals;
   init_vals.insert(init_key_a, gtsam::Pose3());
-  pgo->update(gtsam::NonlinearFactorGraph(), init_vals);
 
-  // make a between to b
   gtsam::Key init_key_b = gtsam::Symbol('b', 0);
-  gtsam::Values init_vals_b;
-  gtsam::NonlinearFactorGraph init_factors_b;
-  gtsam::Pose3 tf_ab = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0));
-  init_vals_b.insert(init_key_b, tf_ab);
-  init_factors_b.add(
-      gtsam::BetweenFactor<gtsam::Pose3>(init_key_a, init_key_b, tf_ab, noise));
-  pgo->update(init_factors_b, init_vals_b);
+  gtsam::Pose3 init_b = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0));
+  init_vals.insert(init_key_b, init_b);
+  pgo->update(gtsam::NonlinearFactorGraph(), init_vals);
 
   // add odometries (4 more)
   for (size_t i = 0; i < 3; i++) {
-    gtsam::Values odom_val_a, odom_val_b;
-    gtsam::NonlinearFactorGraph odom_factor_a, odom_factor_b;
+    gtsam::Values vals;
+    gtsam::NonlinearFactorGraph odom_factors;
     gtsam::Pose3 odom = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 0, 0));
     static const gtsam::SharedNoiseModel& noiseOdom =
         gtsam::noiseModel::Isotropic::Variance(6, 0.1);
@@ -245,15 +230,14 @@ TEST(RobustSolver, multiRobotPcmSimple) {
     gtsam::Key key_a_new = gtsam::Symbol('a', i + 1);
     gtsam::Key key_b_new = gtsam::Symbol('b', i + 1);
 
-    odom_val_a.insert(key_a_new, odom);
-    odom_val_b.insert(key_b_new, odom);
+    vals.insert(key_a_new, odom);
+    vals.insert(key_b_new, odom);
 
-    odom_factor_a.add(gtsam::BetweenFactor<gtsam::Pose3>(
+    odom_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
         key_a_prev, key_a_new, odom, noiseOdom));
-    odom_factor_b.add(gtsam::BetweenFactor<gtsam::Pose3>(
+    odom_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
         key_b_prev, key_b_new, odom, noiseOdom));
-    pgo->update(odom_factor_a, odom_val_a);
-    pgo->update(odom_factor_b, odom_val_b);
+    pgo->update(odom_factors, vals);
   }
 
   // add more odometries a
@@ -321,18 +305,16 @@ TEST(RobustSolver, multiRobotPcmSimple) {
   nfg = pgo->getFactorsUnsafe();
   est = pgo->calculateEstimate();
 
-  EXPECT(nfg.size() == size_t(13));
+  EXPECT(nfg.size() == size_t(12));
   EXPECT(est.size() == size_t(12));
 
-  // add a mixture of good and bad loop closures
-  // good lc
+  // add bad loop closures
   lc_factors = gtsam::NonlinearFactorGraph();
   gtsam::Key a2 = gtsam::Symbol('a', 2);
   gtsam::Key b2 = gtsam::Symbol('b', 2);
   lc_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
       a2, b2, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0)), noise));
 
-  // bad lc
   gtsam::Key a5 = gtsam::Symbol('a', 5);
   gtsam::Key b5 = gtsam::Symbol('b', 5);
   lc_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
@@ -343,7 +325,7 @@ TEST(RobustSolver, multiRobotPcmSimple) {
   nfg = pgo->getFactorsUnsafe();
   est = pgo->calculateEstimate();
 
-  EXPECT(nfg.size() == size_t(14));
+  EXPECT(nfg.size() == size_t(12));
   EXPECT(est.size() == size_t(12));
 
   // add a good and bad single robot loop closures
@@ -368,7 +350,7 @@ TEST(RobustSolver, multiRobotPcmSimple) {
   nfg = pgo->getFactorsUnsafe();
   est = pgo->calculateEstimate();
 
-  EXPECT(nfg.size() == size_t(15));
+  EXPECT(nfg.size() == size_t(13));
   EXPECT(est.size() == size_t(12));
 }
 

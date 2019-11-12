@@ -5,6 +5,8 @@ author: Yun Chang, Luca Carlone
 
 #include "KimeraRPGO/RobustSolver.h"
 
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <gtsam/nonlinear/DoglegOptimizer.h>
@@ -16,6 +18,8 @@ author: Yun Chang, Luca Carlone
 #include "KimeraRPGO/outlier/pcm.h"
 
 namespace KimeraRPGO {
+
+typedef std::pair<gtsam::NonlinearFactorGraph, gtsam::Values> GraphAndValues;
 
 RobustSolver::RobustSolver(const RobustSolverParams& params)
     : GenericSolver(params.solver, params.specialSymbols) {
@@ -106,7 +110,7 @@ void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,
   // optimize
   optimize();
 }
-
+  
 void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
                           const gtsam::Values& values) {
   bool do_optimize;

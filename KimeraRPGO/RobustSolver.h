@@ -52,7 +52,7 @@ class RobustSolver : public GenericSolver {
    *  - values: linearization point of graph to be connected
    */
   void update(const gtsam::NonlinearFactorGraph& factors,
-              const gtsam::Values& values);
+              const gtsam::Values& values = gtsam::Values());
 
  private:
   std::unique_ptr<OutlierRemoval> outlier_removal_;  // outlier removal method;

@@ -54,6 +54,8 @@ target_include_directories(KimeraRPGO
 # Define executables
 add_executable(RpgoReadG2o examples/RpgoReadG2o.cpp)
 target_link_libraries(RpgoReadG2o KimeraRPGO)
+add_executable(GenerateTrajectories examples/GenerateTrajectories.cpp)
+target_link_libraries(GenerateTrajectories gtsam)
 
 ###########################################################################
 # Tests

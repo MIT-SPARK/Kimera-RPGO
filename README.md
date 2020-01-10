@@ -121,3 +121,6 @@ params.setNoRejection();
 
 std::unique_ptr<RobustSolver> pgo = KimeraRPGO::make_unique<RobustSolver>(params); // initiate pgo solver
 ```
+
+## BSD License
+Kimera-RPGO is open source under the BSD license, see the [LICENSE.BSD](LICENSE.BSD) file.

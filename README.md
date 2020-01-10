@@ -22,11 +22,11 @@ We kindly ask to cite our paper if you find this library useful:
 
 ### Related Publications
 
-Outlier Rejection based on PCM:
+Outlier Rejection based on:
 
-- J. Mangelson, D. Dominic, R. Eustice, and R. Vasudevan. **Pairwise Consistent Measurement Set Maximizationfor Robust Multi-robot Map Merging**. IEEE Intl. Conf. on Robotics and Automation (ICRA), 2018.
+- J. Mangelson, D. Dominic, R. Eustice, and R. Vasudevan. **Pairwise Consistent Measurement Set Maximization for Robust Multi-robot Map Merging**. IEEE Intl. Conf. on Robotics and Automation (ICRA), 2018.
 
-[Maximum Clique Finder](http://cucis.ece.northwestern.edu/projects/MAXCLIQUE/) Used with slight adaptations: 
+[Maximum Clique Finder](http://cucis.ece.northwestern.edu/projects/MAXCLIQUE/) used with slight adaptations: 
 
 - B. Pattabiraman, M. Patwary, A. Gebremedhin, W. Liao, and A. Choudhary. **Fast Algorithms for the Maximum Clique Problem on Massive Graphs with Applications to Overlapping Community Detection**, Internet Mathematics, 2014.
 

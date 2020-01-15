@@ -1,6 +1,36 @@
-Kimera-RPGO
-======================================
-This is a repository for robust backend optimization. It is still a work in progress. Many features are still under developing and changing on a daily basis.
+# Kimera-RPGO: Open-Source Robust Pose Graph Optimization
+
+**Authors:** Yun Chang, [Luca Carlone](https://lucacarlone.mit.edu/), Marcus Abate, [Antoni Rosinol](https://www.mit.edu/~arosinol/)
+
+## Publications
+
+We kindly ask to cite our paper if you find this library useful:
+
+ - A. Rosinol, M. Abate, Y. Chang, L. Carlone. [**Kimera: an Open-Source Library for Real-Time Metric-Semantic Localization and Mapping**](https://arxiv.org/abs/1910.02490). arXiv preprint [arXiv:1910.02490](https://arxiv.org/abs/1910.02490).
+ ```bibtex
+ @misc{Rosinol19arxiv-Kimera,
+   title = {Kimera: an Open-Source Library for Real-Time Metric-Semantic Localization and Mapping},
+   author = {Rosinol, Antoni and Abate, Marcus and Chang, Yun and Carlone, Luca},
+   year = {2019},
+   eprint = {1910.02490},
+   archiveprefix = {arXiv},
+   primaryclass = {cs.RO},
+   url = {https://github.com/MIT-SPARK/Kimera},
+   pdf = {https://arxiv.org/pdf/1910.02490.pdf}
+ }
+```
+
+### Related Publications
+
+Outlier Rejection based on:
+
+- J. Mangelson, D. Dominic, R. Eustice, and R. Vasudevan. **Pairwise Consistent Measurement Set Maximization for Robust Multi-robot Map Merging**. IEEE Intl. Conf. on Robotics and Automation (ICRA), 2018.
+
+[Maximum Clique Finder](http://cucis.ece.northwestern.edu/projects/MAXCLIQUE/) used with slight adaptations: 
+
+- B. Pattabiraman, M. Patwary, A. Gebremedhin, W. Liao, and A. Choudhary. **Fast Algorithms for the Maximum Clique Problem on Massive Graphs with Applications to Overlapping Community Detection**, Internet Mathematics, 2014.
+
+- B. Pattabiraman, M. Patwary, A. Gebremedhin, W. Liao, and A. Choudhary. **Fast Algorithms for the Maximum Clique Problem on Massive Sparse Graphs**, In Proceedings of the 10th Workshop on Algorithms and Models for the Web Graph, Cambridge, MA, Lecture Notes in Computer Science, Springer, vol. 8305, pp. 156-169, 2013.
 
 ## Dependencies
 
@@ -91,3 +121,6 @@ params.setNoRejection();
 
 std::unique_ptr<RobustSolver> pgo = KimeraRPGO::make_unique<RobustSolver>(params); // initiate pgo solver
 ```
+
+## BSD License
+Kimera-RPGO is open source under the BSD license, see the [LICENSE.BSD](LICENSE.BSD) file.

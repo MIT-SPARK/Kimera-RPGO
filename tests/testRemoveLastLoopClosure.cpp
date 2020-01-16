@@ -14,9 +14,9 @@
 #include "KimeraRPGO/RobustSolver.h"
 #include "KimeraRPGO/SolverParams.h"
 #include "KimeraRPGO/utils/type_utils.h"
-#include "tests/test_config.h"
+#include "test_config.h"
 
-namespace KimeraRPGO {
+using namespace KimeraRPGO;
 
 void buildTestGraph(gtsam::NonlinearFactorGraph* factors,
                     gtsam::Values* values) {
@@ -275,5 +275,3 @@ int main() {
   return TestRegistry::runAllTests(tr);
 }
 /* ************************************************************************* */
-
-}  // namespace KimeraRPGO

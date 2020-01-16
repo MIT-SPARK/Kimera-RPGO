@@ -12,6 +12,8 @@ author: Yun Chang
 #include <gtsam/nonlinear/Values.h>
 #include <string>
 
+#include "KimeraRPGO/utils/type_utils.h"
+
 namespace KimeraRPGO {
 
 class OutlierRemoval {
@@ -44,6 +46,12 @@ class OutlierRemoval {
   /*! \brief Supressing the print messages to console
    */
   void setQuiet() { debug_ = false; }
+
+  /*! \brief Remove last measured loop closure
+   */
+  virtual void removeLastLoopClosure(
+      ObservationId id,
+      gtsam::NonlinearFactorGraph* updated_factors) {}
 
  protected:
   bool debug_ = true;

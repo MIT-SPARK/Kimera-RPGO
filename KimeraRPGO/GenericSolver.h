@@ -46,6 +46,8 @@ class GenericSolver {
 
   void setQuiet() { debug_ = false; }
 
+  void removeLastFactor();  // remove last added factor
+
  protected:
   bool addAndCheckIfOptimize(
       const gtsam::NonlinearFactorGraph& nfg = gtsam::NonlinearFactorGraph(),

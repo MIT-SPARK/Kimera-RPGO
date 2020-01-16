@@ -54,6 +54,12 @@ class RobustSolver : public GenericSolver {
   void update(const gtsam::NonlinearFactorGraph& factors,
               const gtsam::Values& values = gtsam::Values());
 
+  /*! \brief Remove last added loop closure based on the prefixes of the robots
+   * For example, to remove the last measure loop closure between robots a and c
+   * removeLastLoopClosure('a', 'c');
+   */
+  void removeLastLoopClosure(char prefix_1, char prefix_2);
+
  private:
   std::unique_ptr<OutlierRemoval> outlier_removal_;  // outlier removal method;
 

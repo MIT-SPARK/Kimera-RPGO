@@ -16,6 +16,7 @@ author: Yun Chang, Luca Carlone
 
 #include "KimeraRPGO/logger.h"
 #include "KimeraRPGO/outlier/pcm.h"
+#include "KimeraRPGO/utils/type_utils.h"
 
 namespace KimeraRPGO {
 
@@ -110,20 +111,33 @@ void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,
   // optimize
   optimize();
 }
-  
+
 void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
                           const gtsam::Values& values) {
   bool do_optimize;
   if (outlier_removal_) {
-    do_optimize = outlier_removal_->removeOutliers(
-        factors, values, nfg_, values_);
+    do_optimize =
+        outlier_removal_->removeOutliers(factors, values, nfg_, values_);
   } else {
     do_optimize = addAndCheckIfOptimize(factors, values);
   }
 
   if (do_optimize) optimize();  // optimize once after loading
   return;
-}  // namespace KimeraRPGO
+}
+
+void RobustSolver::removeLastLoopClosure(char prefix_1, char prefix_2) {
+  ObservationId id(prefix_1, prefix_2);
+  if (outlier_removal_) {
+    // removing loop closure so values should not change
+    outlier_removal_->removeLastLoopClosure(id, &nfg_);
+  } else {
+    removeLastFactor();
+  }
+
+  optimize();
+  return;
+}
 
 void RobustSolver::saveData(std::string folder_path) const {
   std::string g2o_file_path = folder_path + "/result.g2o";

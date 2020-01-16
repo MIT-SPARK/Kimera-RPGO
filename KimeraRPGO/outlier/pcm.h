@@ -31,7 +31,6 @@ author: Yun Chang, Luca Carlone
 #include "KimeraRPGO/outlier/OutlierRemoval.h"
 #include "KimeraRPGO/utils/geometry_utils.h"
 #include "KimeraRPGO/utils/graph_utils.h"
-#include "KimeraRPGO/utils/type_utils.h"
 
 namespace KimeraRPGO {
 
@@ -213,6 +212,50 @@ class Pcm : public OutlierRemoval {
     // TODO(Yun) save max clique results
     // saveDistanceMatrix(folder_path);
     // saveCliqueSizeData(folder_path);
+  }
+
+  /*! \brief remove the last loop closure based on observation ID
+   * and update the factors.
+   * For example if Observation id is Obsid('a','c'), method
+   * removes the last loop closure between robots a and c
+   */
+  void removeLastLoopClosure(ObservationId id,
+                             gtsam::NonlinearFactorGraph* updated_factors) {
+    if (loop_closures_.find(id) == loop_closures_.end()) {
+      return;  // No loop closures in this container
+    }
+    // Update the measurements (delete last measurement)
+    size_t numLC = loop_closures_[id].adj_matrix.rows();
+    if (numLC <= 0) {
+      return;  // No more loop closures
+    }
+
+    loop_closures_[id].factors.erase(
+        std::prev(loop_closures_[id].factors.end()));
+    if (loop_closures_[id].factors.size() < 2) {
+      loop_closures_[id].consistent_factors = loop_closures_[id].factors;
+    } else {
+      // Update adjacent and distance matrix
+      loop_closures_[id].adj_matrix =
+          loop_closures_[id].adj_matrix.block(0, 0, numLC - 1, numLC - 1);
+      loop_closures_[id].dist_matrix =
+          loop_closures_[id].dist_matrix.block(0, 0, numLC - 1, numLC - 1);
+
+      // Update the inliers
+      std::vector<int> inliers_idx;
+      size_t num_inliers =
+          findMaxCliqueHeu(loop_closures_[id].adj_matrix, inliers_idx);
+      loop_closures_[id].consistent_factors =
+          gtsam::NonlinearFactorGraph();  // reset
+      // update inliers, or consistent factors, according to max clique result
+      for (size_t i = 0; i < num_inliers; i++) {
+        loop_closures_[id].consistent_factors.add(
+            loop_closures_[id].factors[inliers_idx[i]]);
+      }
+    }
+
+    *updated_factors = buildGraphToOptimize();
+    return;
   }
 
  protected:

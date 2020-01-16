@@ -1,6 +1,6 @@
 /**
- * @file    testDoOptimize.cpp
- * @brief   Unit test for pcm and optimize conditions
+ * @file    testMutiRobot.cpp
+ * @brief   Unit test for pcm for multirobot uses
  * @author  Yun Chang
  */
 
@@ -14,9 +14,9 @@
 #include "KimeraRPGO/RobustSolver.h"
 #include "KimeraRPGO/SolverParams.h"
 #include "KimeraRPGO/utils/type_utils.h"
-#include "test_config.h"
+#include "tests/test_config.h"
 
-using namespace KimeraRPGO;
+namespace KimeraRPGO {
 
 /* ************************************************************************* */
 TEST(RobustSolver, multiRobotPcm) {
@@ -360,3 +360,5 @@ int main() {
   return TestRegistry::runAllTests(tr);
 }
 /* ************************************************************************* */
+
+}  // namespace KimeraRPGO

@@ -95,4 +95,6 @@ void GenericSolver::removeFactorsNoUpdate(
   }
 }
 
+void GenericSolver::removeLastFactor() { nfg_.erase(std::prev(nfg_.end())); }
+
 }  // namespace KimeraRPGO

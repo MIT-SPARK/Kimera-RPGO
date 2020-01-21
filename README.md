@@ -52,7 +52,7 @@ sudo make install
 ```
 **Note:**
 The reason why we need EXPMAP is for the correct calculation of Jacobians.
-Enabling this and the `#define SLOW_BUT_CORRECT_BETWEENFACTOR` in LaserLoopCLosure.h are both important. Otherwise the default are some identity approximations for rotations, which works for some cases but fails for cases with manual loop closures, or artifacts. Note that `sudo make check` will partially fail because some unittests assume the EXPMAP flags to be off.
+Enabling this and the `#define SLOW_BUT_CORRECT_BETWEENFACTOR` before any `#include <gtsam/slam/BetweenFactor.h>` are both important. Otherwise the default are some identity approximations for rotations, which works for some cases but fails for cases with manual loop closures, or artifacts. Note that `sudo make check` in gtsam will partially fail because some unittests assume the EXPMAP flags to be off.
 
 ## Build
 ```bash

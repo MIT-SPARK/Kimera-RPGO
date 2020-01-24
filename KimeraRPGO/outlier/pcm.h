@@ -177,8 +177,12 @@ class Pcm : public OutlierRemoval {
           total_lc_++;
         } break;
         case FactorType::LOOP_CLOSURE: {
-          // add the the loop closure factors and process them together
-          loop_closure_factors.add(new_factors[i]);
+          if (new_factors[i]->front() != new_factors[i]->back()) {
+            // add the the loop closure factors and process them together
+            loop_closure_factors.add(new_factors[i]);
+          } else {
+            log<WARNING>("Attempting to close loop against self");
+          }
         } break;
         case FactorType::NONBETWEEN_FACTORS: {
           nfg_special_.add(new_factors[i]);

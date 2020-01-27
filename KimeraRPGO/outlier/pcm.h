@@ -268,7 +268,7 @@ class Pcm : public OutlierRemoval {
    */
   void parseAndIncrementAdjMatrix(
       const gtsam::NonlinearFactorGraph& new_factors,
-      const gtsam::Values output_values) {
+      const gtsam::Values& output_values) {
     for (size_t i = 0; i < new_factors.size(); i++) {
       // iterate through the factors
       // double check again that these are between factors
@@ -313,7 +313,7 @@ class Pcm : public OutlierRemoval {
           double odom_dist;
           bool odom_consistent = false;
           if (symbfrnt.chr() == symbback.chr()) {
-            odom_consistent = isOdomConsistent(nfg_factor, odom_dist);
+            odom_consistent = isOdomConsistent(nfg_factor, &odom_dist);
           } else {
             // odom consistency check only for intrarobot loop closures
             odom_consistent = true;
@@ -347,7 +347,7 @@ class Pcm : public OutlierRemoval {
 
   // check if a character is a special symbol as defined in constructor
   // (typically these are the landmarks)
-  bool isSpecialSymbol(char symb) const {
+  bool isSpecialSymbol(const char& symb) const {
     for (size_t i = 0; i < special_symbols_.size(); i++) {
       if (special_symbols_[i] == symb) return true;
     }
@@ -357,8 +357,8 @@ class Pcm : public OutlierRemoval {
   /* *******************************************************************************
    */
   // update the odometry: add new measurements to odometry trajectory tree
-  void updateOdom(gtsam::NonlinearFactor::shared_ptr new_factor,
-                  gtsam::Values output_values) {
+  void updateOdom(const gtsam::NonlinearFactor::shared_ptr& new_factor,
+                  const gtsam::Values& output_values) {
     // here we have values for reference checking and initialization if needed
     gtsam::BetweenFactor<poseT> odom_factor =
         *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT>>(new_factor);
@@ -402,10 +402,10 @@ class Pcm : public OutlierRemoval {
    * odometry consistency check specialized to the PoseWithCovariance class
    */
   bool checkOdomConsistent(const PoseWithCovariance<poseT>& result,
-                           double& dist) const {
-    dist = result.mahalanobis_norm();  // for PCM
-    if (debug_) log<INFO>("odometry consistency distance: %1%") % dist;
-    if (dist < threshold1_) {
+                           double* dist) const {
+    *dist = result.mahalanobis_norm();  // for PCM
+    if (debug_) log<INFO>("odometry consistency distance: %1%") % *dist;
+    if (*dist < threshold1_) {
       return true;
     }
     return false;
@@ -416,16 +416,16 @@ class Pcm : public OutlierRemoval {
   /*
    * odometry consistency check specialized to the PoseWithNode class
    */
-  bool checkOdomConsistent(const PoseWithNode<poseT>& result, double& dist) {
+  bool checkOdomConsistent(const PoseWithNode<poseT>& result, double* dist) {
     // For PcmSimple
-    dist = result.avg_trans_norm();
+    *dist = result.avg_trans_norm();
     double rot_dist = result.avg_rot_norm();
 
     if (debug_)
-      log<INFO>("odometry consistency translation distance: %1%") % dist;
+      log<INFO>("odometry consistency translation distance: %1%") % *dist;
     if (debug_)
       log<INFO>("odometry consistency rotation distance: %1%") % rot_dist;
-    if (dist < threshold1_ && rot_dist < threshold2_) {
+    if (*dist < threshold1_ && rot_dist < threshold2_) {
       return true;
     }
     return false;
@@ -438,7 +438,7 @@ class Pcm : public OutlierRemoval {
    * version)
    */
   bool isOdomConsistent(const gtsam::BetweenFactor<poseT>& lc_factor,
-                        double& dist) {
+                        double* dist) {
     // say: loop is between pose i and j
     gtsam::Key key_i = lc_factor.keys().front();  // extract the keys
     gtsam::Key key_j = lc_factor.keys().back();
@@ -471,9 +471,9 @@ class Pcm : public OutlierRemoval {
    * checkPairwiseConsistency and let it take a third argument (the threshold)
    */
   bool checkLoopConsistent(const PoseWithCovariance<poseT>& result,
-                           double& dist) {
-    dist = result.mahalanobis_norm();
-    if (dist < threshold2_) {
+                           double* dist) {
+    *dist = result.mahalanobis_norm();
+    if (*dist < threshold2_) {
       return true;
     }
     return false;
@@ -486,10 +486,10 @@ class Pcm : public OutlierRemoval {
    * TODO: delete this function, rename checkOdomConsistent to
    * checkPairwiseConsistency and let it take a third argument (the threshold)
    */
-  bool checkLoopConsistent(const PoseWithNode<poseT>& result, double& dist) {
-    dist = result.avg_trans_norm();
+  bool checkLoopConsistent(const PoseWithNode<poseT>& result, double* dist) {
+    *dist = result.avg_trans_norm();
     double rot_dist = result.avg_rot_norm();
-    if (dist < threshold1_ && rot_dist < threshold2_) {
+    if (*dist < threshold1_ && rot_dist < threshold2_) {
       return true;
     }
     return false;
@@ -503,7 +503,7 @@ class Pcm : public OutlierRemoval {
    */
   bool areLoopsConsistent(const gtsam::BetweenFactor<poseT>& a_lcBetween_b,
                           const gtsam::BetweenFactor<poseT>& c_lcBetween_d,
-                          double& dist) {
+                          double* dist) {
     // check if two loop closures are consistent
     // say: loop closure 1 is (a,b)
     gtsam::Key key_a = a_lcBetween_b.keys().front();
@@ -592,7 +592,7 @@ class Pcm : public OutlierRemoval {
                 loop_closures_[id].factors[i]);
         // check consistency
         double mah_distance;
-        bool consistent = areLoopsConsistent(factor_i, factor, mah_distance);
+        bool consistent = areLoopsConsistent(factor_i, factor, &mah_distance);
         new_dst_matrix(num_lc - 1, i) = mah_distance;
         new_dst_matrix(i, num_lc - 1) = mah_distance;
         if (consistent) {
@@ -668,7 +668,7 @@ class Pcm : public OutlierRemoval {
         loop = i_path_l.inverse().compose(i_pose_l);
 
         double dist;
-        bool consistent = checkLoopConsistent(loop, dist);
+        bool consistent = checkLoopConsistent(loop, &dist);
 
         new_dst_matrix(num_lc - 1, i) = dist;
         new_dst_matrix(i, num_lc - 1) = dist;

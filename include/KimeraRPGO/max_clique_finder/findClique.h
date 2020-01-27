@@ -20,8 +20,8 @@
 
 /*   http://arxiv.org/abs/1411.7460 */
 
-#ifndef KIMERARPGO_MAX_CLIQUE_FINDER_FINDCLIQUE_H_
-#define KIMERARPGO_MAX_CLIQUE_FINDER_FINDCLIQUE_H_
+#ifndef INCLUDE_KIMERARPGO_MAX_CLIQUE_FINDER_FINDCLIQUE_H_
+#define INCLUDE_KIMERARPGO_MAX_CLIQUE_FINDER_FINDCLIQUE_H_
 
 #include <stdlib.h>
 #include <sys/time.h>
@@ -62,4 +62,4 @@ void maxCliqueHelperHeu(CGraphIO* gio,
                         vector<int>* max_clique_data_inter);
 
 }  // namespace FMC
-#endif  // KIMERARPGO_MAX_CLIQUE_FINDER_FINDCLIQUE_H_
+#endif  // INCLUDE_KIMERARPGO_MAX_CLIQUE_FINDER_FINDCLIQUE_H_

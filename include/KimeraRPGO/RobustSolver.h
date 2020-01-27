@@ -3,8 +3,8 @@ Backend solver class (Robust Pose Graph Optimizer)
 author: Yun Chang, Luca Carlone
 */
 
-#ifndef KIMERARPGO_ROBUSTSOLVER_H_
-#define KIMERARPGO_ROBUSTSOLVER_H_
+#ifndef INCLUDE_KIMERARPGO_ROBUSTSOLVER_H_
+#define INCLUDE_KIMERARPGO_ROBUSTSOLVER_H_
 
 #include <memory>
 #include <string>
@@ -80,4 +80,4 @@ class RobustSolver : public GenericSolver {
 
 }  // namespace KimeraRPGO
 
-#endif  // KIMERARPGO_ROBUSTSOLVER_H_
+#endif  // INCLUDE_KIMERARPGO_ROBUSTSOLVER_H_

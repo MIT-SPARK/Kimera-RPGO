@@ -9,7 +9,8 @@
 
 #include "KimeraRPGO/outlier/pcm.h"
 
-using namespace KimeraRPGO;
+using KimeraRPGO::OutlierRemoval;
+using KimeraRPGO::PcmSimple3D;
 
 /* ************************************************************************* */
 TEST(PcmSimple, OdomTransCheck) {
@@ -63,7 +64,8 @@ TEST(PcmSimple, OdomTransCheck) {
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);
   lc_factor1.add(gtsam::BetweenFactor<gtsam::Pose3>(3, 0, lc1, noiseLc1));
 
-  bool do_optimize = pcm->removeOutliers(lc_factor1, gtsam::Values(), &nfg, &est);
+  bool do_optimize =
+      pcm->removeOutliers(lc_factor1, gtsam::Values(), &nfg, &est);
   EXPECT(size_t(5) == nfg.size());
   EXPECT(size_t(4) == est.size());
   EXPECT(do_optimize == true);
@@ -135,7 +137,8 @@ TEST(PcmSimple, OdomRotCheck) {
       gtsam::noiseModel::Isotropic::Variance(6, 0.1);
   lc_factor1.add(gtsam::BetweenFactor<gtsam::Pose3>(3, 0, lc1, noiseLc1));
 
-  bool do_optimize = pcm->removeOutliers(lc_factor1, gtsam::Values(), &nfg, &est);
+  bool do_optimize =
+      pcm->removeOutliers(lc_factor1, gtsam::Values(), &nfg, &est);
   EXPECT(size_t(5) == nfg.size());
   EXPECT(size_t(4) == est.size());
   EXPECT(do_optimize == true);
@@ -225,7 +228,8 @@ TEST(Pcm, ConsistencyTransCheck) {
   gtsam::Rot3 R_lc2 = gtsam::Rot3::Rz(3.1416);
   gtsam::Pose3 lc2 = gtsam::Pose3(R_lc2, gtsam::Point3(-0.9, 0.9, 0));
   lc_factor2.add(gtsam::BetweenFactor<gtsam::Pose3>(4, 0, lc2, noiseLc));
-  bool do_optimize = pcm->removeOutliers(lc_factor2, gtsam::Values(), &nfg, &est);
+  bool do_optimize =
+      pcm->removeOutliers(lc_factor2, gtsam::Values(), &nfg, &est);
 
   // Check that the two previous loop closures are consistent
   EXPECT(size_t(9) == nfg.size());
@@ -327,7 +331,8 @@ TEST(Pcm, ConsistencyRotCheck) {
   gtsam::Rot3 R_lc2 = gtsam::Rot3::Rz(3.141);
   gtsam::Pose3 lc2 = gtsam::Pose3(R_lc2, gtsam::Point3(-1.0, 1.0, 0));
   lc_factor2.add(gtsam::BetweenFactor<gtsam::Pose3>(4, 0, lc2, noiseLc));
-  bool do_optimize = pcm->removeOutliers(lc_factor2, gtsam::Values(), &nfg, &est);
+  bool do_optimize =
+      pcm->removeOutliers(lc_factor2, gtsam::Values(), &nfg, &est);
 
   // Check that the two previous loop closures are consistent
   EXPECT(size_t(9) == nfg.size());

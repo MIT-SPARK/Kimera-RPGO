@@ -5,6 +5,7 @@ author: Yun Chang, Luca Carlone
 
 #include "KimeraRPGO/RobustSolver.h"
 
+#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>

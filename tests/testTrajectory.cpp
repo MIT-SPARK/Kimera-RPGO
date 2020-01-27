@@ -10,10 +10,12 @@
 #include "KimeraRPGO/utils/geometry_utils.h"
 #include "KimeraRPGO/utils/graph_utils.h"
 
-using namespace KimeraRPGO;
+using KimeraRPGO::PoseWithCovariance;
+using KimeraRPGO::PoseWithNode;
+using KimeraRPGO::Trajectory;
 
 struct normal_rv {
-  normal_rv(Eigen::MatrixXd const &covar) {
+  explicit normal_rv(Eigen::MatrixXd const& covar) {
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigenSolver(covar);
     transform = eigenSolver.eigenvectors() *
                 eigenSolver.eigenvalues().cwiseSqrt().asDiagonal();
@@ -22,7 +24,7 @@ struct normal_rv {
   Eigen::MatrixXd transform;
 
   Eigen::VectorXd operator()() const {
-    static std::mt19937 gen{std::random_device{}()};
+    static std::mt19937 gen {std::random_device{}()};
     static std::normal_distribution<> dist;
     return transform * Eigen::VectorXd{transform.rows()}.unaryExpr(
                            [&](double x) { return dist(gen); });
@@ -33,7 +35,7 @@ struct normal_rv {
 TEST(Trajectory, MonteCarlo) {
   gtsam::Key start_id = 0;
   gtsam::Key end_id = 100;
-  gtsam::Matrix init_covar = Eigen::MatrixXd::Zero(6, 6); // initialize as zero
+  gtsam::Matrix init_covar = Eigen::MatrixXd::Zero(6, 6);  // initialize as zero
 
   // construct initial pose with covar
   PoseWithCovariance<gtsam::Pose3> initial_pose;
@@ -52,7 +54,7 @@ TEST(Trajectory, MonteCarlo) {
     odom.pose = tf;
     odom.covariance_matrix = 0.0001 * Eigen::MatrixXd::Identity(6, 6);
 
-    current_pose = current_pose.compose(odom); // update pose
+    current_pose = current_pose.compose(odom);  // update pose
     test_traj.poses[i] = current_pose;
   }
 
@@ -72,7 +74,7 @@ TEST(Trajectory, MonteCarlo) {
     odom.pose = tf;
     odom.covariance_matrix = 0.0001 * Eigen::MatrixXd::Identity(6, 6);
     // between_rebuild.pose.print();
-    between_rebuild = between_rebuild.compose(odom); // update pose (stich)
+    between_rebuild = between_rebuild.compose(odom);  // update pose (stich)
   }
 
   // monte carlo

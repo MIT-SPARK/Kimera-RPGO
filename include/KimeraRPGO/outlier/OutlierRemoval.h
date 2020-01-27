@@ -5,8 +5,8 @@ along with interface to KimeraRPGO
 author: Yun Chang
 */
 
-#ifndef KIMERARPGO_OUTLIER_OUTLIERREMOVAL_H_
-#define KIMERARPGO_OUTLIER_OUTLIERREMOVAL_H_
+#ifndef INCLUDE_KIMERARPGO_OUTLIER_OUTLIERREMOVAL_H_
+#define INCLUDE_KIMERARPGO_OUTLIER_OUTLIERREMOVAL_H_
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/Values.h>
@@ -58,4 +58,4 @@ class OutlierRemoval {
 };
 
 }  // namespace KimeraRPGO
-#endif  // KIMERARPGO_OUTLIER_OUTLIERREMOVAL_H_
+#endif  // INCLUDE_KIMERARPGO_OUTLIER_OUTLIERREMOVAL_H_

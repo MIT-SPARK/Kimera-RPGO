@@ -4,6 +4,8 @@ No outlier removal in this class
 author: Yun Chang, Luca Carlone
 */
 
+#include <vector>
+
 #include "KimeraRPGO/GenericSolver.h"
 
 #include <gtsam/nonlinear/DoglegOptimizer.h>

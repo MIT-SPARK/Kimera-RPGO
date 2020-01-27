@@ -3,8 +3,8 @@ Symple logger class for prints and warnings
 author: Yun Chang
 */
 
-#ifndef KIMERARPGO_LOGGER_H_
-#define KIMERARPGO_LOGGER_H_
+#ifndef INCLUDE_KIMERARPGO_LOGGER_H_
+#define INCLUDE_KIMERARPGO_LOGGER_H_
 
 #include <boost/format.hpp>
 #include <iostream>
@@ -49,4 +49,4 @@ log_impl::formatted_log_t log(const char* msg) {
 
 }  // namespace KimeraRPGO
 
-#endif  // KIMERARPGO_LOGGER_H_
+#endif  // INCLUDE_KIMERARPGO_LOGGER_H_

@@ -30,17 +30,18 @@ endif()
 ###########################################################################
 # Compile
 add_library(KimeraRPGO SHARED
-  KimeraRPGO/logger.h
-  KimeraRPGO/GenericSolver.cpp
-  KimeraRPGO/RobustSolver.cpp
-  KimeraRPGO/SolverParams.h )
+  include/KimeraRPGO/logger.h
+  src/GenericSolver.cpp
+  src/RobustSolver.cpp
+  include/KimeraRPGO/SolverParams.h )
 
 # Add source code for max clique finder
-include(KimeraRPGO/max_clique_finder/CMakeLists.txt)
+include(include/KimeraRPGO/max_clique_finder/CMakeLists.txt)
 # Add source for outlier rejection stuff
-include(KimeraRPGO/outlier/CMakeLists.txt)
+include(include/KimeraRPGO/outlier/CMakeLists.txt)
 # Add source for utils
-include(KimeraRPGO/utils/CMakeLists.txt)
+include(include/KimeraRPGO/utils/CMakeLists.txt)
+include(src/utils/CMakeLists.txt)
 
 target_link_libraries(KimeraRPGO
   PUBLIC
@@ -52,7 +53,8 @@ target_link_libraries(KimeraRPGO
 target_include_directories(KimeraRPGO
   PUBLIC
     ${GTSAM_INCLUDE_DIR}
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+    $<INSTALL_INTERFACE:include>
 )
 
 ###########################################################################
@@ -66,8 +68,6 @@ target_link_libraries(GenerateTrajectories gtsam)
 # Tests
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/UnitTesting.cmake)
 add_subdirectory(tests)
-add_subdirectory(KimeraRPGO/outlier/tests)
-add_subdirectory(KimeraRPGO/utils/tests)
 set(TEST_DATA_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
 configure_file(tests/test_config.h.in tests/test_config.h)
 

@@ -1,7 +1,7 @@
 // Authors: Yun Chang
 
-#ifndef KIMERARPGO_UTILS_TYPE_UTILS_H_
-#define KIMERARPGO_UTILS_TYPE_UTILS_H_
+#ifndef INCLUDE_KIMERARPGO_UTILS_TYPE_UTILS_H_
+#define INCLUDE_KIMERARPGO_UTILS_TYPE_UTILS_H_
 
 #include <functional>
 #include <memory>
@@ -70,4 +70,4 @@ struct hash<KimeraRPGO::ObservationId> {
 };
 }  // namespace std
 
-#endif  // KIMERARPGO_UTILS_TYPE_UTILS_H_
+#endif  // INCLUDE_KIMERARPGO_UTILS_TYPE_UTILS_H_

@@ -9,10 +9,10 @@
 
 #include "KimeraRPGO/utils/geometry_utils.h"
 
-using namespace KimeraRPGO;
+using KimeraRPGO::PoseWithCovariance;
 
 struct normal_rv {
-  normal_rv(Eigen::MatrixXd const &covar) {
+  explicit normal_rv(Eigen::MatrixXd const& covar) {
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigenSolver(covar);
     transform = eigenSolver.eigenvectors() *
                 eigenSolver.eigenvalues().cwiseSqrt().asDiagonal();
@@ -21,7 +21,7 @@ struct normal_rv {
   Eigen::MatrixXd transform;
 
   Eigen::VectorXd operator()() const {
-    static std::mt19937 gen{std::random_device{}()};
+    static std::mt19937 gen {std::random_device{}()};
     static std::normal_distribution<> dist;
     return transform * Eigen::VectorXd{transform.rows()}.unaryExpr(
                            [&](double x) { return dist(gen); });
@@ -52,7 +52,7 @@ TEST(PoseWithCovariance, Compose) {
   // Test the compose operator for PoseWithCovariance struct
   PoseWithCovariance<gtsam::Pose3> A, AB, B, BC, C, CD, D;
 
-  A.pose = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 1, 1)); // start
+  A.pose = gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 1, 1));  // start
   A.covariance_matrix = 0.1 * Eigen::MatrixXd::Identity(6, 6);
 
   // First test a translation only

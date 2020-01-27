@@ -4,8 +4,8 @@ Backend solver class (Robust Pose Graph Optimizer)
 author: Yun Chang, Luca Carlone
  */
 
-#ifndef KIMERARPGO_OUTLIER_PCM_H_
-#define KIMERARPGO_OUTLIER_PCM_H_
+#ifndef INCLUDE_KIMERARPGO_OUTLIER_PCM_H_
+#define INCLUDE_KIMERARPGO_OUTLIER_PCM_H_
 
 // enables correct operations of GTSAM (correct Jacobians)
 #define SLOW_BUT_CORRECT_BETWEENFACTOR
@@ -110,9 +110,10 @@ class Pcm : public OutlierRemoval {
                       gtsam::NonlinearFactorGraph* output_nfg,
                       gtsam::Values* output_values) override {
     // store new values:
-    output_values->insert(new_values);  // - store latest pose in values_ (note:
-                                       // values_ is the optimized estimate,
-                                       // while trajectory is the odom estimate)
+    output_values->insert(
+        new_values);  // - store latest pose in values_ (note:
+                      // values_ is the optimized estimate,
+                      // while trajectory is the odom estimate)
     // Check values to initialize a trajectory in odom_trajectories if needed
     if (new_factors.size() == 0) {
       // Done and nothing to optimize
@@ -248,7 +249,7 @@ class Pcm : public OutlierRemoval {
       // Update the inliers
       std::vector<int> inliers_idx;
       size_t num_inliers =
-          findMaxCliqueHeu(loop_closures_[id].adj_matrix, inliers_idx);
+          findMaxCliqueHeu(loop_closures_[id].adj_matrix, &inliers_idx);
       loop_closures_[id].consistent_factors =
           gtsam::NonlinearFactorGraph();  // reset
       // update inliers, or consistent factors, according to max clique result
@@ -697,7 +698,8 @@ class Pcm : public OutlierRemoval {
       std::vector<int> inliers_idx;
       it->second.consistent_factors = gtsam::NonlinearFactorGraph();  // reset
       // find max clique
-      size_t num_inliers = findMaxCliqueHeu(it->second.adj_matrix, inliers_idx);
+      size_t num_inliers =
+          findMaxCliqueHeu(it->second.adj_matrix, &inliers_idx);
       // update inliers, or consistent factors, according to max clique result
       for (size_t i = 0; i < num_inliers; i++) {
         it->second.consistent_factors.add(it->second.factors[inliers_idx[i]]);
@@ -715,7 +717,7 @@ class Pcm : public OutlierRemoval {
           gtsam::NonlinearFactorGraph();  // reset
       // find max clique
       size_t num_inliers =
-          findMaxCliqueHeu(it_ldmrk->second.adj_matrix, inliers_idx);
+          findMaxCliqueHeu(it_ldmrk->second.adj_matrix, &inliers_idx);
       // update inliers, or consistent factors, according to max clique result
       for (size_t i = 0; i < num_inliers; i++) {
         it_ldmrk->second.consistent_factors.add(
@@ -763,4 +765,4 @@ typedef Pcm<gtsam::Pose3, PoseWithNode> PcmSimple3D;
 
 }  // namespace KimeraRPGO
 
-#endif  // KIMERARPGO_OUTLIER_PCM_H_
+#endif  // INCLUDE_KIMERARPGO_OUTLIER_PCM_H_

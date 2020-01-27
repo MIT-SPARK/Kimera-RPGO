@@ -3,8 +3,8 @@ Robust Solver Params class
 author: Yun Chang
 */
 
-#ifndef KIMERARPGO_SOLVERPARAMS_H_
-#define KIMERARPGO_SOLVERPARAMS_H_
+#ifndef INCLUDE_KIMERARPGO_SOLVERPARAMS_H_
+#define INCLUDE_KIMERARPGO_SOLVERPARAMS_H_
 
 #include <vector>
 
@@ -117,4 +117,4 @@ struct RobustSolverParams {
 };
 
 }  // namespace KimeraRPGO
-#endif  // KIMERARPGO_SOLVERPARAMS_H_
+#endif  // INCLUDE_KIMERARPGO_SOLVERPARAMS_H_

@@ -3,8 +3,8 @@ Generic backend solver class
 author: Yun Chang, Luca Carlone
 */
 
-#ifndef KIMERARPGO_GENERICSOLVER_H_
-#define KIMERARPGO_GENERICSOLVER_H_
+#ifndef INCLUDE_KIMERARPGO_GENERICSOLVER_H_
+#define INCLUDE_KIMERARPGO_GENERICSOLVER_H_
 
 #include <vector>
 
@@ -64,4 +64,4 @@ class GenericSolver {
 
 }  // namespace KimeraRPGO
 
-#endif  // KIMERARPGO_GENERICSOLVER_H_
+#endif  // INCLUDE_KIMERARPGO_GENERICSOLVER_H_

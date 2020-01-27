@@ -24,6 +24,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <cstddef>
+#include <vector>
 #include "findClique.h"
 
 namespace FMC {

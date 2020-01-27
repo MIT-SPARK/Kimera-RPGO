@@ -1,7 +1,7 @@
 // Authors: Yun Chang
 
-#ifndef KIMERARPGO_UTILS_GRAPH_UTILS_H_
-#define KIMERARPGO_UTILS_GRAPH_UTILS_H_
+#ifndef INCLUDE_KIMERARPGO_UTILS_GRAPH_UTILS_H_
+#define INCLUDE_KIMERARPGO_UTILS_GRAPH_UTILS_H_
 
 #include <map>
 #include <unordered_map>
@@ -13,10 +13,10 @@
 namespace KimeraRPGO {
 
 int findMaxClique(const Eigen::MatrixXd adjMatrix,
-                  std::vector<int>& max_clique);
+                  std::vector<int>* max_clique);
 
 int findMaxCliqueHeu(const Eigen::MatrixXd adjMatrix,
-                     std::vector<int>& max_clique);
+                     std::vector<int>* max_clique);
 
 /** \struct Trajectory
  *  \brief Structure defining a robot trajectory
@@ -56,4 +56,4 @@ struct Trajectory {
 
 }  // namespace KimeraRPGO
 
-#endif  // KIMERARPGO_UTILS_GRAPH_UTILS_H_
+#endif  // INCLUDE_KIMERARPGO_UTILS_GRAPH_UTILS_H_

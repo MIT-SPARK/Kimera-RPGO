@@ -1,7 +1,7 @@
 // Authors: Yun Chang
 
-#ifndef KIMERARPGO_UTILS_GEOMETRY_UTILS_H_
-#define KIMERARPGO_UTILS_GEOMETRY_UTILS_H_
+#ifndef INCLUDE_KIMERARPGO_UTILS_GEOMETRY_UTILS_H_
+#define INCLUDE_KIMERARPGO_UTILS_GEOMETRY_UTILS_H_
 
 // enables correct operations of GTSAM (correct Jacobians)
 #define SLOW_BUT_CORRECT_BETWEENFACTOR
@@ -289,4 +289,4 @@ struct PoseWithNode {
 
 }  // namespace KimeraRPGO
 
-#endif  // KIMERARPGO_UTILS_GEOMETRY_UTILS_H_
+#endif  // INCLUDE_KIMERARPGO_UTILS_GEOMETRY_UTILS_H_

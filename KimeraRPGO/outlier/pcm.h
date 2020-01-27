@@ -107,10 +107,10 @@ class Pcm : public OutlierRemoval {
    */
   bool removeOutliers(const gtsam::NonlinearFactorGraph& new_factors,
                       const gtsam::Values& new_values,
-                      gtsam::NonlinearFactorGraph& output_nfg,
-                      gtsam::Values& output_values) override {
+                      gtsam::NonlinearFactorGraph* output_nfg,
+                      gtsam::Values* output_values) override {
     // store new values:
-    output_values.insert(new_values);  // - store latest pose in values_ (note:
+    output_values->insert(new_values);  // - store latest pose in values_ (note:
                                        // values_ is the optimized estimate,
                                        // while trajectory is the odom estimate)
     // Check values to initialize a trajectory in odom_trajectories if needed
@@ -163,7 +163,7 @@ class Pcm : public OutlierRemoval {
       switch (type) {
         case FactorType::ODOMETRY:  // odometry, do not optimize
         {
-          updateOdom(new_factors[i], output_values);
+          updateOdom(new_factors[i], *output_values);
         } break;
         case FactorType::FIRST_LANDMARK_OBSERVATION:  // landmark measurement,
                                                       // initialize
@@ -198,13 +198,13 @@ class Pcm : public OutlierRemoval {
     }
     if (loop_closure_factors.size() > 0) {
       // update inliers
-      parseAndIncrementAdjMatrix(loop_closure_factors, output_values);
+      parseAndIncrementAdjMatrix(loop_closure_factors, *output_values);
       // output values is just used to sanity check the keys
       findInliers();
       // Find inliers with Pairwise consistent measurement set maximization
       do_optimize = true;
     }
-    output_nfg = buildGraphToOptimize();
+    *output_nfg = buildGraphToOptimize();
     return do_optimize;
   }  // end reject outliers
 

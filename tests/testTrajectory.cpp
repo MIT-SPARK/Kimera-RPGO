@@ -24,7 +24,7 @@ struct normal_rv {
   Eigen::MatrixXd transform;
 
   Eigen::VectorXd operator()() const {
-    static std::mt19937 gen {std::random_device{}()};
+    static std::mt19937 gen{std::random_device{}()};
     static std::normal_distribution<> dist;
     return transform * Eigen::VectorXd{transform.rows()}.unaryExpr(
                            [&](double x) { return dist(gen); });

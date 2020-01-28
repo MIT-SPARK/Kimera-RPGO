@@ -34,7 +34,7 @@ add_library(KimeraRPGO SHARED
   src/GenericSolver.cpp
   src/RobustSolver.cpp
   include/KimeraRPGO/SolverParams.h )
-
+include_directories(include/KimeraRPGO/)
 # Add source code for max clique finder
 include(include/KimeraRPGO/max_clique_finder/CMakeLists.txt)
 # Add source for outlier rejection stuff
@@ -83,9 +83,11 @@ write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfigVer
 
 # Create KimeraRPGOConfig.cmake with extra info from KimeraRPGOConfig.cmake.in
 # This file is necessary to find_package the library KimeraRPGO.
-configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/KimeraRPGOConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfig.cmake
-    INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
+set(INSTALL_CONFIGDIR lib/cmake/KimeraRPGO)
+configure_package_config_file(
+  ${CMAKE_CURRENT_LIST_DIR}/cmake/KimeraRPGOConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfig.cmake
+  INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
 )
 
 export(TARGETS KimeraRPGO FILE KimeraRPGOTargets.cmake)
@@ -94,14 +96,41 @@ export(PACKAGE KimeraRPGO)
 include(GNUInstallDirs)
 install(TARGETS KimeraRPGO
     EXPORT kimera-rpgo-export
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    INCLUDES DESTINATION include
+    RUNTIME DESTINATION bin
 )
 install(EXPORT kimera-rpgo-export
   FILE
     KimeraRPGOTargets.cmake
-    #NAMESPACE
-    #NAKimeraRPGO::
   DESTINATION
-    ${CMAKE_INSTALL_LIBDIR}/cmake/KimeraRPGO
+    ${INSTALL_CONFIGDIR}
 )
+# Install header files
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h")
+
+## Install the config and configversion
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfig.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfigVersion.cmake
+  DESTINATION ${INSTALL_CONFIGDIR}
+)
+
+################################################################################
+# Print configuration variables
+message(STATUS "===============================================================")
+message(STATUS "================  Configuration Options  ======================")
+message(STATUS "CMAKE_CXX_COMPILER_ID type                : ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "CMAKE_CXX_COMPILER_VERSION                : ${CMAKE_CXX_COMPILER_VERSION}")
+message(STATUS "Build flags                                               ")
+if(NOT MSVC AND NOT XCODE_VERSION)
+    message(STATUS "  Build type                              : ${CMAKE_BUILD_TYPE}")
+    if (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Release")
+      message(WARNING "  Build type is not in RELEASE, this will slow down the code.")
+    endif()
+    message(STATUS "  C compilation flags (Release)           : ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}")
+    message(STATUS "  C++ compilation flags (Release)         : ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
+endif()

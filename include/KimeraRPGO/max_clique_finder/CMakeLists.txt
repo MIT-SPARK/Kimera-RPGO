@@ -8,4 +8,3 @@ target_sources(KimeraRPGO
 		"${CMAKE_CURRENT_LIST_DIR}/graphIO.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/utils.cpp"
 )
-target_include_directories(KimeraRPGO PRIVATE ${CMAKE_CURRENT_LIST_DIR})

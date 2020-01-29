@@ -73,8 +73,6 @@ configure_file(tests/test_config.h.in tests/test_config.h)
 
 ###########################################################################
 # Installation
-set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/KimeraRPGO)
-
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfigVersion.cmake
     VERSION ${PROJECT_VERSION}
@@ -98,8 +96,6 @@ install(TARGETS KimeraRPGO
     EXPORT kimera-rpgo-export
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
-    INCLUDES DESTINATION include
-    RUNTIME DESTINATION bin
 )
 install(EXPORT kimera-rpgo-export
   FILE

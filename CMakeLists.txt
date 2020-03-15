@@ -36,11 +36,12 @@ add_library(KimeraRPGO SHARED
   include/KimeraRPGO/SolverParams.h )
 include_directories(include/KimeraRPGO/)
 # Add source code for max clique finder
-include(include/KimeraRPGO/max_clique_finder/CMakeLists.txt)
+add_subdirectory(include/KimeraRPGO/max_clique_finder)
 # Add source for outlier rejection stuff
-include(include/KimeraRPGO/outlier/CMakeLists.txt)
+add_subdirectory(include/KimeraRPGO/outlier)
 # Add source for utils
-include(include/KimeraRPGO/utils/CMakeLists.txt)
+add_subdirectory(include/KimeraRPGO/utils)
+add_subdirectory(src/utils)
 
 target_include_directories(KimeraRPGO PUBLIC
   ${GTSAM_INCLUDE_DIR}
@@ -54,7 +55,6 @@ target_link_libraries(KimeraRPGO
     Boost::boost
     gtsam
     gtsam_unstable
-}
 )
 
 target_compile_options(KimeraRPGO

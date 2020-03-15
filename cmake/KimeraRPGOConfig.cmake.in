@@ -23,7 +23,7 @@ if(EXISTS "${KimeraRPGO_CMAKE_DIR}/CMakeCache.txt")
   set(KimeraRPGO_INCLUDE_DIR @CMAKE_SOURCE_DIR@ CACHE PATH "KimeraRPGO include directory")
 else()
   # Find installed library
-  set(KimeraRPGO_INCLUDE_DIR "${OUR_CMAKE_DIR}/@CONF_REL_INCLUDE_DIR@" CACHE PATH "KimeraRPGO include directory")
+  set(KimeraRPGO_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include/KimeraRPGO" CACHE PATH "KimeraRPGO include directory")
 endif()
 
 SET(KimeraRPGO_INCLUDE_DIRS ${KimeraRPGO_INCLUDE_DIR})

@@ -34,7 +34,7 @@ add_library(KimeraRPGO SHARED
   src/GenericSolver.cpp
   src/RobustSolver.cpp
   include/KimeraRPGO/SolverParams.h )
-include_directories(include/KimeraRPGO/)
+include_directories(include)
 # Add source code for max clique finder
 add_subdirectory(include/KimeraRPGO/max_clique_finder)
 # Add source for outlier rejection stuff
@@ -97,6 +97,8 @@ install(TARGETS KimeraRPGO
   EXPORT kimera-rpgo-export
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
+  INCLUDES DESTINATION include # We need this right?
+  RUNTIME DESTINATION bin
 )
 install(EXPORT kimera-rpgo-export
   FILE
@@ -105,7 +107,7 @@ install(EXPORT kimera-rpgo-export
     ${INSTALL_CONFIGDIR}
 )
 # Install header files
-install(DIRECTORY ${CMAKE_INSTALL_PREFIX}/include/
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/
   DESTINATION include
   FILES_MATCHING PATTERN "*.h")
 
@@ -116,7 +118,7 @@ install(FILES
   DESTINATION ${INSTALL_CONFIGDIR}
 )
 
-export(TARGETS ${PROJECT_NAME} FILE KimeraRPGOTargets.cmake)
+export(TARGETS KimeraRPGO FILE KimeraRPGOTargets.cmake)
 
 ################################################################################
 # Print configuration variables

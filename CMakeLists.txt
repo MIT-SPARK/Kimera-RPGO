@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.5)
-project(KimeraRPGO VERSION 1.0 LANGUAGES CXX)
+project(KimeraRPGO VERSION 2.0 LANGUAGES CXX)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -41,20 +41,25 @@ include(include/KimeraRPGO/max_clique_finder/CMakeLists.txt)
 include(include/KimeraRPGO/outlier/CMakeLists.txt)
 # Add source for utils
 include(include/KimeraRPGO/utils/CMakeLists.txt)
-include(src/utils/CMakeLists.txt)
+
+target_include_directories(KimeraRPGO PUBLIC
+  ${GTSAM_INCLUDE_DIR}
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+  # INSTALL
+  $<INSTALL_INTERFACE:include>
+)
 
 target_link_libraries(KimeraRPGO
   PUBLIC
     Boost::boost
     gtsam
     gtsam_unstable
+}
 )
 
-target_include_directories(KimeraRPGO
-  PUBLIC
-    ${GTSAM_INCLUDE_DIR}
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
-    $<INSTALL_INTERFACE:include>
+target_compile_options(KimeraRPGO
+  PRIVATE -Wall -pipe
+  PRIVATE -march=native
 )
 
 ###########################################################################
@@ -85,17 +90,13 @@ set(INSTALL_CONFIGDIR lib/cmake/KimeraRPGO)
 configure_package_config_file(
   ${CMAKE_CURRENT_LIST_DIR}/cmake/KimeraRPGOConfig.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfig.cmake
-  INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
-)
-
-export(TARGETS KimeraRPGO FILE KimeraRPGOTargets.cmake)
-export(PACKAGE KimeraRPGO)
+  INSTALL_DESTINATION ${INSTALL_CONFIGDIR})
 
 include(GNUInstallDirs)
 install(TARGETS KimeraRPGO
-    EXPORT kimera-rpgo-export
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
+  EXPORT kimera-rpgo-export
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
 )
 install(EXPORT kimera-rpgo-export
   FILE
@@ -104,7 +105,7 @@ install(EXPORT kimera-rpgo-export
     ${INSTALL_CONFIGDIR}
 )
 # Install header files
-install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/
+install(DIRECTORY ${CMAKE_INSTALL_PREFIX}/include/
   DESTINATION include
   FILES_MATCHING PATTERN "*.h")
 
@@ -114,6 +115,8 @@ install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfigVersion.cmake
   DESTINATION ${INSTALL_CONFIGDIR}
 )
+
+export(TARGETS ${PROJECT_NAME} FILE KimeraRPGOTargets.cmake)
 
 ################################################################################
 # Print configuration variables

@@ -21,5 +21,8 @@ endif()
 find_library(KimeraRPGO_LIBRARY KimeraRPGO
   PATHS lib)
 
+find_path(KimeraRPGO_INCLUDE_DIR KimeraRPGOConfig.cmake PATHS include/KimeraRPGO)
+
 set(KimeraRPGO_LIBRARIES ${KimeraRPGO_LIBRARY})
 set(KimeraRPGO_LIBS ${KimeraRPGO_LIBRARY})
+set(KimeraRPGO_INCLUDE_DIRS ${KimeraRPGO_INCLUDE_DIR})

@@ -14,9 +14,9 @@ RUN vcs import src < underlay.repos
 ENV OVERLAY_WS /opt/overlay_ws
 RUN mkdir -p $OVERLAY_WS/src
 WORKDIR $OVERLAY_WS
-COPY ./ src/Kimera-RPGO
-# COPY ./install/overlay.repos ./
-# RUN vcs import src < overlay.repos
+COPY ./install/overlay.repos ./
+RUN vcs import src < overlay.repos
+COPY ./ src/MIT-SPARK/Kimera-RPGO
 
 # copy manifests for caching
 WORKDIR /opt
@@ -32,7 +32,6 @@ FROM $FROM_IMAGE AS build
 RUN apt-get update && apt-get install -q -y \
       ccache \
       lcov \
-      ros-$ROS_DISTRO-ros-core \
     && rm -rf /var/lib/apt/lists/*
 
 # copy underlay manifests

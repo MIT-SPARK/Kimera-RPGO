@@ -23,7 +23,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * */
 
-#include "KimeraRPGO/max_clique_finder/graphIO.h"
+#include "kimera_rpgo/max_clique_finder/graphIO.h"
 
 #include <map>
 #include <string>

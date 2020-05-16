@@ -3,12 +3,11 @@ Robust Solver Params class
 author: Yun Chang
 */
 
-#ifndef INCLUDE_KIMERARPGO_SOLVERPARAMS_H_
-#define INCLUDE_KIMERARPGO_SOLVERPARAMS_H_
+#pragma once
 
 #include <vector>
 
-namespace KimeraRPGO {
+namespace kimera_rpgo {
 
 enum class Solver { LM, GN };
 
@@ -116,5 +115,4 @@ struct RobustSolverParams {
   double pcmDist_rotThreshold;
 };
 
-}  // namespace KimeraRPGO
-#endif  // INCLUDE_KIMERARPGO_SOLVERPARAMS_H_
+}  // namespace kimera_rpgo

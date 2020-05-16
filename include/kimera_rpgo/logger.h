@@ -3,8 +3,7 @@ Symple logger class for prints and warnings
 author: Yun Chang
 */
 
-#ifndef INCLUDE_KIMERARPGO_LOGGER_H_
-#define INCLUDE_KIMERARPGO_LOGGER_H_
+#pragma once
 
 #include <boost/format.hpp>
 #include <iostream>
@@ -13,7 +12,7 @@ author: Yun Chang
 using std::cout;
 using std::endl;
 
-namespace KimeraRPGO {
+namespace kimera_rpgo {
 
 enum log_level_t {
   WARNING,
@@ -47,6 +46,4 @@ log_impl::formatted_log_t log(const char* msg) {
   return log_impl::formatted_log_t(level, msg);
 }
 
-}  // namespace KimeraRPGO
-
-#endif  // INCLUDE_KIMERARPGO_LOGGER_H_
+}  // namespace kimera_rpgo

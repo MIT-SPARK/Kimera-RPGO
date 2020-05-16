@@ -22,7 +22,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * * * * * * */
 
-#include "KimeraRPGO/max_clique_finder/findClique.h"
+#include "kimera_rpgo/max_clique_finder/findClique.h"
 
 #include <vector>
 

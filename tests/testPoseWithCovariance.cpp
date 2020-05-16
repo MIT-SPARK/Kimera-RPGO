@@ -7,9 +7,9 @@
 #include <CppUnitLite/TestHarness.h>
 #include <random>
 
-#include "KimeraRPGO/utils/geometry_utils.h"
+#include "kimera_rpgo/utils/geometry_utils.h"
 
-using KimeraRPGO::PoseWithCovariance;
+using kimera_rpgo::PoseWithCovariance;
 
 struct normal_rv {
   explicit normal_rv(Eigen::MatrixXd const& covar) {

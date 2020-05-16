@@ -7,10 +7,10 @@
 #include <CppUnitLite/TestHarness.h>
 #include <random>
 
-#include "KimeraRPGO/outlier/pcm.h"
+#include "kimera_rpgo/outlier/pcm.h"
 
-using KimeraRPGO::OutlierRemoval;
-using KimeraRPGO::Pcm3D;
+using kimera_rpgo::OutlierRemoval;
+using kimera_rpgo::Pcm3D;
 
 /* ************************************************************************* */
 TEST(Pcm, OdometryCheck) {

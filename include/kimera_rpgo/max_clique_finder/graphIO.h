@@ -20,8 +20,7 @@
 
 /*   http://arxiv.org/abs/1411.7460 */
 
-#ifndef INCLUDE_KIMERARPGO_MAX_CLIQUE_FINDER_GRAPHIO_H_
-#define INCLUDE_KIMERARPGO_MAX_CLIQUE_FINDER_GRAPHIO_H_
+#pragma once
 
 #include <float.h>
 #include <string.h>
@@ -76,4 +75,3 @@ class CGraphIO {
   vector<double> m_vd_Values;
 };
 }  // namespace FMC
-#endif  // INCLUDE_KIMERARPGO_MAX_CLIQUE_FINDER_GRAPHIO_H_

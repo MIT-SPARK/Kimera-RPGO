@@ -1,7 +1,6 @@
 // Authors: Yun Chang
 
-#ifndef INCLUDE_KIMERARPGO_UTILS_GEOMETRY_UTILS_H_
-#define INCLUDE_KIMERARPGO_UTILS_GEOMETRY_UTILS_H_
+#pragma once
 
 // enables correct operations of GTSAM (correct Jacobians)
 #define SLOW_BUT_CORRECT_BETWEENFACTOR
@@ -12,7 +11,7 @@
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/slam/PriorFactor.h>
 
-#include "KimeraRPGO/logger.h"
+#include "kimera_rpgo/logger.h"
 
 #include <map>
 #include <vector>
@@ -20,7 +19,7 @@
 /** \namespace graph_utils
  *  \brief This namespace encapsulates utility functions to manipulate graphs
  */
-namespace KimeraRPGO {
+namespace kimera_rpgo {
 
 /** \getting the dimensions of various Lie types
  *   \simple helper functions */
@@ -287,6 +286,4 @@ struct PoseWithNode {
   }
 };
 
-}  // namespace KimeraRPGO
-
-#endif  // INCLUDE_KIMERARPGO_UTILS_GEOMETRY_UTILS_H_
+}  // namespace kimera_rpgo

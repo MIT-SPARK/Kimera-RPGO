@@ -20,8 +20,7 @@
 
 /*   http://arxiv.org/abs/1411.7460 */
 
-#ifndef INCLUDE_KIMERARPGO_MAX_CLIQUE_FINDER_FINDCLIQUE_H_
-#define INCLUDE_KIMERARPGO_MAX_CLIQUE_FINDER_FINDCLIQUE_H_
+#pragma once
 
 #include <stdlib.h>
 #include <sys/time.h>
@@ -30,7 +29,7 @@
 #include <iostream>
 #include <vector>
 
-#include "KimeraRPGO/max_clique_finder/graphIO.h"
+#include "kimera_rpgo/max_clique_finder/graphIO.h"
 
 using namespace std;
 
@@ -62,4 +61,3 @@ void maxCliqueHelperHeu(CGraphIO* gio,
                         vector<int>* max_clique_data_inter);
 
 }  // namespace FMC
-#endif  // INCLUDE_KIMERARPGO_MAX_CLIQUE_FINDER_FINDCLIQUE_H_

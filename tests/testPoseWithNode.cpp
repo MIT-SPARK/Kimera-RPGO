@@ -8,9 +8,9 @@
 #include <limits>
 #include <random>
 
-#include "KimeraRPGO/utils/geometry_utils.h"
+#include "kimera_rpgo/utils/geometry_utils.h"
 
-using KimeraRPGO::PoseWithNode;
+using kimera_rpgo::PoseWithNode;
 
 /* ************************************************************************* */
 TEST(PoseWithNode, Inverse) {

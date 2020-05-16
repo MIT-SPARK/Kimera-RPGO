@@ -14,12 +14,12 @@
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/slam/dataset.h>
 
-#include "KimeraRPGO/RobustSolver.h"
-#include "KimeraRPGO/SolverParams.h"
-#include "KimeraRPGO/utils/type_utils.h"
+#include "kimera_rpgo/RobustSolver.h"
+#include "kimera_rpgo/SolverParams.h"
+#include "kimera_rpgo/utils/type_utils.h"
 #include "test_config.h"
 
-using namespace KimeraRPGO;
+using namespace kimera_rpgo;
 
 /* ************************************************************************* */
 TEST(RobustSolver, Load1) {
@@ -30,20 +30,20 @@ TEST(RobustSolver, Load1) {
   boost::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up KimeraRPGO solver
+  // set up kimera_rpgo solver
   RobustSolverParams params;
   params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      kimera_rpgo::makimera_rpgoRobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
-  gtsam::Key init_key = gtsam::Symbol('a', 0);
+  gtsam::kimera_rpgom::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init_factor(
-      init_key, values->at<gtsam::Pose3>(init_key), noise);
+      init_kimera_rpgos->at<gtsam::Pose3>(init_kimera_rpgoe);
 
   nfg->add(init_factor);
   pgo->update(*nfg, *values);
@@ -51,7 +51,7 @@ TEST(RobustSolver, Load1) {
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
 
-  // Since odom check threshold is 0, should only have the odom edges + prior
+  // Since odom checkimera_rpgod is 0, should only have the odom edges + prior
   // (no lc should have passed)
   EXPECT(nfg_out.size() == size_t(50));
   EXPECT(values_out.size() == size_t(50));
@@ -65,19 +65,19 @@ TEST(RobustSolver, Add1) {
   boost::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up KimeraRPGO solver
+  // set up kimera_rpgo solver
   RobustSolverParams params;
   params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      kimera_rpgo::makimera_rpgoRobustSolver>(params);
 
   static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
-  gtsam::Key init_key = gtsam::Symbol('a', 0);
+  gtsam::kimera_rpgom::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
-      init_key, values->at<gtsam::Pose3>(init_key), noise);
+      init_kimera_rpgos->at<gtsam::Pose3>(init_kimera_rpgoe);
   nfg->add(init);
   pgo->update(*nfg, *values);  // first load
 
@@ -94,17 +94,17 @@ TEST(RobustSolver, Add1) {
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
 
-  // Since odom check threshold is 0, should only have the odom edges + prior +
+  // Since odom checkimera_rpgod is 0, should only have the odom edges + prior +
   // between (no lc should have passed)
   EXPECT(nfg_out.size() == size_t(91));
   EXPECT(values_out.size() == size_t(92));
 
   // Try add another loop closuer
   // create the between factor for connection
-  gtsam::Key key_b1 = gtsam::Symbol('b', 1);
-  gtsam::Key key_a1 = gtsam::Symbol('a', 1);
+  gtsam::kimera_rpgotsam::Symbol('b', 1);
+  gtsam::kimera_rpgotsam::Symbol('a', 1);
   gtsam::Pose3 a1b1 = gtsam::Pose3();
-  gtsam::BetweenFactor<gtsam::Pose3> a1tob1(key_a1, key_b1, a1b1, noise);
+  gtsam::BetweenFactor<gtsam::Pose3> a1tob1(kimera_rpgob1, noise);
 
   gtsam::NonlinearFactorGraph newfactors;
   newfactors.add(a1tob1);
@@ -124,22 +124,21 @@ TEST(RobustSolver, Load2) {
   boost::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up KimeraRPGO solver
+  // set up kimera_rpgo solver
   RobustSolverParams params;
   params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET);
-  std::vector<char> special_symbs{'l', 'u'};  // for landmarks
-  params.specialSymbols = special_symbs;
+  std::vector<char> special_symbs{'l', 'u'};  // for landmarkimera_rpgos.specialSymbols = special_symbs;
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      kimera_rpgo::makimera_rpgoRobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
-  gtsam::Key init_key = gtsam::Symbol('a', 0);
+  gtsam::kimera_rpgom::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
-      init_key, values->at<gtsam::Pose3>(init_key), noise);
+      init_kimera_rpgos->at<gtsam::Pose3>(init_kimera_rpgoe);
   nfg->add(init);
   // Load graph using prior
   pgo->update(*nfg, *values);
@@ -160,19 +159,19 @@ TEST(RobustSolver, Add2) {
   boost::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up KimeraRPGO solver
+  // set up kimera_rpgo solver
   RobustSolverParams params;
   params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      kimera_rpgo::makimera_rpgoRobustSolver>(params);
 
   static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
-  gtsam::Key init_key = gtsam::Symbol('a', 0);
+  gtsam::kimera_rpgom::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
-      init_key, values->at<gtsam::Pose3>(init_key), noise);
+      init_kimera_rpgos->at<gtsam::Pose3>(init_kimera_rpgoe);
   nfg->add(init);
   pgo->update(*nfg, *values);  // first load
 
@@ -195,10 +194,10 @@ TEST(RobustSolver, Add2) {
 
   // Try add another loop closuer
   // create the between factor for connection
-  gtsam::Key key_b1 = gtsam::Symbol('b', 1);
-  gtsam::Key key_a1 = gtsam::Symbol('a', 1);
+  gtsam::kimera_rpgotsam::Symbol('b', 1);
+  gtsam::kimera_rpgotsam::Symbol('a', 1);
   gtsam::Pose3 a1b1 = gtsam::Pose3();
-  gtsam::BetweenFactor<gtsam::Pose3> a1tob1(key_a1, key_b1, a1b1, noise);
+  gtsam::BetweenFactor<gtsam::Pose3> a1tob1(kimera_rpgob1, noise);
 
   gtsam::NonlinearFactorGraph newfactors;
   newfactors.add(a1tob1);
@@ -221,12 +220,12 @@ TEST(RobustSolver, Load1NoPrior) {
   gtsam::NonlinearFactorGraph nfg = *gv.first;
   gtsam::Values values = *gv.second;
 
-  // set up KimeraRPGO solver
+  // set up kimera_rpgo solver
   RobustSolverParams params;
   params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      kimera_rpgo::makimera_rpgoRobustSolver>(params);
 
   // Load graph using prior
   pgo->update(nfg, values);
@@ -234,7 +233,7 @@ TEST(RobustSolver, Load1NoPrior) {
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
 
-  // Since odom check threshold is 0, should only have the odom edges
+  // Since odom checkimera_rpgod is 0, should only have the odom edges
   EXPECT(nfg_out.size() == size_t(49));
   EXPECT(values_out.size() == size_t(50));
 }
@@ -248,20 +247,20 @@ TEST(RobustSolver, NoRejectLoad) {
   boost::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up KimeraRPGO solver
+  // set up kimera_rpgo solver
   RobustSolverParams params;
   params.setNoRejection(Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      kimera_rpgo::makimera_rpgoRobustSolver>(params);
 
   // Create prior
   static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
-  gtsam::Key init_key = gtsam::Symbol('a', 0);
+  gtsam::kimera_rpgom::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
-      init_key, values->at<gtsam::Pose3>(init_key), noise);
+      init_kimera_rpgos->at<gtsam::Pose3>(init_kimera_rpgoe);
   // add prior factor
   nfg->add(init);
   pgo->update(*nfg, *values);
@@ -282,19 +281,19 @@ TEST(RobustSolver, NoRejectAdd) {
   boost::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-  // set up KimeraRPGO solver
+  // set up kimera_rpgo solver
   RobustSolverParams params;
   params.setNoRejection(Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+      kimera_rpgo::makimera_rpgoRobustSolver>(params);
 
   static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
-  gtsam::Key init_key = gtsam::Symbol('a', 0);
+  gtsam::kimera_rpgom::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
-      init_key, values->at<gtsam::Pose3>(init_key), noise);
+      init_kimera_rpgos->at<gtsam::Pose3>(init_kimera_rpgoe);
   nfg->add(init);
   pgo->update(*nfg, *values);  // first load
 
@@ -317,10 +316,10 @@ TEST(RobustSolver, NoRejectAdd) {
 
   // Try add another loop closuer
   // create the between factor for connection
-  gtsam::Key key_b1 = gtsam::Symbol('b', 1);
-  gtsam::Key key_a1 = gtsam::Symbol('a', 1);
+  gtsam::kimera_rpgotsam::Symbol('b', 1);
+  gtsam::kimera_rpgotsam::Symbol('a', 1);
   gtsam::Pose3 a1b1 = gtsam::Pose3();
-  gtsam::BetweenFactor<gtsam::Pose3> a1tob1(key_a1, key_b1, a1b1, noise);
+  gtsam::BetweenFactor<gtsam::Pose3> a1tob1(kimera_rpgob1, noise);
 
   gtsam::NonlinearFactorGraph newfactors;
   newfactors.add(a1tob1);
@@ -343,20 +342,20 @@ TEST(RobustSolver, NoRejectAdd) {
 //   boost::tie(nfg, values) =
 //       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-//   // set up KimeraRPGO solver
+//   // set up kimera_rpgo solver
 //   RobustSolverParams params;
 //   params.setPcmSimple3DParams(0.001, 0.0001, Verbosity::QUIET);
 
 //   std::unique_ptr<RobustSolver> pgo =
-//       KimeraRPGO::make_unique<RobustSolver>(params);
+//       kimera_rpgo::makimera_rpgoRobustSolver>(params);
 
 //   // Create prior
 //   static const gtsam::SharedNoiseModel& noise =
 //       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
-//   gtsam::Key init_key = gtsam::Symbol('a', 0);
+//   gtsam::kimera_rpgom::Symbol('a', 0);
 //   gtsam::PriorFactor<gtsam::Pose3> init(
-//       init_key, values->at<gtsam::Pose3>(init_key), noise);
+//       init_kimera_rpgos->at<gtsam::Pose3>(init_kimera_rpgoe);
 
 //   // Load graph using prior
 //   nfg->add(init);
@@ -380,19 +379,19 @@ TEST(RobustSolver, NoRejectAdd) {
 //   boost::tie(nfg, values) =
 //       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-//   // set up KimeraRPGO solver
+//   // set up kimera_rpgo solver
 //   RobustSolverParams params;
 //   params.setPcmSimple3DParams(0.001, 0.0001, Verbosity::QUIET);
 
 //   std::unique_ptr<RobustSolver> pgo =
-//       KimeraRPGO::make_unique<RobustSolver>(params);
+//       kimera_rpgo::makimera_rpgoRobustSolver>(params);
 
 //   static const gtsam::SharedNoiseModel& noise =
 //       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
-//   gtsam::Key init_key = gtsam::Symbol('a', 0);
+//   gtsam::kimera_rpgom::Symbol('a', 0);
 //   gtsam::PriorFactor<gtsam::Pose3> init(
-//       init_key, values->at<gtsam::Pose3>(init_key), noise);
+//       init_kimera_rpgos->at<gtsam::Pose3>(init_kimera_rpgoe);
 //   nfg->add(init);
 //   pgo->update(*nfg, *values);  // first load
 
@@ -404,18 +403,15 @@ TEST(RobustSolver, NoRejectAdd) {
 //       gtsam::load3D(std::string(DATASET_PATH) + "/robot_b.g2o");
 
 //   // create the between factor for connection
-//   gtsam::Key init_key_b = gtsam::Symbol('b', 0);
-//   gtsam::Pose3 transform_ab = values->at<gtsam::Pose3>(init_key).between(
-//       values_b->at<gtsam::Pose3>(init_key_b));
-//   gtsam::BetweenFactor<gtsam::Pose3> bridge(
-//       init_key, init_key_b, transform_ab, noise);
+//   gtsam::kimera_rpgosam::Symbol('b', 0);
+//   gtsam::Pose3 transform_ab = values->at<gtsam::Pose3>(init_kimera_rpgoen(
+//       values_b->at<gtsam::Pose3>(init_kimera_rpgo/   gtsam::BetweenFactor<gtsam::Pose3> bridge(
+//       init_kimera_rpgonsform_ab, noise);
 
 //   gtsam::NonlinearFactorGraph bridge_factor;
 //   gtsam::Values bridge_value;
 //   bridge_factor.add(bridge);
-//   bridge_value.insert(init_key_b, values_b->at(init_key_b));
-
-//   // add graph
+//   bridge_value.insert(init_kimera_rpgoues_b->at(init_kimera_rpgo//   // add graph
 //   pgo->update(bridge_factor, bridge_value);
 //   pgo->update(*nfg_b, *values_b);
 
@@ -429,10 +425,10 @@ TEST(RobustSolver, NoRejectAdd) {
 
 //   // Try add another loop closuer
 //   // create the between factor for connection
-//   gtsam::Key key_b1 = gtsam::Symbol('b', 1);
-//   gtsam::Key key_a1 = gtsam::Symbol('a', 1);
+//   gtsam::kimera_rpgotsam::Symbol('b', 1);
+//   gtsam::kimera_rpgotsam::Symbol('a', 1);
 //   gtsam::Pose3 a1b1 = gtsam::Pose3();
-//   gtsam::BetweenFactor<gtsam::Pose3> a1tob1(key_a1, key_b1, a1b1, noise);
+//   gtsam::BetweenFactor<gtsam::Pose3> a1tob1(kimera_rpgob1, noise);
 
 //   gtsam::NonlinearFactorGraph newfactors;
 //   newfactors.add(a1tob1);
@@ -455,20 +451,20 @@ TEST(RobustSolver, NoRejectAdd) {
 //   boost::tie(nfg, values) =
 //       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-//   // set up KimeraRPGO solver
+//   // set up kimera_rpgo solver
 //   RobustSolverParams params;
 //   params.setPcmSimple3DParams(100.0, 100.0, Verbosity::QUIET);
 
 //   std::unique_ptr<RobustSolver> pgo =
-//       KimeraRPGO::make_unique<RobustSolver>(params);
+//       kimera_rpgo::makimera_rpgoRobustSolver>(params);
 
 //   // Create prior
 //   static const gtsam::SharedNoiseModel& noise =
 //       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
-//   gtsam::Key init_key = gtsam::Symbol('a', 0);
+//   gtsam::kimera_rpgom::Symbol('a', 0);
 //   gtsam::PriorFactor<gtsam::Pose3> init(
-//       init_key, values->at<gtsam::Pose3>(init_key), noise);
+//       init_kimera_rpgos->at<gtsam::Pose3>(init_kimera_rpgoe);
 
 //   // Load graph using prior
 //   nfg->add(init);
@@ -490,19 +486,19 @@ TEST(RobustSolver, NoRejectAdd) {
 //   boost::tie(nfg, values) =
 //       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
-//   // set up KimeraRPGO solver
+//   // set up kimera_rpgo solver
 //   RobustSolverParams params;
 //   params.setPcmSimple3DParams(100.0, 100.0, Verbosity::QUIET);
 
 //   std::unique_ptr<RobustSolver> pgo =
-//       KimeraRPGO::make_unique<RobustSolver>(params);
+//       kimera_rpgo::makimera_rpgoRobustSolver>(params);
 
 //   static const gtsam::SharedNoiseModel& noise =
 //       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
-//   gtsam::Key init_key = gtsam::Symbol('a', 0);
+//   gtsam::kimera_rpgom::Symbol('a', 0);
 //   gtsam::PriorFactor<gtsam::Pose3> init(
-//       init_key, values->at<gtsam::Pose3>(init_key), noise);
+//       init_kimera_rpgos->at<gtsam::Pose3>(init_kimera_rpgoe);
 //   nfg->add(init);
 //   pgo->update(*nfg, *values);  // first load
 
@@ -514,18 +510,15 @@ TEST(RobustSolver, NoRejectAdd) {
 //       gtsam::load3D(std::string(DATASET_PATH) + "/robot_b.g2o");
 
 //   // create the between factor for connection
-//   gtsam::Key init_key_b = gtsam::Symbol('b', 0);
-//   gtsam::Pose3 transform_ab = values->at<gtsam::Pose3>(init_key).between(
-//       values_b->at<gtsam::Pose3>(init_key_b));
-//   gtsam::BetweenFactor<gtsam::Pose3> bridge(
-//       init_key, init_key_b, transform_ab, noise);
+//   gtsam::kimera_rpgosam::Symbol('b', 0);
+//   gtsam::Pose3 transform_ab = values->at<gtsam::Pose3>(init_kimera_rpgoen(
+//       values_b->at<gtsam::Pose3>(init_kimera_rpgo/   gtsam::BetweenFactor<gtsam::Pose3> bridge(
+//       init_kimera_rpgonsform_ab, noise);
 
 //   gtsam::NonlinearFactorGraph bridge_factor;
 //   gtsam::Values bridge_value;
 //   bridge_factor.add(bridge);
-//   bridge_value.insert(init_key_b, values_b->at(init_key_b));
-
-//   // add graph
+//   bridge_value.insert(init_kimera_rpgoues_b->at(init_kimera_rpgo//   // add graph
 //   pgo->update(bridge_factor, bridge_value);
 //   pgo->update(*nfg_b, *values_b);
 
@@ -538,10 +531,10 @@ TEST(RobustSolver, NoRejectAdd) {
 
 //   // Try add another loop closuer
 //   // create the between factor for connection
-//   gtsam::Key key_b1 = gtsam::Symbol('b', 1);
-//   gtsam::Key key_a1 = gtsam::Symbol('a', 1);
+//   gtsam::kimera_rpgotsam::Symbol('b', 1);
+//   gtsam::kimera_rpgotsam::Symbol('a', 1);
 //   gtsam::Pose3 a1b1 = gtsam::Pose3();
-//   gtsam::BetweenFactor<gtsam::Pose3> a1tob1(key_a1, key_b1, a1b1, noise);
+//   gtsam::BetweenFactor<gtsam::Pose3> a1tob1(kimera_rpgob1, noise);
 
 //   gtsam::NonlinearFactorGraph newfactors;
 //   newfactors.add(a1tob1);
@@ -564,12 +557,12 @@ TEST(RobustSolver, NoRejectAdd) {
 //   gtsam::NonlinearFactorGraph nfg = *gv.first;
 //   gtsam::Values values = *gv.second;
 
-//   // set up KimeraRPGO solver
+//   // set up kimera_rpgo solver
 //   RobustSolverParams params;
 //   params.setPcmSimple3DParams(100.0, 100.0, Verbosity::QUIET);
 
 //   std::unique_ptr<RobustSolver> pgo =
-//       KimeraRPGO::make_unique<RobustSolver>(params);
+//       kimera_rpgo::makimera_rpgoRobustSolver>(params);
 
 //   // Load graph using prior
 //   pgo->update(nfg, values);

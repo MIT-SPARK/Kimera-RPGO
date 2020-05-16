@@ -1,7 +1,5 @@
 // Authors: Yun Chang
-
-#ifndef INCLUDE_KIMERARPGO_UTILS_TYPE_UTILS_H_
-#define INCLUDE_KIMERARPGO_UTILS_TYPE_UTILS_H_
+#pragma once 
 
 #include <functional>
 #include <memory>
@@ -10,9 +8,9 @@
 #include <gtsam/base/Vector.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
-#include "KimeraRPGO/logger.h"
+#include "kimera_rpgo/logger.h"
 
-namespace KimeraRPGO {
+namespace kimera_rpgo {
 
 struct Measurements {
   gtsam::NonlinearFactorGraph factors;
@@ -56,18 +54,16 @@ std::unique_ptr<T> make_unique(Args&&... args) {
   return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
-}  // namespace KimeraRPGO
+}  // namespace kimera_rpgo
 
 namespace std {
 // hash function for ObservationId
 template <>
-struct hash<KimeraRPGO::ObservationId> {
-  std::size_t operator()(const KimeraRPGO::ObservationId& id) const {
+struct hash<kimera_rpgo::ObservationId> {
+  std::size_t operator()(const kimera_rpgo::ObservationId& id) const {
     using std::hash;
     return hash<char>()(id.id1) + hash<char>()(id.id2) +
            hash<char>()(id.id1) * hash<char>()(id.id2);
   }
 };
 }  // namespace std
-
-#endif  // INCLUDE_KIMERARPGO_UTILS_TYPE_UTILS_H_

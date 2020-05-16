@@ -1,7 +1,6 @@
 // Authors: Yun Chang
 
-#ifndef INCLUDE_KIMERARPGO_UTILS_GRAPH_UTILS_H_
-#define INCLUDE_KIMERARPGO_UTILS_GRAPH_UTILS_H_
+#pragma once
 
 #include <map>
 #include <unordered_map>
@@ -10,7 +9,7 @@
 #include <gtsam/inference/Symbol.h>
 #include <Eigen/Dense>
 
-namespace KimeraRPGO {
+namespace kimera_rpgo {
 
 int findMaxClique(const Eigen::MatrixXd adjMatrix,
                   std::vector<int>* max_clique);
@@ -54,6 +53,4 @@ struct Trajectory {
   }
 };
 
-}  // namespace KimeraRPGO
-
-#endif  // INCLUDE_KIMERARPGO_UTILS_GRAPH_UTILS_H_
+}  // namespace kimera_rpgo

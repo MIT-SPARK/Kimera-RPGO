@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.5)
-project(KimeraRPGO VERSION 2.0 LANGUAGES CXX)
+project(kimera_rpgo VERSION 1.0 LANGUAGES CXX)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -29,35 +29,35 @@ endif()
 
 ###########################################################################
 # Compile
-add_library(KimeraRPGO SHARED
-  include/KimeraRPGO/logger.h
+add_library(kimera_rpgo SHARED
+  include/kimera_rpgo/logger.h
   src/GenericSolver.cpp
   src/RobustSolver.cpp
-  include/KimeraRPGO/SolverParams.h )
+  include/kimera_rpgo/SolverParams.h )
 include_directories(include)
 # Add source code for max clique finder
-add_subdirectory(include/KimeraRPGO/max_clique_finder)
+add_subdirectory(include/kimera_rpgo/max_clique_finder)
 # Add source for outlier rejection stuff
-add_subdirectory(include/KimeraRPGO/outlier)
+add_subdirectory(include/kimera_rpgo/outlier)
 # Add source for utils
-add_subdirectory(include/KimeraRPGO/utils)
+add_subdirectory(include/kimera_rpgo/utils)
 add_subdirectory(src/utils)
 
-target_include_directories(KimeraRPGO PUBLIC
+target_include_directories(kimera_rpgo PUBLIC
   ${GTSAM_INCLUDE_DIR}
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
   # INSTALL
   $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(KimeraRPGO
+target_link_libraries(kimera_rpgo
   PUBLIC
     Boost::boost
     gtsam
     gtsam_unstable
 )
 
-target_compile_options(KimeraRPGO
+target_compile_options(kimera_rpgo
   PRIVATE -Wall -pipe
   PRIVATE -march=native
 )
@@ -65,7 +65,7 @@ target_compile_options(KimeraRPGO
 ###########################################################################
 # Define executables
 add_executable(RpgoReadG2o examples/RpgoReadG2o.cpp)
-target_link_libraries(RpgoReadG2o KimeraRPGO)
+target_link_libraries(RpgoReadG2o kimera_rpgo)
 add_executable(GenerateTrajectories examples/GenerateTrajectories.cpp)
 target_link_libraries(GenerateTrajectories gtsam)
 
@@ -79,21 +79,21 @@ configure_file(tests/test_config.h.in tests/test_config.h)
 ###########################################################################
 # Installation
 include(CMakePackageConfigHelpers)
-write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfigVersion.cmake
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/kimera_rpgoConfigVersion.cmake
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY AnyNewerVersion
 )
 
-# Create KimeraRPGOConfig.cmake with extra info from KimeraRPGOConfig.cmake.in
-# This file is necessary to find_package the library KimeraRPGO.
-set(INSTALL_CONFIGDIR lib/cmake/KimeraRPGO)
+# Create kimera_rpgoConfig.cmake with extra info from kimera_rpgoConfig.cmake.in
+# This file is necessary to find_package the library kimera_rpgo.
+set(INSTALL_CONFIGDIR lib/cmake/kimera_rpgo)
 configure_package_config_file(
-  ${CMAKE_CURRENT_LIST_DIR}/cmake/KimeraRPGOConfig.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfig.cmake
+  ${CMAKE_CURRENT_LIST_DIR}/cmake/kimera_rpgoConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/kimera_rpgoConfig.cmake
   INSTALL_DESTINATION ${INSTALL_CONFIGDIR})
 
 include(GNUInstallDirs)
-install(TARGETS KimeraRPGO
+install(TARGETS kimera_rpgo
   EXPORT kimera-rpgo-export
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -102,7 +102,7 @@ install(TARGETS KimeraRPGO
 )
 install(EXPORT kimera-rpgo-export
   FILE
-    KimeraRPGOTargets.cmake
+    kimera_rpgoTargets.cmake
   DESTINATION
     ${INSTALL_CONFIGDIR}
 )
@@ -113,12 +113,12 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/
 
 ## Install the config and configversion
 install(FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfig.cmake
-  ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfigVersion.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/kimera_rpgoConfig.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/kimera_rpgoConfigVersion.cmake
   DESTINATION ${INSTALL_CONFIGDIR}
 )
 
-export(TARGETS KimeraRPGO FILE KimeraRPGOTargets.cmake)
+export(TARGETS kimera_rpgo FILE kimera_rpgoTargets.cmake)
 
 ################################################################################
 # Print configuration variables

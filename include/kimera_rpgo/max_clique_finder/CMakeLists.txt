@@ -1,5 +1,5 @@
-# Add source code for KimeraRPGO
-target_sources(KimeraRPGO
+# Add source code for kimera_rpgo
+target_sources(kimera_rpgo
 	PRIVATE
 		"${CMAKE_CURRENT_LIST_DIR}/findClique.h"
 		"${CMAKE_CURRENT_LIST_DIR}/findClique.cpp"

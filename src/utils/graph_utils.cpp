@@ -11,7 +11,7 @@ int findMaxClique(const Eigen::MatrixXd adjMatrix,
   // Compute maximum clique
   FMC::CGraphIO gio;
   gio.ReadEigenAdjacencyMatrix(adjMatrix);
-  int max_clique_size;
+  size_t max_clique_size = 0;
   max_clique_size = FMC::maxClique(&gio, max_clique_size, max_clique);
   return max_clique_size;
 }

@@ -1,24 +1,22 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * * * * * * */
-/*   Description:  a library for finding the maximum clique of a graph
+/* Description:  a library for finding the maximum clique of a graph
 
 
 
-/*   Authors: Bharath Pattabiraman and Md. Mostofa Ali Patwary */
-/*            EECS Department, Northwestern University */
-/*            email: {bpa342,mpatwary}@eecs.northwestern.edu */
+   Authors: Bharath Pattabiraman and Md. Mostofa Ali Patwary
+            EECS Department, Northwestern University
+            email: {bpa342,mpatwary}@eecs.northwestern.edu
 
-/*   Copyright, 2014, Northwestern University */
-/*   See COPYRIGHT notice in top-level directory. */
+   Copyright, 2014, Northwestern University
+   See COPYRIGHT notice in top-level directory.
 
-/*   Please site the following publication if you use this package: */
-/*   Bharath Pattabiraman, Md. Mostofa Ali Patwary, Assefaw H. Gebremedhin2,
+   Please site the following publication if you use this package:
+   Bharath Pattabiraman, Md. Mostofa Ali Patwary, Assefaw H. Gebremedhin2,
 
-/*   Wei-keng Liao, and Alok Choudhary. */
-/*   "Fast Algorithms for the Maximum Clique Problem on Massive Graphs with */
-/*   Applications to Overlapping Community Detection"
+   Wei-keng Liao, and Alok Choudhary.
+   "Fast Algorithms for the Maximum Clique Problem on Massive Graphs with
+   Applications to Overlapping Community Detection"
 
-/*   http://arxiv.org/abs/1411.7460 */
+   http://arxiv.org/abs/1411.7460 */
 
 #pragma once
 
@@ -46,18 +44,18 @@ void usage(char* argv0);
 int getDegree(vector<int>* ptrVtx, int idx);
 void print_max_clique(vector<int>& max_clique_data);
 
-int maxClique(CGraphIO* gio, int l_bound, vector<int>* max_clique_data);
+int maxClique(CGraphIO* gio, size_t l_bound, vector<int>* max_clique_data);
 void maxCliqueHelper(CGraphIO* gio,
                      vector<int>* U,
-                     int sizeOfClique,
-                     int* maxClq,
+                     size_t sizeOfClique,
+                     size_t* maxClq,
                      vector<int>* max_clique_data_inter);
 
 int maxCliqueHeu(CGraphIO* gio, vector<int>* max_clique_data);
 void maxCliqueHelperHeu(CGraphIO* gio,
                         vector<int>* U,
-                        int sizeOfClique,
-                        int* maxClq,
+                        size_t sizeOfClique,
+                        size_t* maxClq,
                         vector<int>* max_clique_data_inter);
 
 }  // namespace FMC

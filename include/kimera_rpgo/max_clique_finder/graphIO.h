@@ -1,24 +1,22 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * * * * * * */
 /*   Description:  an I/O library for reading a graph
 
 
 
-/*   Authors: Md. Mostofa Ali Patwary and Bharath Pattabiraman */
-/*            EECS Department, Northwestern University */
-/*            email: {mpatwary,bpa342}@eecs.northwestern.edu */
+   Authors: Md. Mostofa Ali Patwary and Bharath Pattabiraman
+            EECS Department, Northwestern University
+            email: {mpatwary,bpa342}@eecs.northwestern.edu
 
-/*   Copyright, 2014, Northwestern University */
-/*   See COPYRIGHT notice in top-level directory. */
+   Copyright, 2014, Northwestern University
+   See COPYRIGHT notice in top-level directory.
 
-/*   Please site the following publication if you use this package: */
-/*   Bharath Pattabiraman, Md. Mostofa Ali Patwary, Assefaw H. Gebremedhin2,
+   Please site the following publication if you use this package:
+   Bharath Pattabiraman, Md. Mostofa Ali Patwary, Assefaw H. Gebremedhin2,
 
-/*   Wei-keng Liao, and Alok Choudhary. */
-/*   "Fast Algorithms for the Maximum Clique Problem on Massive Graphs with */
-/*   Applications to Overlapping Community Detection"
+   Wei-keng Liao, and Alok Choudhary.
+   "Fast Algorithms for the Maximum Clique Problem on Massive Graphs with
+   Applications to Overlapping Community Detection"
 
-/*   http://arxiv.org/abs/1411.7460 */
+   http://arxiv.org/abs/1411.7460 */
 
 #pragma once
 

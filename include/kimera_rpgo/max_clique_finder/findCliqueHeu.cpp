@@ -1,24 +1,22 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * * * * * * */
-/*   Description:  a library for finding the maximum clique from a graph
+/* Description:  a library for finding the maximum clique from a graph
 
 
 
-/*   Authors: Md. Mostofa Ali Patwary and Bharath Pattabiraman */
-/*            EECS Department, Northwestern University */
-/*            email: {mpatwary,bpa342}@eecs.northwestern.edu */
+   Authors: Md. Mostofa Ali Patwary and Bharath Pattabiraman
+            EECS Department, Northwestern University
+            email: {mpatwary,bpa342}@eecs.northwestern.edu
 
-/*   Copyright, 2014, Northwestern University */
-/*   See COPYRIGHT notice in top-level directory. */
+   Copyright, 2014, Northwestern University
+   See COPYRIGHT notice in top-level directory.
 
-/*   Please site the following publication if you use this package: */
-/*   Bharath Pattabiraman, Md. Mostofa Ali Patwary, Assefaw H. Gebremedhin2,
+   Please site the following publication if you use this package:
+   Bharath Pattabiraman, Md. Mostofa Ali Patwary, Assefaw H. Gebremedhin2,
 
-/*   Wei-keng Liao, and Alok Choudhary. */
-/*   "Fast Algorithms for the Maximum Clique Problem on Massive Graphs with */
-/*   Applications to Overlapping Community Detection"
+   Wei-keng Liao, and Alok Choudhary.
+   "Fast Algorithms for the Maximum Clique Problem on Massive Graphs with
+   Applications to Overlapping Community Detection"
 
-/*   http://arxiv.org/abs/1411.7460 */
+   http://arxiv.org/abs/1411.7460 */
 
 #include <stdlib.h>
 #include <sys/time.h>
@@ -48,7 +46,8 @@ int maxCliqueHeu(CGraphIO* gio, vector<int>* max_clique_data) {
   int notComputed = 0;
 
   // compute the max clique for each vertex
-  for (int iCandidateVertex = 0; iCandidateVertex < p_v_i_Vertices->size() - 1;
+  for (size_t iCandidateVertex = 0;
+       iCandidateVertex < p_v_i_Vertices->size() - 1;
        iCandidateVertex++) {
     // Pruning 1
     if (maxClq > ((*p_v_i_Vertices)[iCandidateVertex + 1] -

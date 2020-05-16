@@ -1,26 +1,21 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * * * * * * */
-/*   Description:  a library for finding the maximum clique of a graph
- */
+/* Description:  a library for finding the maximum clique of a graph
 
-/*   Authors: Bharath Pattabiraman and Md. Mostofa Ali Patwary */
-/*            EECS Department, Northwestern University */
-/*            email: {bpa342,mpatwary}@eecs.northwestern.edu */
 
-/*   Copyright, 2014, Northwestern University */
-/*   See COPYRIGHT notice in top-level directory. */
+   Authors: Bharath Pattabiraman and Md. Mostofa Ali Patwary
+            EECS Department, Northwestern University
+            email: {bpa342,mpatwary}@eecs.northwestern.edu
 
-/*   Please site the following publication if you use this package: */
-/*   Bharath Pattabiraman, Md. Mostofa Ali Patwary, Assefaw H. Gebremedhin2,
- */
-/*   Wei-keng Liao, and Alok Choudhary. */
-/*   "Fast Algorithms for the Maximum Clique Problem on Massive Graphs with */
-/*   Applications to Overlapping Community Detection"
- */
-/*   http://arxiv.org/abs/1411.7460
- */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * * * * * * */
+   Copyright, 2014, Northwestern University
+   See COPYRIGHT notice in top-level directory.
+
+   Please site the following publication if you use this package:
+   Bharath Pattabiraman, Md. Mostofa Ali Patwary, Assefaw H. Gebremedhin2,
+
+   Wei-keng Liao, and Alok Choudhary.
+   "Fast Algorithms for the Maximum Clique Problem on Massive Graphs with
+   Applications to Overlapping Community Detection"
+
+   http://arxiv.org/abs/1411.7460 */
 
 #include "kimera_rpgo/max_clique_finder/findClique.h"
 
@@ -35,8 +30,8 @@ int pruned5;
 /* Algorithm 2: CLIQUE: Recursive Subroutine of algorithm 1. */
 void maxCliqueHelper(CGraphIO* gio,
                      vector<int>* U,
-                     int sizeOfClique,
-                     int* maxClq,
+                     size_t sizeOfClique,
+                     size_t* maxClq,
                      vector<int>* max_clique_data_inter) {
   int iPos, index = 0, maxClq_prev;
   vector<int>* ptrVertex = gio->GetVerticesPtr();
@@ -64,7 +59,7 @@ void maxCliqueHelper(CGraphIO* gio,
       // Pruning 5
       if (getDegree(ptrVertex, (*ptrEdge)[j]) >= *maxClq) {
         // Loop over U.
-        for (int i = 0; i < U->size(); i++) {
+        for (size_t i = 0; i < U->size(); i++) {
           if ((*ptrEdge)[j] == (*U)[i]) U_new.push_back((*ptrEdge)[j]);
         }
       } else
@@ -82,7 +77,7 @@ void maxCliqueHelper(CGraphIO* gio,
 }
 
 /* Algorithm 1: MAXCLIQUE: Finds maximum clique of the given graph */
-int maxClique(CGraphIO* gio, int l_bound, vector<int>* max_clique_data) {
+int maxClique(CGraphIO* gio, size_t l_bound, vector<int>* max_clique_data) {
   vector<int>* ptrVertex = gio->GetVerticesPtr();
   vector<int>* ptrEdge = gio->GetEdgesPtr();
   vector<int> U;
@@ -90,7 +85,7 @@ int maxClique(CGraphIO* gio, int l_bound, vector<int>* max_clique_data) {
   vector<int> max_clique_data_inter;
   max_clique_data_inter.reserve(gio->GetVertexCount());
   max_clique_data->reserve(gio->GetVertexCount());
-  int maxClq = l_bound;
+  size_t maxClq = l_bound;
   int prev_maxClq;
 
   // cout << "Computing Max Clique... with lower bound " << maxClq << endl;
@@ -151,7 +146,7 @@ int maxClique(CGraphIO* gio, int l_bound, vector<int>* max_clique_data) {
 
 void print_max_clique(const vector<int>& max_clique_data) {
   // cout << "Maximum clique: ";
-  for (int i = 0; i < max_clique_data.size(); i++)
+  for (size_t i = 0; i < max_clique_data.size(); i++)
     cout << max_clique_data[i] + 1 << " ";
   cout << endl;
 }

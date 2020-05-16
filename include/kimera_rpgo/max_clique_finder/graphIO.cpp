@@ -1,27 +1,22 @@
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * * * * * * */
 /*   Description:  an I/O library for reading a graph
- */
-/*                                                                           		   */
-/*                                                                           		   */
-/*   Authors: Md. Mostofa Ali Patwary and Bharath Pattabiraman */
-/*            EECS Department, Northwestern University */
-/*            email: {mpatwary,bpa342}@eecs.northwestern.edu */
-/*                                                                           		   */
-/*   Copyright, 2014, Northwestern University */
-/*   See COPYRIGHT notice in top-level directory. */
-/*                                                                           		   */
-/*   Please site the following publication if you use this package: */
-/*   Bharath Pattabiraman, Md. Mostofa Ali Patwary, Assefaw H. Gebremedhin2,
- */
-/*   Wei-keng Liao, and Alok Choudhary. */
-/*   "Fast Algorithms for the Maximum Clique Problem on Massive Graphs with */
-/*   Applications to Overlapping Community Detection"
- */
-/*   http://arxiv.org/abs/1411.7460
- */
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- * * * * * * */
+
+
+
+   Authors: Md. Mostofa Ali Patwary and Bharath Pattabiraman
+            EECS Department, Northwestern University
+            email: {mpatwary,bpa342}@eecs.northwestern.edu
+
+   Copyright, 2014, Northwestern University
+   See COPYRIGHT notice in top-level directory.
+
+   Please site the following publication if you use this package:
+   Bharath Pattabiraman, Md. Mostofa Ali Patwary, Assefaw H. Gebremedhin2,
+
+   Wei-keng Liao, and Alok Choudhary.
+   "Fast Algorithms for the Maximum Clique Problem on Massive Graphs with
+   Applications to Overlapping Community Detection"
+
+   http://arxiv.org/abs/1411.7460 */
 
 #include "kimera_rpgo/max_clique_finder/graphIO.h"
 
@@ -141,7 +136,7 @@ bool CGraphIO::ReadMatrixMarketAdjacencyGraph(string s_InputFile,
       // This is to handle directed graphs. If the edge is already present,
       // skip. If not add.
       int exists = 0;
-      for (int k = 0; k < nodeList[rowIndex].size(); k++) {
+      for (size_t k = 0; k < nodeList[rowIndex].size(); k++) {
         if (colIndex == nodeList[rowIndex][k]) {
           exists = 1;
           break;
@@ -192,7 +187,7 @@ bool CGraphIO::ReadMatrixMarketAdjacencyGraph(string s_InputFile,
 
 bool CGraphIO::ReadEigenAdjacencyMatrix(Eigen::MatrixXd adjMatrix) {
   map<int, vector<int>> nodeList;
-  int col = 0, row = 0;
+  size_t col = 0, row = 0;
 
   int num_upper_triangular = 0;
 
@@ -206,7 +201,7 @@ bool CGraphIO::ReadEigenAdjacencyMatrix(Eigen::MatrixXd adjMatrix) {
       }
 
       int exists = 0;
-      for (int k = 0; k < nodeList[i].size(); k++) {
+      for (size_t k = 0; k < nodeList[i].size(); k++) {
         if (j == nodeList[i][k]) {
           exists = 1;
           break;

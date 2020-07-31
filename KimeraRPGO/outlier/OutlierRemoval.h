@@ -19,8 +19,8 @@ class OutlierRemoval {
   OutlierRemoval() = default;
   virtual ~OutlierRemoval() = default;
 
-  virtual size_t getNumLC() {}
-  virtual size_t getNumLCInliers() {}
+  virtual size_t getNumLC() = 0;
+  virtual size_t getNumLCInliers() = 0;
 
   /*! \brief Process new measurements and reject outliers
    *  process the new measurements and update the "good set" of measurements

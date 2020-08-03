@@ -30,17 +30,25 @@ endif()
 ###########################################################################
 # Compile
 add_library(KimeraRPGO SHARED
-  KimeraRPGO/logger.h
-  KimeraRPGO/GenericSolver.cpp
-  KimeraRPGO/RobustSolver.cpp
-  KimeraRPGO/SolverParams.h )
-
+  include/KimeraRPGO/logger.h
+  src/GenericSolver.cpp
+  src/RobustSolver.cpp
+  include/KimeraRPGO/SolverParams.h )
+include_directories(include)
 # Add source code for max clique finder
-include(KimeraRPGO/max_clique_finder/CMakeLists.txt)
+add_subdirectory(include/KimeraRPGO/max_clique_finder)
 # Add source for outlier rejection stuff
-include(KimeraRPGO/outlier/CMakeLists.txt)
+add_subdirectory(include/KimeraRPGO/outlier)
 # Add source for utils
-include(KimeraRPGO/utils/CMakeLists.txt)
+add_subdirectory(include/KimeraRPGO/utils)
+add_subdirectory(src/utils)
+
+target_include_directories(KimeraRPGO PUBLIC
+  ${GTSAM_INCLUDE_DIR}
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+  # INSTALL
+  $<INSTALL_INTERFACE:include>
+)
 
 target_link_libraries(KimeraRPGO
   PUBLIC
@@ -49,30 +57,27 @@ target_link_libraries(KimeraRPGO
     gtsam_unstable
 )
 
-target_include_directories(KimeraRPGO
-  PUBLIC
-    ${GTSAM_INCLUDE_DIR}
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+target_compile_options(KimeraRPGO
+  PRIVATE -Wall -pipe
+  # PRIVATE -march=native
 )
 
 ###########################################################################
 # Define executables
 add_executable(RpgoReadG2o examples/RpgoReadG2o.cpp)
 target_link_libraries(RpgoReadG2o KimeraRPGO)
+add_executable(GenerateTrajectories examples/GenerateTrajectories.cpp)
+target_link_libraries(GenerateTrajectories gtsam)
 
 ###########################################################################
 # Tests
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/UnitTesting.cmake)
 add_subdirectory(tests)
-add_subdirectory(KimeraRPGO/outlier/tests)
-add_subdirectory(KimeraRPGO/utils/tests)
 set(TEST_DATA_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests/data")
 configure_file(tests/test_config.h.in tests/test_config.h)
 
 ###########################################################################
 # Installation
-set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/KimeraRPGO)
-
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfigVersion.cmake
     VERSION ${PROJECT_VERSION}
@@ -81,25 +86,52 @@ write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfigVer
 
 # Create KimeraRPGOConfig.cmake with extra info from KimeraRPGOConfig.cmake.in
 # This file is necessary to find_package the library KimeraRPGO.
-configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/KimeraRPGOConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfig.cmake
-    INSTALL_DESTINATION ${INSTALL_CONFIGDIR}
-)
-
-export(TARGETS KimeraRPGO FILE KimeraRPGOTargets.cmake)
-export(PACKAGE KimeraRPGO)
+set(INSTALL_CONFIGDIR lib/cmake/KimeraRPGO)
+configure_package_config_file(
+  ${CMAKE_CURRENT_LIST_DIR}/cmake/KimeraRPGOConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfig.cmake
+  INSTALL_DESTINATION ${INSTALL_CONFIGDIR})
 
 include(GNUInstallDirs)
 install(TARGETS KimeraRPGO
-    EXPORT kimera-rpgo-export
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  EXPORT kimera-rpgo-export
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  INCLUDES DESTINATION include # We need this right?
+  RUNTIME DESTINATION bin
 )
 install(EXPORT kimera-rpgo-export
   FILE
     KimeraRPGOTargets.cmake
-    #NAMESPACE
-    #NAKimeraRPGO::
   DESTINATION
-    ${CMAKE_INSTALL_LIBDIR}/cmake/KimeraRPGO
+    ${INSTALL_CONFIGDIR}
 )
+# Install header files
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h")
+
+## Install the config and configversion
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfig.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfigVersion.cmake
+  DESTINATION ${INSTALL_CONFIGDIR}
+)
+
+export(TARGETS KimeraRPGO FILE KimeraRPGOTargets.cmake)
+
+################################################################################
+# Print configuration variables
+message(STATUS "===============================================================")
+message(STATUS "================  Configuration Options  ======================")
+message(STATUS "CMAKE_CXX_COMPILER_ID type                : ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "CMAKE_CXX_COMPILER_VERSION                : ${CMAKE_CXX_COMPILER_VERSION}")
+message(STATUS "Build flags                                               ")
+if(NOT MSVC AND NOT XCODE_VERSION)
+    message(STATUS "  Build type                              : ${CMAKE_BUILD_TYPE}")
+    if (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Release")
+      message(WARNING "  Build type is not in RELEASE, this will slow down the code.")
+    endif()
+    message(STATUS "  C compilation flags (Release)           : ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_RELEASE}")
+    message(STATUS "  C++ compilation flags (Release)         : ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
+endif()

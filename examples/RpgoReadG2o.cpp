@@ -45,8 +45,8 @@ void Simulate(gtsam::GraphAndValues gv,
   init_values.insert(current_key, values.at<T>(current_key));
   gtsam::PriorFactor<T> prior_factor(
       current_key, values.at<T>(current_key), init_noise);
-
-  pgo->loadGraph(nfg, values, prior_factor);
+  nfg.add(prior_factor);
+  pgo->update(nfg, values);
 
   pgo->saveData(output_folder);  // tell pgo to save g2o result
 }

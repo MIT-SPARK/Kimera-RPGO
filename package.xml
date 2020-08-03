@@ -2,7 +2,7 @@
 <package format="2">
   <name>kimera_rpgo</name>
   <version>0.0.1</version>
-  <description>KimeraRPGO</description>
+  <description>A library for robust pose graph optimization using gtsam</description>
 
   <maintainer email="yunchang@mit.edu"></maintainer>
   <license>BSD</license>

@@ -42,11 +42,11 @@ TEST(RobustSolver, Load1) {
       gtsam::noiseModel::Isotropic::Variance(6, 0.01);
 
   gtsam::Key init_key = gtsam::Symbol('a', 0);
-  gtsam::PriorFactor<gtsam::Pose3> init(
+  gtsam::PriorFactor<gtsam::Pose3> init_factor(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
 
-  // Load graph using prior
-  pgo->loadGraph(*nfg, *values, init);
+  nfg->add(init_factor);
+  pgo->update(*nfg, *values);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
@@ -67,7 +67,7 @@ TEST(RobustSolver, Add1) {
 
   // set up KimeraRPGO solver
   RobustSolverParams params;
-  params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
+  params.setPcm3DParams(0.0, 0.0, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
@@ -78,7 +78,8 @@ TEST(RobustSolver, Add1) {
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init);  // first load
+  nfg->add(init);
+  pgo->update(*nfg, *values);  // first load
 
   // add graph
   // read g2o file for robot b
@@ -87,35 +88,36 @@ TEST(RobustSolver, Add1) {
   boost::tie(nfg_b, values_b) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_b.g2o");
 
-  // create the between factor for connection
-  gtsam::Key init_key_b = gtsam::Symbol('b', 0);
-  gtsam::Pose3 transform_ab = values->at<gtsam::Pose3>(init_key).between(
-      values_b->at<gtsam::Pose3>(init_key_b));
-  gtsam::BetweenFactor<gtsam::Pose3> bridge(
-      init_key, init_key_b, transform_ab, noise);
-
-  // add graph
-  pgo->addGraph(*nfg_b, *values_b, bridge);
+  // add robot b
+  pgo->update(*nfg_b, *values_b);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
 
   // Since odom check threshold is 0, should only have the odom edges + prior +
   // between (no lc should have passed)
-  EXPECT(nfg_out.size() == size_t(92));
+  EXPECT(nfg_out.size() == size_t(91));
   EXPECT(values_out.size() == size_t(92));
 
-  // Try add another loop closuer
-  // create the between factor for connection
+  // Try add interrobot loop closures
   gtsam::Key key_b1 = gtsam::Symbol('b', 1);
   gtsam::Key key_a1 = gtsam::Symbol('a', 1);
-  gtsam::Pose3 a1b1 = gtsam::Pose3();
-  gtsam::BetweenFactor<gtsam::Pose3> a1tob1(key_a1, key_b1, a1b1, noise);
+  gtsam::BetweenFactor<gtsam::Pose3> a1tob1(
+      key_a1, key_b1, gtsam::Pose3(), noise);
+
+  gtsam::Key key_b2 = gtsam::Symbol('b', 2);
+  gtsam::Key key_a2 = gtsam::Symbol('a', 2);
+  gtsam::BetweenFactor<gtsam::Pose3> a2tob2(
+      key_a2, key_b2, gtsam::Pose3(), noise);
 
   gtsam::NonlinearFactorGraph newfactors;
   newfactors.add(a1tob1);
+  newfactors.add(a2tob2);
   gtsam::Values newvalues;
   pgo->update(newfactors, newvalues);
+
+  nfg_out = pgo->getFactorsUnsafe();
+  values_out = pgo->calculateEstimate();
 
   EXPECT(nfg_out.size() == size_t(92));
   EXPECT(values_out.size() == size_t(92));
@@ -146,9 +148,9 @@ TEST(RobustSolver, Load2) {
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-
+  nfg->add(init);
   // Load graph using prior
-  pgo->loadGraph(*nfg, *values, init);
+  pgo->update(*nfg, *values);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
@@ -179,7 +181,8 @@ TEST(RobustSolver, Add2) {
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init);  // first load
+  nfg->add(init);
+  pgo->update(*nfg, *values);  // first load
 
   // add graph
   // read g2o file for robot b
@@ -188,21 +191,14 @@ TEST(RobustSolver, Add2) {
   boost::tie(nfg_b, values_b) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_b.g2o");
 
-  // create the between factor for connection
-  gtsam::Key init_key_b = gtsam::Symbol('b', 0);
-  gtsam::Pose3 transform_ab = values->at<gtsam::Pose3>(init_key).between(
-      values_b->at<gtsam::Pose3>(init_key_b));
-  gtsam::BetweenFactor<gtsam::Pose3> bridge(
-      init_key, init_key_b, transform_ab, noise);
-
-  // add graph
-  pgo->addGraph(*nfg_b, *values_b, bridge);
+  // add robot b
+  pgo->update(*nfg_b, *values_b);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
 
   // Since thresholds are high, should have all the edges
-  EXPECT(nfg_out.size() == size_t(97));
+  EXPECT(nfg_out.size() == size_t(96));
   EXPECT(values_out.size() == size_t(92));
 
   // Try add another loop closuer
@@ -220,7 +216,7 @@ TEST(RobustSolver, Add2) {
   nfg_out = pgo->getFactorsUnsafe();
   values_out = pgo->calculateEstimate();
 
-  EXPECT(nfg_out.size() == size_t(98));
+  EXPECT(nfg_out.size() == size_t(97));
   EXPECT(values_out.size() == size_t(92));
 }
 
@@ -240,10 +236,8 @@ TEST(RobustSolver, Load1NoPrior) {
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
 
-  gtsam::Key init_key = gtsam::Symbol('a', 0);
-
   // Load graph using prior
-  pgo->loadGraph<gtsam::Pose3>(nfg, values, init_key);
+  pgo->update(nfg, values);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
@@ -276,9 +270,9 @@ TEST(RobustSolver, NoRejectLoad) {
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-
-  // Load graph using prior
-  pgo->loadGraph(*nfg, *values, init);
+  // add prior factor
+  nfg->add(init);
+  pgo->update(*nfg, *values);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
@@ -309,7 +303,8 @@ TEST(RobustSolver, NoRejectAdd) {
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init);  // first load
+  nfg->add(init);
+  pgo->update(*nfg, *values);  // first load
 
   // add graph
   // read g2o file for robot b
@@ -318,21 +313,14 @@ TEST(RobustSolver, NoRejectAdd) {
   boost::tie(nfg_b, values_b) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_b.g2o");
 
-  // create the between factor for connection
-  gtsam::Key init_key_b = gtsam::Symbol('b', 0);
-  gtsam::Pose3 transform_ab = values->at<gtsam::Pose3>(init_key).between(
-      values_b->at<gtsam::Pose3>(init_key_b));
-  gtsam::BetweenFactor<gtsam::Pose3> bridge(
-      init_key, init_key_b, transform_ab, noise);
-
-  // add graph
-  pgo->addGraph(*nfg_b, *values_b, bridge);
+  // add robot b
+  pgo->update(*nfg_b, *values_b);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
 
   // Since thresholds are high, should have all the edges
-  EXPECT(nfg_out.size() == size_t(97));
+  EXPECT(nfg_out.size() == size_t(96));
   EXPECT(values_out.size() == size_t(92));
 
   // Try add another loop closuer
@@ -350,11 +338,11 @@ TEST(RobustSolver, NoRejectAdd) {
   nfg_out = pgo->getFactorsUnsafe();
   values_out = pgo->calculateEstimate();
 
-  EXPECT(nfg_out.size() == size_t(98));
+  EXPECT(nfg_out.size() == size_t(97));
   EXPECT(values_out.size() == size_t(92));
 }
 
-/* ************************************************************************* */
+/*  ************************************************************************* */
 TEST(RobustSolver, Load1PcmSimple) {
   // load graph
   // read g2o file for robot a
@@ -379,7 +367,8 @@ TEST(RobustSolver, Load1PcmSimple) {
       init_key, values->at<gtsam::Pose3>(init_key), noise);
 
   // Load graph using prior
-  pgo->loadGraph(*nfg, *values, init);
+  nfg->add(init);
+  pgo->update(*nfg, *values);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
@@ -390,7 +379,8 @@ TEST(RobustSolver, Load1PcmSimple) {
   EXPECT(values_out.size() == size_t(50));
 }
 
-/* ************************************************************************* */
+/* *************************************************************************
+ */
 TEST(RobustSolver, Add1PcmSimple) {
   // load graph for robot a (same as above)
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
@@ -400,7 +390,7 @@ TEST(RobustSolver, Add1PcmSimple) {
 
   // set up KimeraRPGO solver
   RobustSolverParams params;
-  params.setPcmSimple3DParams(0.001, 0.0001, Verbosity::QUIET);
+  params.setPcmSimple3DParams(0.0, 0.0, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
@@ -411,7 +401,8 @@ TEST(RobustSolver, Add1PcmSimple) {
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init);  // first load
+  nfg->add(init);
+  pgo->update(*nfg, *values);  // first load
 
   // add graph
   // read g2o file for robot b
@@ -420,33 +411,31 @@ TEST(RobustSolver, Add1PcmSimple) {
   boost::tie(nfg_b, values_b) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_b.g2o");
 
-  // create the between factor for connection
-  gtsam::Key init_key_b = gtsam::Symbol('b', 0);
-  gtsam::Pose3 transform_ab = values->at<gtsam::Pose3>(init_key).between(
-      values_b->at<gtsam::Pose3>(init_key_b));
-  gtsam::BetweenFactor<gtsam::Pose3> bridge(
-      init_key, init_key_b, transform_ab, noise);
-
-  // add graph
-  pgo->addGraph(*nfg_b, *values_b, bridge);
+  // add robot b
+  pgo->update(*nfg_b, *values_b);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
 
   // Thresholds are close to 0, should only have the odom edges + prior +
   // between (no lc should have passed)
-  EXPECT(nfg_out.size() == size_t(92));
+  EXPECT(nfg_out.size() == size_t(91));
   EXPECT(values_out.size() == size_t(92));
 
-  // Try add another loop closuer
-  // create the between factor for connection
+  // Try add interrobot loop closures
   gtsam::Key key_b1 = gtsam::Symbol('b', 1);
   gtsam::Key key_a1 = gtsam::Symbol('a', 1);
-  gtsam::Pose3 a1b1 = gtsam::Pose3();
-  gtsam::BetweenFactor<gtsam::Pose3> a1tob1(key_a1, key_b1, a1b1, noise);
+  gtsam::BetweenFactor<gtsam::Pose3> a1tob1(
+      key_a1, key_b1, gtsam::Pose3(), noise);
+
+  gtsam::Key key_b2 = gtsam::Symbol('b', 2);
+  gtsam::Key key_a2 = gtsam::Symbol('a', 2);
+  gtsam::BetweenFactor<gtsam::Pose3> a2tob2(
+      key_a2, key_b2, gtsam::Pose3(), noise);
 
   gtsam::NonlinearFactorGraph newfactors;
   newfactors.add(a1tob1);
+  newfactors.add(a2tob2);
   gtsam::Values newvalues;
   pgo->update(newfactors, newvalues);
 
@@ -457,7 +446,8 @@ TEST(RobustSolver, Add1PcmSimple) {
   EXPECT(values_out.size() == size_t(92));
 }
 
-/* ************************************************************************* */
+/* *************************************************************************
+ */
 TEST(RobustSolver, Load2PcmSimple) {
   // load graph
   // read g2o file for robot a
@@ -482,7 +472,8 @@ TEST(RobustSolver, Load2PcmSimple) {
       init_key, values->at<gtsam::Pose3>(init_key), noise);
 
   // Load graph using prior
-  pgo->loadGraph(*nfg, *values, init);
+  nfg->add(init);
+  pgo->update(*nfg, *values);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
@@ -492,7 +483,8 @@ TEST(RobustSolver, Load2PcmSimple) {
   EXPECT(values_out.size() == size_t(50));
 }
 
-/* ************************************************************************* */
+/* *************************************************************************
+ */
 TEST(RobustSolver, Add2PcmSimple) {
   // load graph for robot a (same as above)
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
@@ -513,7 +505,8 @@ TEST(RobustSolver, Add2PcmSimple) {
   gtsam::Key init_key = gtsam::Symbol('a', 0);
   gtsam::PriorFactor<gtsam::Pose3> init(
       init_key, values->at<gtsam::Pose3>(init_key), noise);
-  pgo->loadGraph(*nfg, *values, init);  // first load
+  nfg->add(init);
+  pgo->update(*nfg, *values);  // first load
 
   // add graph
   // read g2o file for robot b
@@ -522,21 +515,14 @@ TEST(RobustSolver, Add2PcmSimple) {
   boost::tie(nfg_b, values_b) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_b.g2o");
 
-  // create the between factor for connection
-  gtsam::Key init_key_b = gtsam::Symbol('b', 0);
-  gtsam::Pose3 transform_ab = values->at<gtsam::Pose3>(init_key).between(
-      values_b->at<gtsam::Pose3>(init_key_b));
-  gtsam::BetweenFactor<gtsam::Pose3> bridge(
-      init_key, init_key_b, transform_ab, noise);
-
-  // add graph
-  pgo->addGraph(*nfg_b, *values_b, bridge);
+  // add robot b
+  pgo->update(*nfg_b, *values_b);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();
 
   // Since thresholds are high, should have all the edges
-  EXPECT(nfg_out.size() == size_t(97));
+  EXPECT(nfg_out.size() == size_t(96));
   EXPECT(values_out.size() == size_t(92));
 
   // Try add another loop closuer
@@ -554,11 +540,12 @@ TEST(RobustSolver, Add2PcmSimple) {
   nfg_out = pgo->getFactorsUnsafe();
   values_out = pgo->calculateEstimate();
 
-  EXPECT(nfg_out.size() == size_t(98));
+  EXPECT(nfg_out.size() == size_t(97));
   EXPECT(values_out.size() == size_t(92));
 }
 
-/* ************************************************************************* */
+/* *************************************************************************
+ */
 TEST(RobustSolver, Load1NoPriorPcmSimple) {
   // load graph
   // read g2o file for robot a
@@ -574,10 +561,8 @@ TEST(RobustSolver, Load1NoPriorPcmSimple) {
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
 
-  gtsam::Key init_key = gtsam::Symbol('a', 0);
-
   // Load graph using prior
-  pgo->loadGraph<gtsam::Pose3>(nfg, values, init_key);
+  pgo->update(nfg, values);
 
   gtsam::NonlinearFactorGraph nfg_out = pgo->getFactorsUnsafe();
   gtsam::Values values_out = pgo->calculateEstimate();

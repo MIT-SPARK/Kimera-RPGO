@@ -349,6 +349,8 @@ TEST(RobustSolver, LandmarkPcmSimple) {
 TEST(RobustSolver, LandmarkNoReject) {
   RobustSolverParams params;
   params.setNoRejection(Verbosity::QUIET);
+  std::vector<char> special_symbs{'l'};  // for landmarks
+  params.specialSymbols = special_symbs;
 
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
@@ -490,7 +492,7 @@ TEST(RobustSolver, LandmarkNoReject) {
   landmark_values = gtsam::Values();
   gtsam::Key l1 = gtsam::Symbol('l', 1);
   landmark_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      a2, l0, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0)), lmk_noise));
+      a2, l1, gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0)), lmk_noise));
   landmark_values.insert(l1,
                          gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 1, 0)));
   pgo->update(landmark_factors, landmark_values);

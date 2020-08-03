@@ -9,7 +9,7 @@
 #include <gtsam/inference/Symbol.h>
 #include <Eigen/Dense>
 
-namespace kimera_rpgo {
+namespace KimeraRPGO {
 
 int findMaxClique(const Eigen::MatrixXd adjMatrix,
                   std::vector<int>* max_clique);
@@ -53,4 +53,4 @@ struct Trajectory {
   }
 };
 
-}  // namespace kimera_rpgo
+}  // namespace KimeraRPGO

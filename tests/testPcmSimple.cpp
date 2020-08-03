@@ -7,10 +7,10 @@
 #include <CppUnitLite/TestHarness.h>
 #include <random>
 
-#include "kimera_rpgo/outlier/pcm.h"
+#include "KimeraRPGO/outlier/pcm.h"
 
-using kimera_rpgo::OutlierRemoval;
-using kimera_rpgo::PcmSimple3D;
+using KimeraRPGO::OutlierRemoval;
+using KimeraRPGO::PcmSimple3D;
 
 /* ************************************************************************* */
 TEST(PcmSimple, OdomTransCheck) {

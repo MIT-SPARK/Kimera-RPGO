@@ -7,12 +7,12 @@
 #include <CppUnitLite/TestHarness.h>
 #include <random>
 
-#include "kimera_rpgo/utils/geometry_utils.h"
-#include "kimera_rpgo/utils/graph_utils.h"
+#include "KimeraRPGO/utils/geometry_utils.h"
+#include "KimeraRPGO/utils/graph_utils.h"
 
-using kimera_rpgo::PoseWithCovariance;
-using kimera_rpgo::PoseWithNode;
-using kimera_rpgo::Trajectory;
+using KimeraRPGO::PoseWithCovariance;
+using KimeraRPGO::PoseWithNode;
+using KimeraRPGO::Trajectory;
 
 struct normal_rv {
   explicit normal_rv(Eigen::MatrixXd const& covar) {

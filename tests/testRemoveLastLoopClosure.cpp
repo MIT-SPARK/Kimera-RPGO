@@ -11,14 +11,14 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/inference/Symbol.h>
 
-#include "kimera_rpgo/RobustSolver.h"
-#include "kimera_rpgo/SolverParams.h"
-#include "kimera_rpgo/utils/type_utils.h"
+#include "KimeraRPGO/RobustSolver.h"
+#include "KimeraRPGO/SolverParams.h"
+#include "KimeraRPGO/utils/type_utils.h"
 #include "test_config.h"
 
-using kimera_rpgo::RobustSolver;
-using kimera_rpgo::RobustSolverParams;
-using kimera_rpgo::Verbosity;
+using KimeraRPGO::RobustSolver;
+using KimeraRPGO::RobustSolverParams;
+using KimeraRPGO::Verbosity;
 
 void buildTestGraph(gtsam::NonlinearFactorGraph* factors,
                     gtsam::Values* values) {
@@ -107,12 +107,12 @@ void buildTestGraph(gtsam::NonlinearFactorGraph* factors,
 
 /* ************************************************************************* */
 TEST(RobustSolver, RemoveLastLoopClosureNoOR) {
-  // set up kimera_rpgo solver
+  // set up KimeraRPGO solver
   RobustSolverParams params;
   params.setNoRejection(Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      kimera_rpgo::make_unique<RobustSolver>(params);
+      KimeraRPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 10e-8);
@@ -190,12 +190,12 @@ TEST(RobustSolver, RemoveLastLoopClosureNoOR) {
 
 /* ************************************************************************* */
 TEST(RobustSolver, RemoveLastLoopClosurePcm) {
-  // set up kimera_rpgo solver
+  // set up KimeraRPGO solver
   RobustSolverParams params;
   params.setPcm3DParams(100, 100, Verbosity::QUIET);
 
   std::unique_ptr<RobustSolver> pgo =
-      kimera_rpgo::make_unique<RobustSolver>(params);
+      KimeraRPGO::make_unique<RobustSolver>(params);
 
   static const gtsam::SharedNoiseModel& noise =
       gtsam::noiseModel::Isotropic::Variance(6, 10e-8);

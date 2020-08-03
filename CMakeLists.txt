@@ -29,43 +29,43 @@ endif()
 
 ###########################################################################
 # Compile
-add_library(kimera_rpgo SHARED
-  include/kimera_rpgo/logger.h
+add_library(KimeraRPGO SHARED
+  include/KimeraRPGO/logger.h
   src/GenericSolver.cpp
   src/RobustSolver.cpp
-  include/kimera_rpgo/SolverParams.h )
+  include/KimeraRPGO/SolverParams.h )
 include_directories(include)
 # Add source code for max clique finder
-add_subdirectory(include/kimera_rpgo/max_clique_finder)
+add_subdirectory(include/KimeraRPGO/max_clique_finder)
 # Add source for outlier rejection stuff
-add_subdirectory(include/kimera_rpgo/outlier)
+add_subdirectory(include/KimeraRPGO/outlier)
 # Add source for utils
-add_subdirectory(include/kimera_rpgo/utils)
+add_subdirectory(include/KimeraRPGO/utils)
 add_subdirectory(src/utils)
 
-target_include_directories(kimera_rpgo PUBLIC
+target_include_directories(KimeraRPGO PUBLIC
   ${GTSAM_INCLUDE_DIR}
   $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
   # INSTALL
   $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(kimera_rpgo
+target_link_libraries(KimeraRPGO
   PUBLIC
     Boost::boost
     gtsam
     gtsam_unstable
 )
 
-target_compile_options(kimera_rpgo
+target_compile_options(KimeraRPGO
   PRIVATE -Wall -pipe
-  PRIVATE -march=native
+  # PRIVATE -march=native
 )
 
 ###########################################################################
 # Define executables
 add_executable(RpgoReadG2o examples/RpgoReadG2o.cpp)
-target_link_libraries(RpgoReadG2o kimera_rpgo)
+target_link_libraries(RpgoReadG2o KimeraRPGO)
 add_executable(GenerateTrajectories examples/GenerateTrajectories.cpp)
 target_link_libraries(GenerateTrajectories gtsam)
 
@@ -79,21 +79,21 @@ configure_file(tests/test_config.h.in tests/test_config.h)
 ###########################################################################
 # Installation
 include(CMakePackageConfigHelpers)
-write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/kimera_rpgoConfigVersion.cmake
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfigVersion.cmake
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY AnyNewerVersion
 )
 
-# Create kimera_rpgoConfig.cmake with extra info from kimera_rpgoConfig.cmake.in
-# This file is necessary to find_package the library kimera_rpgo.
-set(INSTALL_CONFIGDIR lib/cmake/kimera_rpgo)
+# Create KimeraRPGOConfig.cmake with extra info from KimeraRPGOConfig.cmake.in
+# This file is necessary to find_package the library KimeraRPGO.
+set(INSTALL_CONFIGDIR lib/cmake/KimeraRPGO)
 configure_package_config_file(
-  ${CMAKE_CURRENT_LIST_DIR}/cmake/kimera_rpgoConfig.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/kimera_rpgoConfig.cmake
+  ${CMAKE_CURRENT_LIST_DIR}/cmake/KimeraRPGOConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfig.cmake
   INSTALL_DESTINATION ${INSTALL_CONFIGDIR})
 
 include(GNUInstallDirs)
-install(TARGETS kimera_rpgo
+install(TARGETS KimeraRPGO
   EXPORT kimera-rpgo-export
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
@@ -102,7 +102,7 @@ install(TARGETS kimera_rpgo
 )
 install(EXPORT kimera-rpgo-export
   FILE
-    kimera_rpgoTargets.cmake
+    KimeraRPGOTargets.cmake
   DESTINATION
     ${INSTALL_CONFIGDIR}
 )
@@ -113,12 +113,12 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/
 
 ## Install the config and configversion
 install(FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/kimera_rpgoConfig.cmake
-  ${CMAKE_CURRENT_BINARY_DIR}/kimera_rpgoConfigVersion.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfig.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfigVersion.cmake
   DESTINATION ${INSTALL_CONFIGDIR}
 )
 
-export(TARGETS kimera_rpgo FILE kimera_rpgoTargets.cmake)
+export(TARGETS KimeraRPGO FILE KimeraRPGOTargets.cmake)
 
 ################################################################################
 # Print configuration variables

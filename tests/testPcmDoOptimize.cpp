@@ -9,10 +9,10 @@
 #include <vector>
 
 #include <gtsam/sam/RangeFactor.h>
-#include "kimera_rpgo/outlier/pcm.h"
+#include "KimeraRPGO/outlier/pcm.h"
 
-using kimera_rpgo::OutlierRemoval;
-using kimera_rpgo::Pcm3D;
+using KimeraRPGO::OutlierRemoval;
+using KimeraRPGO::Pcm3D;
 
 /* ************************************************************************* */
 TEST(PcmDoOptimize, Odometry) {

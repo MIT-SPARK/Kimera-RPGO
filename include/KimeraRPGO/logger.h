@@ -12,7 +12,7 @@ author: Yun Chang
 using std::cout;
 using std::endl;
 
-namespace kimera_rpgo {
+namespace KimeraRPGO {
 
 enum log_level_t {
   WARNING,
@@ -46,4 +46,4 @@ log_impl::formatted_log_t log(const char* msg) {
   return log_impl::formatted_log_t(level, msg);
 }
 
-}  // namespace kimera_rpgo
+}  // namespace KimeraRPGO

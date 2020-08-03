@@ -1,10 +1,10 @@
 // Authors: Yun Chang
 #include <vector>
 
-#include "kimera_rpgo/max_clique_finder/findClique.h"
-#include "kimera_rpgo/utils/graph_utils.h"
+#include "KimeraRPGO/max_clique_finder/findClique.h"
+#include "KimeraRPGO/utils/graph_utils.h"
 
-namespace kimera_rpgo {
+namespace KimeraRPGO {
 
 int findMaxClique(const Eigen::MatrixXd adjMatrix,
                   std::vector<int>* max_clique) {
@@ -26,4 +26,4 @@ int findMaxCliqueHeu(const Eigen::MatrixXd adjMatrix,
   return max_clique_size;
 }
 
-}  // namespace kimera_rpgo
+}  // namespace KimeraRPGO

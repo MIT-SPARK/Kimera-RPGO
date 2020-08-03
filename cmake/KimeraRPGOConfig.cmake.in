@@ -14,16 +14,16 @@ find_dependency(GTSAM REQUIRED)
 
 list(REMOVE_AT CMAKE_MODULE_PATH -1)
 
-if(NOT TARGET kimera_rpgo)
-  include("${KimeraRPGO_CMAKE_DIR}/kimera_rpgoTargets.cmake")
+if(NOT TARGET KimeraRPGO)
+  include("${KimeraRPGO_CMAKE_DIR}/KimeraRPGOTargets.cmake")
 endif()
 
 if(EXISTS "${KimeraRPGO_CMAKE_DIR}/CMakeCache.txt")
   # In build tree
-  set(KimeraRPGO_INCLUDE_DIR @CMAKE_SOURCE_DIR@ CACHE PATH "kimera_rpgo include directory")
+  set(KimeraRPGO_INCLUDE_DIR @CMAKE_SOURCE_DIR@ CACHE PATH "KimeraRPGO include directory")
 else()
   # Find installed library
-  set(KimeraRPGO_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include/kimera_rpgo" CACHE PATH "kimera_rpgo include directory")
+  set(KimeraRPGO_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include/KimeraRPGO" CACHE PATH "KimeraRPGO include directory")
 endif()
 
 SET(KimeraRPGO_INCLUDE_DIRS ${KimeraRPGO_INCLUDE_DIR})

@@ -7,7 +7,7 @@ author: Yun Chang
 
 #include <vector>
 
-namespace kimera_rpgo {
+namespace KimeraRPGO {
 
 enum class Solver { LM, GN };
 
@@ -115,4 +115,4 @@ struct RobustSolverParams {
   double pcmDist_rotThreshold;
 };
 
-}  // namespace kimera_rpgo
+}  // namespace KimeraRPGO

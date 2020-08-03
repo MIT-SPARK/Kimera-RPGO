@@ -6,13 +6,13 @@ author: Yun Chang, Luca Carlone
 
 #include <vector>
 
-#include "kimera_rpgo/GenericSolver.h"
+#include "KimeraRPGO/GenericSolver.h"
 
 #include <gtsam/nonlinear/DoglegOptimizer.h>
 #include <gtsam/nonlinear/GaussNewtonOptimizer.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 
-namespace kimera_rpgo {
+namespace KimeraRPGO {
 
 GenericSolver::GenericSolver(Solver solvertype,
                              std::vector<char> special_symbols)
@@ -99,4 +99,4 @@ void GenericSolver::removeFactorsNoUpdate(
 
 void GenericSolver::removeLastFactor() { nfg_.erase(std::prev(nfg_.end())); }
 
-}  // namespace kimera_rpgo
+}  // namespace KimeraRPGO

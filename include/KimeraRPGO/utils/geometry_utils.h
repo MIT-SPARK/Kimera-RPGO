@@ -11,7 +11,7 @@
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/slam/PriorFactor.h>
 
-#include "kimera_rpgo/logger.h"
+#include "KimeraRPGO/logger.h"
 
 #include <map>
 #include <vector>
@@ -19,7 +19,7 @@
 /** \namespace graph_utils
  *  \brief This namespace encapsulates utility functions to manipulate graphs
  */
-namespace kimera_rpgo {
+namespace KimeraRPGO {
 
 /** \getting the dimensions of various Lie types
  *   \simple helper functions */
@@ -286,4 +286,4 @@ struct PoseWithNode {
   }
 };
 
-}  // namespace kimera_rpgo
+}  // namespace KimeraRPGO

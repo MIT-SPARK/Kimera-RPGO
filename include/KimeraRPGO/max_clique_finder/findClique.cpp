@@ -17,7 +17,7 @@
 
    http://arxiv.org/abs/1411.7460 */
 
-#include "kimera_rpgo/max_clique_finder/findClique.h"
+#include "KimeraRPGO/max_clique_finder/findClique.h"
 
 #include <vector>
 

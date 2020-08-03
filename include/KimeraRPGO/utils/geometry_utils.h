@@ -90,7 +90,7 @@ struct PoseWithCovariance {
     pose = between_factor.measured();
     gtsam::Matrix covar =
         boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>(
-            between_factor.get_noiseModel())
+            between_factor.noiseModel())
             ->covariance();
 
     // prevent propagation of nan values in the edge case
@@ -176,11 +176,11 @@ struct PoseWithCovariance {
       int r_dim = getRotationDim<T>();
       Eigen::MatrixXd cov_block =
           covariance_matrix.block(r_dim, r_dim, t_dim, t_dim);
-      return std::sqrt(log.tail(t_dim).transpose() * gtsam::inverse(cov_block) *
+      return std::sqrt(log.tail(t_dim).transpose() * cov_block.inverse() *
                        log.tail(t_dim));
     }
 
-    return std::sqrt(log.transpose() * gtsam::inverse(covariance_matrix) * log);
+    return std::sqrt(log.transpose() * covariance_matrix.inverse() * log);
   }
 };
 
@@ -220,7 +220,7 @@ struct PoseWithNode {
     pose = between_factor.measured();
     gtsam::Matrix covar =
         boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>(
-            between_factor.get_noiseModel())
+            between_factor.noiseModel())
             ->covariance();
 
     // prevent propagation of nan values in the edge case

@@ -119,6 +119,7 @@ install(FILES
 )
 
 export(TARGETS KimeraRPGO FILE KimeraRPGOTargets.cmake)
+export(PACKAGE KimeraRPGO)
 
 ################################################################################
 # Print configuration variables

@@ -36,7 +36,7 @@ static const size_t getTranslationDim() {
   // get translation dimension of some gtsam object
   BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<T>));
   T sample_object;
-  return sample_object.translation().dimension;
+  return sample_object.translation().size();
 }
 
 template <class T>

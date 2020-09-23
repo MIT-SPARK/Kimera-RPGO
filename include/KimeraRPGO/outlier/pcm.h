@@ -262,6 +262,31 @@ class Pcm : public OutlierRemoval {
     return;
   }
 
+  /*! \brief remove the prior factors of nodes that given prefix
+   */
+  void removePriorFactorsWithPrefix(
+      const char& prefix,
+      gtsam::NonlinearFactorGraph* updated_factors) {
+    // First make copy of nfg_special_ where prior factors stored
+    const gtsam::NonlinearFactorGraph nfg_special_copy = nfg_special_;
+    // Clear nfg_special_
+    nfg_special_ = gtsam::NonlinearFactorGraph();
+    // Iterate and pick out non prior factors and prior factors without key with
+    // prefix
+    for (auto factor : nfg_special_copy) {
+      if (!boost::dynamic_pointer_cast<gtsam::PriorFactor<poseT>>(factor)) {
+        nfg_special_.add(factor);
+      } else {
+        gtsam::PriorFactor<poseT> prior_factor =
+            *boost::dynamic_pointer_cast<gtsam::PriorFactor<poseT>>(factor);
+        gtsam::Symbol node(prior_factor.key());
+        if (node.chr() != prefix) nfg_special_.add(factor);
+      }
+    }
+    *updated_factors = buildGraphToOptimize();
+    return;
+  }
+
  protected:
   /*! \brief goes through the loop closures and updates the corresponding
    * adjacency matrices, in preparation for max clique

@@ -52,6 +52,12 @@ class OutlierRemoval {
       ObservationId id,
       gtsam::NonlinearFactorGraph* updated_factors) {}
 
+  /*! \brief Remove prior factors of nodes with prefix prefix
+   */
+  virtual void removePriorFactorsWithPrefix(
+      const char& prefix,
+      gtsam::NonlinearFactorGraph* updated_factors) {}
+
  protected:
   bool debug_ = true;
 };

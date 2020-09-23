@@ -128,6 +128,18 @@ void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
   return;
 }
 
+void RobustSolver::removePriorFactorsWithPrefix(const char& prefix,
+                                                bool optimize_graph) {
+  if (outlier_removal_) {
+    // removing loop closure so values should not change
+    outlier_removal_->removePriorFactorsWithPrefix(prefix, &nfg_);
+  } else {
+    removePriorsWithPrefix(prefix);
+  }
+  if (optimize_graph) optimize();
+  return;
+}
+
 void RobustSolver::removeLastLoopClosure(char prefix_1, char prefix_2) {
   ObservationId id(prefix_1, prefix_2);
   if (outlier_removal_) {

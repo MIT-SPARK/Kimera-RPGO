@@ -60,8 +60,14 @@ class RobustSolver : public GenericSolver {
    */
   void removeLastLoopClosure(char prefix_1, char prefix_2);
 
+  /*! \brief remove the prior factors of nodes that given prefix
+   */
+  void removePriorFactorsWithPrefix(const char& prefix,
+                                    bool optimize_graph = false);
+
  private:
-  std::unique_ptr<OutlierRemoval> outlier_removal_;  // outlier removal method;
+  std::unique_ptr<OutlierRemoval> outlier_removal_;  // outlier removal
+                                                     // method;
 
   /*! \brief Calling the optimization
    *  Optimize the factor graph with the stroed values

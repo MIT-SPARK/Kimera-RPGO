@@ -114,7 +114,8 @@ void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,
 }
 
 void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
-                          const gtsam::Values& values) {
+                          const gtsam::Values& values,
+                          bool optimize_graph) {
   bool do_optimize;
   if (outlier_removal_) {
     do_optimize =
@@ -123,7 +124,7 @@ void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
     do_optimize = addAndCheckIfOptimize(factors, values);
   }
 
-  if (do_optimize) optimize();  // optimize once after loading
+  if (do_optimize & optimize_graph) optimize();  // optimize once after loading
   return;
 }
 

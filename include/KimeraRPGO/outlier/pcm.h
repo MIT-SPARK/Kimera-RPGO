@@ -214,7 +214,7 @@ class Pcm : public OutlierRemoval {
    */
   void saveData(std::string folder_path) override {
     // TODO(Yun) save max clique results
-    // saveDistanceMatrix(folder_path);
+    saveAdjacencyMatrix(folder_path);
     // saveCliqueSizeData(folder_path);
   }
 
@@ -779,6 +779,24 @@ class Pcm : public OutlierRemoval {
     output_nfg.add(
         nfg_special_);  // still need to update the class overall factorgraph
     return output_nfg;
+  }
+
+  /*
+   * Save adjacency matrix to ObservationId_adj_matrix.txt
+   */
+  void saveAdjacencyMatrix(const std::string& folder_path) {
+    for (auto measurement : loop_closures_) {
+      ObservationId id = measurement.first;
+      gtsam::Matrix adj_matrix = measurement.second.adj_matrix;
+
+      // Save to file
+      std::string filename =
+          folder_path + "/" + id.id1 + "-" + id.id2 + "_adj_matrix.txt";
+      std::ofstream outfile;
+      outfile.open(filename);
+      outfile << adj_matrix;
+      outfile.close();
+    }
   }
 };
 

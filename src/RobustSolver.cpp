@@ -77,6 +77,11 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
       log<WARNING>("Unrecognized verbosity. Automatically setting to UPDATE. ");
     }
   }
+
+  // set log output
+  if (params.log_output) {
+    if (outlier_removal_) outlier_removal_->logOutput(params.log_folder);
+  }
 }
 
 void RobustSolver::optimize() {

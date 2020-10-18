@@ -46,6 +46,13 @@ class OutlierRemoval {
    */
   void setQuiet() { debug_ = false; }
 
+  /*! \brief Set log folder
+   */
+  void logOutput(const std::string& output_folder) {
+    log_output_ = true;
+    log_folder_ = output_folder;
+  }
+
   /*! \brief Remove last measured loop closure
    */
   virtual void removeLastLoopClosure(
@@ -60,6 +67,8 @@ class OutlierRemoval {
 
  protected:
   bool debug_ = true;
+  bool log_output_ = false;
+  std::string log_folder_;
 };
 
 }  // namespace KimeraRPGO

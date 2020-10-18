@@ -5,6 +5,7 @@ author: Yun Chang
 
 #pragma once
 
+#include <string>
 #include <vector>
 
 namespace KimeraRPGO {
@@ -32,9 +33,9 @@ struct RobustSolverParams {
         verbosity(Verbosity::UPDATE),
         pcm_odomThreshold(10.0),
         pcm_lcThreshold(5.0),
-        pcmDist_transThreshold(0.05),   // 5cm
-        pcmDist_rotThreshold(0.005) {}  // <0.5degrees
-
+        pcmDist_transThreshold(0.05),  // 5cm
+        pcmDist_rotThreshold(0.005),   // <0.5degrees
+        log_output(false) {}
   /*! \brief For RobustSolver to not do outlier rejection at all
    */
   void setNoRejection(Verbosity verbos = Verbosity::UPDATE) {
@@ -100,11 +101,20 @@ struct RobustSolverParams {
     verbosity = verbos;
   }
 
+  /*! \brief set folder to log data
+   */
+  void logOutput(const std::string& output_folder) {
+    log_output = true;
+    log_folder = output_folder;
+  }
+
   // General
   Solver solver;
   OutlierRemovalMethod outlierRemovalMethod;
   std::vector<char> specialSymbols;
   Verbosity verbosity;
+  bool log_output;
+  std::string log_folder;
 
   // for Pcm
   double pcm_odomThreshold;

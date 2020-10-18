@@ -10,6 +10,7 @@ author: Yun Chang, Luca Carlone
 #define SLOW_BUT_CORRECT_BETWEENFACTOR
 
 #include <math.h>
+#include <chrono>
 #include <fstream>
 #include <iomanip>
 #include <sstream>
@@ -108,6 +109,8 @@ class Pcm : public OutlierRemoval {
                       const gtsam::Values& new_values,
                       gtsam::NonlinearFactorGraph* output_nfg,
                       gtsam::Values* output_values) override {
+    // Start timer
+    auto start = std::chrono::high_resolution_clock::now();
     // store new values:
     output_values->insert(
         new_values);  // - store latest pose in values_ (note:
@@ -205,6 +208,20 @@ class Pcm : public OutlierRemoval {
       do_optimize = true;
     }
     *output_nfg = buildGraphToOptimize();
+
+    // End clock
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto spin_duration =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
+    if (debug_)
+      log<INFO>(
+          "PCM spin took %1% nanoseconds. Detected %2% total loop closures "
+          "with %3% inliers. ") %
+          spin_duration.count() % total_lc_ % total_good_lc_;
+    if (log_output_) {
+      saveAdjacencyMatrix(log_folder_);
+      logSpinStatus(spin_duration.count(), log_folder_);
+    }
     return do_optimize;
   }  // end reject outliers
 
@@ -214,7 +231,8 @@ class Pcm : public OutlierRemoval {
    */
   void saveData(std::string folder_path) override {
     // TODO(Yun) save max clique results
-    saveAdjacencyMatrix(folder_path);
+    // TODO(Yun) Maybe just use log?
+    // saveAdjacencyMatrix(folder_path);
     // saveCliqueSizeData(folder_path);
   }
 
@@ -797,6 +815,19 @@ class Pcm : public OutlierRemoval {
       outfile << adj_matrix;
       outfile.close();
     }
+  }
+
+  /*
+   * Log spin status (timing, number of loop closures, number of inliers)
+   */
+  void logSpinStatus(const int& spin_duration, const std::string& folder_path) {
+    // Save to file
+    std::string filename = folder_path + "/pcm_status.txt";
+    std::ofstream outfile;
+    outfile.open(filename);
+    outfile << total_lc_ << " " << total_good_lc_ << " " << spin_duration
+            << std::endl;
+    outfile.close();
   }
 };
 

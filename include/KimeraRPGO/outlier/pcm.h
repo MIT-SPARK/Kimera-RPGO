@@ -354,7 +354,8 @@ class Pcm : public OutlierRemoval {
             // detect which inter or intra robot loop closure this belongs to
             if (num_new_loopclosures->find(obs_id) ==
                 num_new_loopclosures->end()) {
-              num_new_loopclosures->at(obs_id) = 1;
+              num_new_loopclosures->insert(
+                  std::pair<ObservationId, size_t>(obs_id, 1));
             } else {
               num_new_loopclosures->at(obs_id)++;
             }

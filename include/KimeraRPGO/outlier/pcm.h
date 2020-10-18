@@ -199,11 +199,17 @@ class Pcm : public OutlierRemoval {
         }
       }  // end switch
     }
+    auto max_clique_duration = std::chrono::nanoseconds::zero();
     if (loop_closure_factors.size() > 0) {
       // update inliers
       parseAndIncrementAdjMatrix(loop_closure_factors, *output_values);
       // output values is just used to sanity check the keys
+      auto max_clique_start = std::chrono::high_resolution_clock::now();
       findInliers();
+      auto max_clique_end = std::chrono::high_resolution_clock::now();
+      max_clique_duration =
+          std::chrono::duration_cast<std::chrono::nanoseconds>(
+              max_clique_end - max_clique_start);
       // Find inliers with Pairwise consistent measurement set maximization
       do_optimize = true;
     }
@@ -220,7 +226,8 @@ class Pcm : public OutlierRemoval {
           spin_duration.count() % total_lc_ % total_good_lc_;
     if (log_output_) {
       saveAdjacencyMatrix(log_folder_);
-      logSpinStatus(spin_duration.count(), log_folder_);
+      logSpinStatus(
+          spin_duration.count(), max_clique_duration.count(), log_folder_);
     }
     return do_optimize;
   }  // end reject outliers
@@ -820,13 +827,15 @@ class Pcm : public OutlierRemoval {
   /*
    * Log spin status (timing, number of loop closures, number of inliers)
    */
-  void logSpinStatus(const int& spin_duration, const std::string& folder_path) {
+  void logSpinStatus(const int& spin_duration,
+                     const int& find_inlier_duration,
+                     const std::string& folder_path) {
     // Save to file
     std::string filename = folder_path + "/outlier_rejection_status.txt";
     std::ofstream outfile;
     outfile.open(filename, std::ofstream::out | std::ofstream::app);
-    outfile << total_lc_ << " " << total_good_lc_ << " " << spin_duration
-            << std::endl;
+    outfile << total_lc_ << " " << total_good_lc_ << " " << spin_duration << " "
+            << find_inlier_duration << std::endl;
     outfile.close();
   }
 };

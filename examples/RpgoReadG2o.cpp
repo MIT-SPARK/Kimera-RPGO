@@ -62,6 +62,10 @@ int main(int argc, char* argv[]) {
     std::string flag = argv[6];
     if (flag == "v") verbose = true;
   }
+  RobustSolverParams params;
+
+  params.logOutput(output_folder);
+
   Verbosity verbosity = Verbosity::VERBOSE;
   if (!verbose) verbosity = Verbosity::QUIET;
 
@@ -73,16 +77,14 @@ int main(int argc, char* argv[]) {
                                  true,
                                  gtsam::NoiseFormatG2O);
 
-    RobustSolverParams params;
-    params.setPcm2DParams(atof(argv[3]), atof(argv[4]), verbosity);
+    params.setPcmSimple2DParams(atof(argv[3]), atof(argv[4]), verbosity);
 
     Simulate<gtsam::Pose2>(graphNValues, params, output_folder);
 
   } else if (dim == "3d") {
     graphNValues = gtsam::load3D(argv[2]);
 
-    RobustSolverParams params;
-    params.setPcm3DParams(atof(argv[3]), atof(argv[4]), verbosity);
+    params.setPcmSimple3DParams(atof(argv[3]), atof(argv[4]), verbosity);
 
     Simulate<gtsam::Pose3>(graphNValues, params, output_folder);
 

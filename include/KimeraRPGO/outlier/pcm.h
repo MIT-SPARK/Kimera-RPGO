@@ -822,9 +822,9 @@ class Pcm : public OutlierRemoval {
    */
   void logSpinStatus(const int& spin_duration, const std::string& folder_path) {
     // Save to file
-    std::string filename = folder_path + "/pcm_status.txt";
+    std::string filename = folder_path + "/outlier_rejection_status.txt";
     std::ofstream outfile;
-    outfile.open(filename);
+    outfile.open(filename, std::ofstream::out | std::ofstream::app);
     outfile << total_lc_ << " " << total_good_lc_ << " " << spin_duration
             << std::endl;
     outfile.close();

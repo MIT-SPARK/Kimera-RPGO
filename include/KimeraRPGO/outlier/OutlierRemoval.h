@@ -9,6 +9,7 @@ author: Yun Chang
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/Values.h>
+#include <fstream>
 #include <string>
 
 #include "KimeraRPGO/utils/type_utils.h"
@@ -51,6 +52,11 @@ class OutlierRemoval {
   void logOutput(const std::string& output_folder) {
     log_output_ = true;
     log_folder_ = output_folder;
+    std::string filename = output_folder + "/outlier_rejection_status.txt";
+    std::ofstream outfile;
+    outfile.open(filename);
+    outfile << "totoal inliers nanoseconds\n";
+    outfile.close();
   }
 
   /*! \brief Remove last measured loop closure

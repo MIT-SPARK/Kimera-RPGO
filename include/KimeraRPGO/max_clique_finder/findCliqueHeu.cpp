@@ -138,7 +138,7 @@ int maxCliqueHeuIncremental(CGraphIO* gio,
 
   // compute the max clique for each vertex
   // TODO tricky indexing ...
-  for (size_t iCandidateVertex = p_v_i_Vertices->size() - num_new_lc;
+  for (size_t iCandidateVertex = p_v_i_Vertices->size() - num_new_lc - 1;
        iCandidateVertex < p_v_i_Vertices->size() - 1;
        iCandidateVertex++) {
     // Pruning 1

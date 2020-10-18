@@ -77,14 +77,14 @@ int main(int argc, char* argv[]) {
                                  true,
                                  gtsam::NoiseFormatG2O);
 
-    params.setPcm2DParams(atof(argv[3]), atof(argv[4]), verbosity);
+    params.setPcmSimple2DParams(atof(argv[3]), atof(argv[4]), verbosity);
 
     Simulate<gtsam::Pose2>(graphNValues, params, output_folder);
 
   } else if (dim == "3d") {
     graphNValues = gtsam::load3D(argv[2]);
 
-    params.setPcm3DParams(atof(argv[3]), atof(argv[4]), verbosity);
+    params.setPcmSimple3DParams(atof(argv[3]), atof(argv[4]), verbosity);
 
     Simulate<gtsam::Pose3>(graphNValues, params, output_folder);
 

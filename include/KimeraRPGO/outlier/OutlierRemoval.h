@@ -55,7 +55,7 @@ class OutlierRemoval {
     std::string filename = output_folder + "/outlier_rejection_status.txt";
     std::ofstream outfile;
     outfile.open(filename);
-    outfile << "totoal inliers nanoseconds\n";
+    outfile << "total inliers spin-time mc-time\n";
     outfile.close();
   }
 

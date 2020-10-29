@@ -19,9 +19,8 @@ author: Yun Chang
 
 using namespace KimeraRPGO;
 
-/* Usage: ./RpgoReadG2o 2d <some-2d-g2o-file> <odom-threshold> <pcm-threshold>
-   <output-g2o-file> <verbosity> [or]   ./RpgoReadG2o 3d <some-3d-g2o-file>
-   <odom-threshold> <pcm-threshold> <output-g2o-file> <verbosity>*/
+/* Usage: ./RpgoReadG2o 2d <some-2d-g2o-file> <incremental> <odom-threshold> <pcm-threshold>
+   <output-g2o-file> <verbosity> [or]*/
 template <class T>
 void SimulateIncremental(gtsam::GraphAndValues gv,
                          RobustSolverParams params,
@@ -70,7 +69,7 @@ void SimulateIncremental(gtsam::GraphAndValues gv,
   for (auto loop_closure : lc_factors) {
     gtsam::NonlinearFactorGraph new_factors;
     new_factors.add(loop_closure);
-    pgo->update(new_factors, gtsam::Values());
+    pgo->update(new_factors, gtsam::Values(), false);
   }
   pgo->saveData(output_folder);  // tell pgo to save g2o result
 }
@@ -78,17 +77,22 @@ void SimulateIncremental(gtsam::GraphAndValues gv,
 int main(int argc, char* argv[]) {
   gtsam::GraphAndValues graphNValues;
   std::string dim = argv[1];
+  int incremental = std::atoi(argv[3]);
   std::string output_folder;
-  if (argc > 5) output_folder = argv[5];
+  if (argc > 6) output_folder = argv[6];
 
   bool verbose = false;
-  if (argc > 6) {
-    std::string flag = argv[6];
+  if (argc > 7) {
+    std::string flag = argv[7];
     if (flag == "v") verbose = true;
   }
   RobustSolverParams params;
 
   params.logOutput(output_folder);
+
+  if (incremental == 1) {
+    params.setIncremental();
+  }
 
   Verbosity verbosity = Verbosity::VERBOSE;
   if (!verbose) verbosity = Verbosity::QUIET;
@@ -101,21 +105,21 @@ int main(int argc, char* argv[]) {
                                  true,
                                  gtsam::NoiseFormatG2O);
 
-    params.setPcmSimple2DParams(atof(argv[3]), atof(argv[4]), verbosity);
+    params.setPcmSimple2DParams(atof(argv[4]), atof(argv[5]), verbosity);
 
     SimulateIncremental<gtsam::Pose2>(graphNValues, params, output_folder);
 
   } else if (dim == "3d") {
     graphNValues = gtsam::load3D(argv[2]);
 
-    params.setPcmSimple3DParams(atof(argv[3]), atof(argv[4]), verbosity);
+    params.setPcmSimple3DParams(atof(argv[4]), atof(argv[5]), verbosity);
 
     SimulateIncremental<gtsam::Pose3>(graphNValues, params, output_folder);
 
   } else {
     log<WARNING>("Unsupported input format: ");
     log<WARNING>(
-        "Should be ./RpgoReadG2o <2d or 3d> <g2o file> <odom thresh> "
-        "<pcm thresh> <opt: output_folder> <opt: v for messages");
+        "Should be ./RpgoReadG2oIncremental <2d or 3d> <g2o file> <0 or 1> <trans thresh> "
+        "rot thresh> <opt: output_folder> <opt: v for messages");
   }
 }

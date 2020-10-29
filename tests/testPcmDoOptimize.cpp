@@ -131,7 +131,7 @@ TEST(PcmDoOptimize, landmarks) {
   // first observation: do_optimize = false
   // repeated observatio: do_optimize = true
   std::vector<char> special_symbs{'l', 'u'};  // for landmarks
-  OutlierRemoval* pcm = new Pcm3D(10.0, 10.0, special_symbs);
+  OutlierRemoval* pcm = new Pcm3D(10.0, 10.0, true, special_symbs);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =
@@ -190,7 +190,7 @@ TEST(PcmDoOptimize, Beacon) {
   // first observation: do_optimize = false
   // repeated observatio: do_optimize = true
   std::vector<char> special_symbs{'l', 'u'};  // for landmarks
-  OutlierRemoval* pcm = new Pcm3D(1.0, 1.0, special_symbs);
+  OutlierRemoval* pcm = new Pcm3D(1.0, 1.0, true, special_symbs);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =

@@ -53,10 +53,12 @@ class Pcm : public OutlierRemoval {
  public:
   Pcm(double threshold1,
       double threshold2,
+      bool incremental = false,
       const std::vector<char>& special_symbols = std::vector<char>())
       : OutlierRemoval(),
         threshold1_(threshold1),
         threshold2_(threshold2),
+        incremental_(incremental),
         special_symbols_(special_symbols),
         total_lc_(0),
         total_good_lc_(0) {
@@ -84,6 +86,9 @@ class Pcm : public OutlierRemoval {
 
   // trajectory maping robot prefix to its keys and poses
   std::unordered_map<char, Trajectory<poseT, T>> odom_trajectories_;
+
+  // Incremental max clique
+  bool incremental_;
 
   // these are the symbols corresponding to landmarks
   std::vector<char> special_symbols_;
@@ -199,17 +204,21 @@ class Pcm : public OutlierRemoval {
         }
       }  // end switch
     }
-    auto max_clique_duration = std::chrono::nanoseconds::zero();
+    auto max_clique_duration = std::chrono::milliseconds::zero();
     if (loop_closure_factors.size() > 0) {
       // update inliers
       std::unordered_map<ObservationId, size_t> num_new_loopclosures;
       parseAndIncrementAdjMatrix(
           loop_closure_factors, *output_values, &num_new_loopclosures);
       auto max_clique_start = std::chrono::high_resolution_clock::now();
-      findInliersIncremental(num_new_loopclosures);
+      if (incremental_) {
+        findInliersIncremental(num_new_loopclosures);
+      } else {
+        findInliers();
+      }
       auto max_clique_end = std::chrono::high_resolution_clock::now();
       max_clique_duration =
-          std::chrono::duration_cast<std::chrono::nanoseconds>(
+          std::chrono::duration_cast<std::chrono::milliseconds>(
               max_clique_end - max_clique_start);
       // Find inliers with Pairwise consistent measurement set maximization
       do_optimize = true;
@@ -219,10 +228,10 @@ class Pcm : public OutlierRemoval {
     // End clock
     auto stop = std::chrono::high_resolution_clock::now();
     auto spin_duration =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
+        std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
     if (debug_)
       log<INFO>(
-          "PCM spin took %1% nanoseconds. Detected %2% total loop closures "
+          "PCM spin took %1% milliseconds. Detected %2% total loop closures "
           "with %3% inliers. ") %
           spin_duration.count() % total_lc_ % total_good_lc_;
     if (log_output_) {

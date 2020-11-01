@@ -35,6 +35,7 @@ struct RobustSolverParams {
         pcm_lcThreshold(5.0),
         pcmDist_transThreshold(0.05),  // 5cm
         pcmDist_rotThreshold(0.005),   // <0.5degrees
+        incremental(false),
         log_output(false) {}
   /*! \brief For RobustSolver to not do outlier rejection at all
    */
@@ -42,6 +43,10 @@ struct RobustSolverParams {
     outlierRemovalMethod = OutlierRemovalMethod::NONE;
     verbosity = verbos;
   }
+
+  /*! \brief use incremental max clique
+   */
+  void setIncremental() { incremental = true; }
 
   /*! \brief 2D version of Pcm
    * This one looks at Mahalanobis distance
@@ -123,6 +128,9 @@ struct RobustSolverParams {
   // for PcmSimple
   double pcmDist_transThreshold;
   double pcmDist_rotThreshold;
+
+  // incremental max clique
+  bool incremental;
 };
 
 }  // namespace KimeraRPGO

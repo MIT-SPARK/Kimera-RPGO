@@ -58,4 +58,9 @@ void maxCliqueHelperHeu(CGraphIO* gio,
                         size_t* maxClq,
                         vector<int>* max_clique_data_inter);
 
+int maxCliqueHeuIncremental(CGraphIO* gio,
+                            size_t num_new_lc,
+                            size_t prev_maxclique_size,
+                            vector<int>* max_clique_data);
+
 }  // namespace FMC

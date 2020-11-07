@@ -229,7 +229,7 @@ class Pcm : public OutlierRemoval {
     auto stop = std::chrono::high_resolution_clock::now();
     auto spin_duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-    if (debug_)
+    if (debug_ || do_optimize)
       log<INFO>(
           "PCM spin took %1% milliseconds. Detected %2% total loop closures "
           "with %3% inliers. ") %

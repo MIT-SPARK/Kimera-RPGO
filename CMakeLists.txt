@@ -28,6 +28,16 @@ if(NOT TARGET Boost::boost)
 endif()
 
 ###########################################################################
+# Parallel Maximum Clique
+configure_file(cmake/pmc.CMakeLists.txt.in pmc-download/CMakeLists.txt)
+execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/pmc-download")
+execute_process(COMMAND "${CMAKE_COMMAND}" --build .
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/pmc-download")
+add_subdirectory("${CMAKE_BINARY_DIR}/pmc-src"
+        "${CMAKE_BINARY_DIR}/pmc-build")
+
+###########################################################################
 # Compile
 add_library(KimeraRPGO SHARED
   include/KimeraRPGO/logger.h
@@ -55,6 +65,7 @@ target_link_libraries(KimeraRPGO
     Boost::boost
     gtsam
     gtsam_unstable
+    pmc
 )
 
 target_compile_options(KimeraRPGO

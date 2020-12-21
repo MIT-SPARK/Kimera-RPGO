@@ -8,8 +8,11 @@
 
 #include <gtsam/inference/Symbol.h>
 #include <Eigen/Dense>
+#include "pmc/pmc.h"
 
 namespace KimeraRPGO {
+
+pmc::pmc_graph adjMatrixToPmcGraph(const Eigen::MatrixXd& adjMatrix);
 
 int findMaxClique(const Eigen::MatrixXd& adjMatrix,
                   std::vector<int>* max_clique);

@@ -7,14 +7,94 @@
 
 namespace KimeraRPGO {
 
+pmc::pmc_graph adjMatrixToPmcGraph(const Eigen::MatrixXd& adjMatrix) {
+  // First convert adjacency matrix to PMC graph
+  std::vector<int> edges;
+  std::vector<long long> vertices;
+  vertices.push_back(edges.size());
+
+  if (adjMatrix.rows() != adjMatrix.cols()) {
+    std::cout << "ERROR: expected adjacency matrix to be symmetric. "
+              << std::endl;
+    return pmc::pmc_graph(vertices, edges);
+  }
+
+  for (size_t i = 0; i < adjMatrix.rows(); i++) {
+    for (size_t j = 0; j < adjMatrix.cols(); j++) {
+      if (adjMatrix(i, j) > 0) {
+        edges.push_back(j);
+      }
+    }
+    vertices.push_back(edges.size());
+  }
+
+  return pmc::pmc_graph(vertices, edges);
+}
+
 int findMaxCliqueHeu(const Eigen::MatrixXd adjMatrix,
                      std::vector<int>* max_clique) {
-  // Compute maximum clique (heuristic inexact version)
-  FMC::CGraphIO gio;
-  gio.ReadEigenAdjacencyMatrix(adjMatrix);
-  int max_clique_size = 0;
-  max_clique_size = FMC::maxCliqueHeu(&gio, max_clique);
-  return max_clique_size;
+  if (adjMatrix.rows() == 1) {
+    max_clique->push_back(0);
+    return 1;
+  }
+
+  pmc::pmc_graph G = adjMatrixToPmcGraph(adjMatrix);
+
+  // Prepare PMC input
+  pmc::input in;
+  in.algorithm = 0;
+  in.threads = 12;
+  in.experiment = 0;
+  in.lb = 0;
+  in.ub = 0;
+  in.param_ub = 0;
+  in.adj_limit = 20000;
+  in.time_limit = 3600;
+  in.remove_time = 4;
+  in.graph_stats = false;
+  in.verbose = false;
+  in.help = false;
+  in.MCE = false;
+  in.decreasing_order = false;
+  in.heu_strat = "kcore";
+  in.vertex_search_order = "deg";
+
+  G.compute_cores();
+  auto max_core = G.get_max_core();
+
+  if (max_core > static_cast<int>(static_cast<double>(adjMatrix.rows()))) {
+    auto k_cores = G.get_kcores();
+    for (int i = 1; i < k_cores->size(); ++i) {
+      // Note: k_core has size equals to num vertices + 1
+      if ((*k_cores)[i] >= max_core) {
+        max_clique->push_back(i - 1);
+      }
+    }
+    return max_clique->size();
+  }
+
+  if (in.ub == 0) {
+    in.ub = max_core + 1;
+  }
+
+  // lower-bound of max clique
+  if (in.lb == 0 && in.heu_strat != "0") {  // skip if given as input
+    pmc::pmc_heu maxclique(G, in);
+    in.lb = maxclique.search(G, *max_clique);
+  }
+
+  assert(in.lb != 0);
+  if (in.lb == 0) {
+    // This means that max clique has a size of one
+    max_clique->push_back(0);
+    return max_clique->size();
+  }
+
+  if (in.lb == in.ub) {
+    return max_clique->size();
+  }
+
+  return max_clique->size();
 }
 
 // TODO
@@ -36,27 +116,12 @@ int findMaxCliqueHeuIncremental(const Eigen::MatrixXd adjMatrix,
 
 int findMaxClique(const Eigen::MatrixXd& adjMatrix,
                   std::vector<int>* max_clique) {
-  // First convert adjacency matrix to PMC graph
-  std::vector<int> edges;
-  std::vector<long long> vertices;
-  vertices.push_back(edges.size());
-
-  if (adjMatrix.rows() != adjMatrix.cols()) {
-    std::cout << "ERROR: expected adjacency matrix to be symmetric. "
-              << std::endl;
-    return 0;
+  if (adjMatrix.rows() == 1) {
+    max_clique->push_back(0);
+    return 1;
   }
 
-  for (size_t i = 0; i < adjMatrix.rows(); i++) {
-    for (size_t j = 0; j < adjMatrix.cols(); j++) {
-      if (adjMatrix(i, j) > 0) {
-        edges.push_back(j);
-      }
-    }
-    vertices.push_back(edges.size());
-  }
-
-  pmc::pmc_graph G(vertices, edges);
+  pmc::pmc_graph G = adjMatrixToPmcGraph(adjMatrix);
 
   // Prepare PMC input
   pmc::input in;
@@ -76,6 +141,26 @@ int findMaxClique(const Eigen::MatrixXd& adjMatrix,
   in.decreasing_order = false;
   in.heu_strat = "kcore";
   in.vertex_search_order = "deg";
+
+  G.compute_cores();
+  auto max_core = G.get_max_core();
+
+  if (in.ub == 0) {
+    in.ub = max_core + 1;
+  }
+
+  // lower-bound of max clique
+  if (in.lb == 0 && in.heu_strat != "0") {  // skip if given as input
+    pmc::pmc_heu maxclique(G, in);
+    in.lb = maxclique.search(G, *max_clique);
+  }
+
+  assert(in.lb != 0);
+  if (in.lb == 0) {
+    // This means that max clique has a size of one
+    max_clique->push_back(0);
+    return max_clique->size();
+  }
 
   // Exact max clique finding
   // The following methods are used:

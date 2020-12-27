@@ -23,7 +23,8 @@ GenericSolver::GenericSolver(Solver solvertype,
       nfg_(gtsam::NonlinearFactorGraph()),
       solver_type_(solvertype),
       special_symbols_(special_symbols),
-      debug_(true) {}
+      debug_(true),
+      log_(false) {}
 
 bool GenericSolver::isSpecialSymbol(char symb) const {
   for (size_t i = 0; i < special_symbols_.size(); i++) {

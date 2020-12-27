@@ -75,6 +75,8 @@ class RobustSolver : public GenericSolver {
    */
   void optimize();
 
+  bool use_gnc_;
+
  public:
   /*! \brief Save results from Solver
    *  Saves the resulting g2o file and also the data saved in the outlier

@@ -36,7 +36,8 @@ struct RobustSolverParams {
         pcmDist_transThreshold(0.05),  // 5cm
         pcmDist_rotThreshold(0.005),   // <0.5degrees
         incremental(false),
-        log_output(false) {}
+        log_output(false),
+        gnc(false) {}
   /*! \brief For RobustSolver to not do outlier rejection at all
    */
   void setNoRejection(Verbosity verbos = Verbosity::UPDATE) {
@@ -113,6 +114,10 @@ struct RobustSolverParams {
     log_folder = output_folder;
   }
 
+  /*! \brief use gnc
+   */
+  void useGnc() { gnc = true; }
+
   // General
   Solver solver;
   OutlierRemovalMethod outlierRemovalMethod;
@@ -131,6 +136,7 @@ struct RobustSolverParams {
 
   // incremental max clique
   bool incremental;
+  bool gnc;
 };
 
 }  // namespace KimeraRPGO

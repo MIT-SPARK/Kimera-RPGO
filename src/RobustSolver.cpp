@@ -83,6 +83,11 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
     }
   }
 
+  if (params.gnc) {
+    use_gnc_ = true;
+    log<INFO>("Running GNC.");
+  }
+
   // set log output
   if (params.log_output) {
     if (outlier_removal_) outlier_removal_->logOutput(params.log_folder);
@@ -97,20 +102,29 @@ void RobustSolver::optimize() {
       lmParams.setVerbosityLM("SUMMARY");
       log<INFO>("Running LM");
     }
-    gtsam::GncParams<gtsam::LevenbergMarquardtParams> gncParams(lmParams);
-    values_ =
-        gtsam::GncOptimizer<gtsam::GncParams<gtsam::LevenbergMarquardtParams>>(
-            nfg_, values_, gncParams)
-            .optimize();
-    // values_ =
-    //     gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
+    if (use_gnc_) {
+      gtsam::GncParams<gtsam::LevenbergMarquardtParams> gncParams(lmParams);
+      values_ = gtsam::GncOptimizer<
+                    gtsam::GncParams<gtsam::LevenbergMarquardtParams>>(
+                    nfg_, values_, gncParams)
+                    .optimize();
+    } else {
+      values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, lmParams)
+                    .optimize();
+    }
   } else if (solver_type_ == Solver::GN) {
-    gtsam::GaussNewtonParams params;
+    gtsam::GaussNewtonParams gnParams;
     if (debug_) {
-      params.setVerbosity("ERROR");
+      gnParams.setVerbosity("ERROR");
       log<INFO>("Running GN");
     }
-    values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, params).optimize();
+    if (use_gnc_) {
+      gtsam::GncParams<gtsam::GaussNewtonParams> gncParams(gnParams);
+      values_ = gtsam::GncOptimizer<gtsam::GncParams<gtsam::GaussNewtonParams>>(
+                    nfg_, values_, gncParams)
+                    .optimize();
+    }
+    values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, gnParams).optimize();
   } else {
     log<WARNING>("Unsupported Solver");
     exit(EXIT_FAILURE);

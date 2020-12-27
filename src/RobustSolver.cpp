@@ -12,6 +12,7 @@ author: Yun Chang, Luca Carlone
 
 #include <gtsam/nonlinear/DoglegOptimizer.h>
 #include <gtsam/nonlinear/GaussNewtonOptimizer.h>
+#include <gtsam/nonlinear/GncOptimizer.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 #include <gtsam/slam/dataset.h>
 
@@ -90,14 +91,19 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
 
 void RobustSolver::optimize() {
   if (solver_type_ == Solver::LM) {
-    gtsam::LevenbergMarquardtParams params;
+    gtsam::LevenbergMarquardtParams lmParams;
+    lmParams.diagonalDamping = true;
     if (debug_) {
-      params.setVerbosityLM("SUMMARY");
+      lmParams.setVerbosityLM("SUMMARY");
       log<INFO>("Running LM");
     }
-    params.diagonalDamping = true;
+    gtsam::GncParams<gtsam::LevenbergMarquardtParams> gncParams(lmParams);
     values_ =
-        gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
+        gtsam::GncOptimizer<gtsam::GncParams<gtsam::LevenbergMarquardtParams>>(
+            nfg_, values_, gncParams)
+            .optimize();
+    // values_ =
+    //     gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
   } else if (solver_type_ == Solver::GN) {
     gtsam::GaussNewtonParams params;
     if (debug_) {

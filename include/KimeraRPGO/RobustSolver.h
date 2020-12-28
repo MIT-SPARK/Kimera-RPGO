@@ -51,7 +51,8 @@ class RobustSolver : public GenericSolver {
    *  - values: linearization point of graph to be connected
    */
   void update(const gtsam::NonlinearFactorGraph& factors,
-              const gtsam::Values& values = gtsam::Values());
+              const gtsam::Values& values = gtsam::Values(),
+              bool optimize_graph = true);
 
   /*! \brief Remove last added loop closure based on the prefixes of the robots
    * For example, to remove the last measure loop closure between robots a and c
@@ -59,8 +60,14 @@ class RobustSolver : public GenericSolver {
    */
   void removeLastLoopClosure(char prefix_1, char prefix_2);
 
+  /*! \brief remove the prior factors of nodes that given prefix
+   */
+  void removePriorFactorsWithPrefix(const char& prefix,
+                                    bool optimize_graph = false);
+
  private:
-  std::unique_ptr<OutlierRemoval> outlier_removal_;  // outlier removal method;
+  std::unique_ptr<OutlierRemoval> outlier_removal_;  // outlier removal
+                                                     // method;
 
   /*! \brief Calling the optimization
    *  Optimize the factor graph with the stroed values

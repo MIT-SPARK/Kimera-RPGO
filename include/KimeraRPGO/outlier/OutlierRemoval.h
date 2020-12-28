@@ -9,6 +9,7 @@ author: Yun Chang
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/Values.h>
+#include <fstream>
 #include <string>
 
 #include "KimeraRPGO/utils/type_utils.h"
@@ -46,14 +47,34 @@ class OutlierRemoval {
    */
   void setQuiet() { debug_ = false; }
 
+  /*! \brief Set log folder
+   */
+  void logOutput(const std::string& output_folder) {
+    log_output_ = true;
+    log_folder_ = output_folder;
+    std::string filename = output_folder + "/outlier_rejection_status.txt";
+    std::ofstream outfile;
+    outfile.open(filename);
+    outfile << "total inliers spin-time mc-time\n";
+    outfile.close();
+  }
+
   /*! \brief Remove last measured loop closure
    */
   virtual void removeLastLoopClosure(
       ObservationId id,
       gtsam::NonlinearFactorGraph* updated_factors) {}
 
+  /*! \brief Remove prior factors of nodes with prefix prefix
+   */
+  virtual void removePriorFactorsWithPrefix(
+      const char& prefix,
+      gtsam::NonlinearFactorGraph* updated_factors) {}
+
  protected:
   bool debug_ = true;
+  bool log_output_ = false;
+  std::string log_folder_;
 };
 
 }  // namespace KimeraRPGO

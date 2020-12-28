@@ -5,6 +5,7 @@ author: Yun Chang, Luca Carlone
 
 #include "KimeraRPGO/RobustSolver.h"
 
+#include <chrono>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -91,6 +92,13 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
   // set log output
   if (params.log_output) {
     if (outlier_removal_) outlier_removal_->logOutput(params.log_folder);
+    log_ = true;
+    log_folder_ = params.log_folder;
+    std::string filename = log_folder_ + "/rpgo_status.csv";
+    std::ofstream outfile;
+    outfile.open(filename);
+    outfile << "graph-size,spin-time(mu-s)\n";
+    outfile.close();
   }
 }
 
@@ -145,6 +153,9 @@ void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,
 void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
                           const gtsam::Values& values,
                           bool optimize_graph) {
+  // Start timer
+  auto start = std::chrono::high_resolution_clock::now();
+
   bool do_optimize;
   if (outlier_removal_) {
     do_optimize =
@@ -154,6 +165,20 @@ void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
   }
 
   if (do_optimize & optimize_graph) optimize();  // optimize once after loading
+
+  // Stop timer and save
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto spin_time =
+      std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+
+  // Log status
+  if (log_) {
+    std::string filename = log_folder_ + "/rpgo_status.csv";
+    std::ofstream outfile;
+    outfile.open(filename, std::ofstream::out | std::ofstream::app);
+    outfile << nfg_.size() << "," << spin_time.count() << std::endl;
+    outfile.close();
+  }
   return;
 }
 

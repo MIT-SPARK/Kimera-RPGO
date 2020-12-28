@@ -19,8 +19,8 @@ author: Yun Chang
 
 using namespace KimeraRPGO;
 
-/* Usage: ./RpgoReadG2o 2d <some-2d-g2o-file> <incremental> <odom-threshold> <pcm-threshold>
-   <output-g2o-file> <verbosity> [or]*/
+/* Usage: ./RpgoReadG2o 2d <some-2d-g2o-file> <incremental> <odom-threshold>
+   <pcm-threshold> <output-g2o-file> <verbosity> [or]*/
 template <class T>
 void SimulateIncremental(gtsam::GraphAndValues gv,
                          RobustSolverParams params,
@@ -78,12 +78,13 @@ int main(int argc, char* argv[]) {
   gtsam::GraphAndValues graphNValues;
   std::string dim = argv[1];
   int incremental = std::atoi(argv[3]);
+  int gnc = std::atoi(argv[4]);
   std::string output_folder;
-  if (argc > 6) output_folder = argv[6];
+  if (argc > 7) output_folder = argv[7];
 
   bool verbose = false;
-  if (argc > 7) {
-    std::string flag = argv[7];
+  if (argc > 8) {
+    std::string flag = argv[8];
     if (flag == "v") verbose = true;
   }
   RobustSolverParams params;
@@ -92,6 +93,10 @@ int main(int argc, char* argv[]) {
 
   if (incremental == 1) {
     params.setIncremental();
+  }
+
+  if (gnc == 1) {
+    params.useGnc();
   }
 
   Verbosity verbosity = Verbosity::VERBOSE;
@@ -105,21 +110,22 @@ int main(int argc, char* argv[]) {
                                  true,
                                  gtsam::NoiseFormatG2O);
 
-    params.setPcmSimple2DParams(atof(argv[4]), atof(argv[5]), verbosity);
+    params.setPcmSimple2DParams(atof(argv[5]), atof(argv[6]), verbosity);
 
     SimulateIncremental<gtsam::Pose2>(graphNValues, params, output_folder);
 
   } else if (dim == "3d") {
     graphNValues = gtsam::load3D(argv[2]);
 
-    params.setPcmSimple3DParams(atof(argv[4]), atof(argv[5]), verbosity);
+    params.setPcmSimple3DParams(atof(argv[5]), atof(argv[6]), verbosity);
 
     SimulateIncremental<gtsam::Pose3>(graphNValues, params, output_folder);
 
   } else {
     log<WARNING>("Unsupported input format: ");
     log<WARNING>(
-        "Should be ./RpgoReadG2oIncremental <2d or 3d> <g2o file> <0 or 1> <trans thresh> "
-        "rot thresh> <opt: output_folder> <opt: v for messages");
+        "Should be ./RpgoReadG2oIncremental <2d or 3d> <g2o file> <0 or 1 "
+        "(incremental)> <0 or 1 (gnc)> <trans thresh> rot thresh> <opt: "
+        "output_folder> <opt: v for messages");
   }
 }

@@ -86,7 +86,14 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
 
   if (params.gnc) {
     use_gnc_ = true;
+    gnc_inlier_threshold_ = params.gncInlierThreshold;
     log<INFO>("Running GNC.");
+    if (!outlier_removal_) {
+      log<WARNING>(
+          "GNC currently only supported to run with PCM. Please use PCM with "
+          "high threshold as an alternative for not using PCM at all. ");
+      exit(EXIT_FAILURE);
+    }
   }
 
   // set log output
@@ -110,12 +117,22 @@ void RobustSolver::optimize() {
       lmParams.setVerbosityLM("SUMMARY");
       log<INFO>("Running LM");
     }
-    if (use_gnc_) {
+    if (use_gnc_ && outlier_removal_) {
+      size_t num_odom_factors = outlier_removal_->getNumOdomFactors();
       gtsam::GncParams<gtsam::LevenbergMarquardtParams> gncParams(lmParams);
-      values_ = gtsam::GncOptimizer<
-                    gtsam::GncParams<gtsam::LevenbergMarquardtParams>>(
-                    nfg_, values_, gncParams)
-                    .optimize();
+      // Set odometry as known inliers
+      std::vector<size_t> odom_factor_indices(num_odom_factors);
+      std::iota(
+          std::begin(odom_factor_indices), std::end(odom_factor_indices), 0);
+      gncParams.setKnownInliers(odom_factor_indices);
+      // Set inlier cost threshold
+      gncParams.setInlierCostThreshold(gnc_inlier_threshold_);
+      // Create GNC optimizer
+      gtsam::GncOptimizer<gtsam::GncParams<gtsam::LevenbergMarquardtParams> >
+          gnc_optimizer(nfg_, values_, gncParams);
+      // Optimize and get weights
+      values_ = gnc_optimizer.optimize();
+      gnc_weights_ = gnc_optimizer.getWeights();
     } else {
       values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, lmParams)
                     .optimize();
@@ -126,11 +143,22 @@ void RobustSolver::optimize() {
       gnParams.setVerbosity("ERROR");
       log<INFO>("Running GN");
     }
-    if (use_gnc_) {
+    if (use_gnc_ && outlier_removal_) {
+      size_t num_odom_factors = outlier_removal_->getNumOdomFactors();
       gtsam::GncParams<gtsam::GaussNewtonParams> gncParams(gnParams);
-      values_ = gtsam::GncOptimizer<gtsam::GncParams<gtsam::GaussNewtonParams>>(
-                    nfg_, values_, gncParams)
-                    .optimize();
+      // Set odometry as known inliers
+      std::vector<size_t> odom_factor_indices(num_odom_factors);
+      std::iota(
+          std::begin(odom_factor_indices), std::end(odom_factor_indices), 0);
+      gncParams.setKnownInliers(odom_factor_indices);
+      // Set inlier cost threshold
+      gncParams.setInlierCostThreshold(gnc_inlier_threshold_);
+      // Create GNC optimizer
+      gtsam::GncOptimizer<gtsam::GncParams<gtsam::GaussNewtonParams> >
+          gnc_optimizer(nfg_, values_, gncParams);
+      // Optimize and get weights
+      values_ = gnc_optimizer.optimize();
+      gnc_weights_ = gnc_optimizer.getWeights();
     }
     values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, gnParams).optimize();
   } else {

@@ -8,6 +8,8 @@ author: Yun Chang
 #include <string>
 #include <vector>
 
+#include <gtsam/nonlinear/GncParams.h>
+
 namespace KimeraRPGO {
 
 enum class Solver { LM, GN };
@@ -116,7 +118,10 @@ struct RobustSolverParams {
 
   /*! \brief use gnc
    */
-  void useGnc() { gnc = true; }
+  void useGnc(double inlier_threshold = 1.0) {
+    gnc = true;
+    gncInlierThreshold = inlier_threshold;
+  }
 
   // General
   Solver solver;
@@ -136,7 +141,10 @@ struct RobustSolverParams {
 
   // incremental max clique
   bool incremental;
+
+  // for GNC
   bool gnc;
+  double gncInlierThreshold;
 };
 
 }  // namespace KimeraRPGO

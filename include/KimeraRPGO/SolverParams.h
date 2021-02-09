@@ -8,8 +8,6 @@ author: Yun Chang
 #include <string>
 #include <vector>
 
-#include <gtsam/nonlinear/GncParams.h>
-
 namespace KimeraRPGO {
 
 enum class Solver { LM, GN };
@@ -39,7 +37,7 @@ struct RobustSolverParams {
         pcmDist_rotThreshold(0.005),   // <0.5degrees
         incremental(false),
         log_output(false),
-        gnc(false) {}
+        use_gnc_(false) {}
   /*! \brief For RobustSolver to not do outlier rejection at all
    */
   void setNoRejection(Verbosity verbos = Verbosity::UPDATE) {
@@ -109,18 +107,27 @@ struct RobustSolverParams {
     verbosity = verbos;
   }
 
+  /*! \brief one way of setting GNC parameters (confidence threshold)
+   */
+  void setGncInlierCostThresholdsAtProbability(const double& alpha) {
+    use_gnc_ = true;
+    gnc_threshold_mode_ = GncThresholdMode::PROBABILITY;
+    gnc_inlier_threshold_ = alpha;
+  }
+
+  /*! \brief one way of setting GNC parameters (cost threshold)
+   */
+  void setGncInlierCostThresholds(const double& cost) {
+    use_gnc_ = true;
+    gnc_threshold_mode_ = GncThresholdMode::COST;
+    gnc_inlier_threshold_ = cost;
+  }
+
   /*! \brief set folder to log data
    */
   void logOutput(const std::string& output_folder) {
     log_output = true;
     log_folder = output_folder;
-  }
-
-  /*! \brief use gnc
-   */
-  void useGnc(double inlier_threshold = 1.0) {
-    gnc = true;
-    gncInlierThreshold = inlier_threshold;
   }
 
   // General
@@ -142,9 +149,11 @@ struct RobustSolverParams {
   // incremental max clique
   bool incremental;
 
-  // for GNC
-  bool gnc;
-  double gncInlierThreshold;
+  // GNC variables
+  enum class GncThresholdMode { COST = 0u, PROBABILITY = 1u };
+  bool use_gnc_;
+  GncThresholdMode gnc_threshold_mode_;
+  double gnc_inlier_threshold_;
 };
 
 }  // namespace KimeraRPGO

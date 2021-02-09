@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
   }
 
   if (gnc == 1) {
-    params.useGnc();
+    params.setGncInlierCostThresholds(1.0);
   }
 
   Verbosity verbosity = Verbosity::VERBOSE;

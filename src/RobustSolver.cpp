@@ -26,7 +26,7 @@ namespace KimeraRPGO {
 typedef std::pair<gtsam::NonlinearFactorGraph, gtsam::Values> GraphAndValues;
 
 RobustSolver::RobustSolver(const RobustSolverParams& params)
-    : GenericSolver(params.solver, params.specialSymbols) {
+    : GenericSolver(params.solver, params.specialSymbols), params_(params) {
   switch (params.outlierRemovalMethod) {
     case OutlierRemovalMethod::NONE: {
       outlier_removal_ =
@@ -84,18 +84,6 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
     }
   }
 
-  if (params.gnc) {
-    use_gnc_ = true;
-    gnc_inlier_threshold_ = params.gncInlierThreshold;
-    log<INFO>("Running GNC.");
-    if (!outlier_removal_) {
-      log<WARNING>(
-          "GNC currently only supported to run with PCM. Please use PCM with "
-          "high threshold as an alternative for not using PCM at all. ");
-      exit(EXIT_FAILURE);
-    }
-  }
-
   // set log output
   if (params.log_output) {
     if (outlier_removal_) outlier_removal_->logOutput(params.log_folder);
@@ -117,7 +105,7 @@ void RobustSolver::optimize() {
       lmParams.setVerbosityLM("SUMMARY");
       log<INFO>("Running LM");
     }
-    if (use_gnc_ && outlier_removal_) {
+    if (params_.use_gnc_ && outlier_removal_) {
       size_t num_odom_factors = outlier_removal_->getNumOdomFactors();
       gtsam::GncParams<gtsam::LevenbergMarquardtParams> gncParams(lmParams);
       // Set odometry as known inliers
@@ -125,11 +113,20 @@ void RobustSolver::optimize() {
       std::iota(
           std::begin(odom_factor_indices), std::end(odom_factor_indices), 0);
       gncParams.setKnownInliers(odom_factor_indices);
-      // Set inlier cost threshold
-      gncParams.setInlierCostThreshold(gnc_inlier_threshold_);
       // Create GNC optimizer
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::LevenbergMarquardtParams> >
           gnc_optimizer(nfg_, values_, gncParams);
+      switch (params_.gnc_threshold_mode_) {
+        case (params_.GncThresholdMode::COST):
+          gnc_optimizer.setInlierCostThresholds(params_.gnc_inlier_threshold_);
+          break;
+        case (params_.GncThresholdMode::PROBABILITY):
+          gnc_optimizer.setInlierCostThresholdsAtProbability(
+              params_.gnc_inlier_threshold_);
+          break;
+        default:
+          log<WARNING>("Unsupported GNC threshold mode. ");
+      }
       // Optimize and get weights
       values_ = gnc_optimizer.optimize();
       gnc_weights_ = gnc_optimizer.getWeights();
@@ -143,7 +140,7 @@ void RobustSolver::optimize() {
       gnParams.setVerbosity("ERROR");
       log<INFO>("Running GN");
     }
-    if (use_gnc_ && outlier_removal_) {
+    if (params_.use_gnc_ && outlier_removal_) {
       size_t num_odom_factors = outlier_removal_->getNumOdomFactors();
       gtsam::GncParams<gtsam::GaussNewtonParams> gncParams(gnParams);
       // Set odometry as known inliers
@@ -151,11 +148,20 @@ void RobustSolver::optimize() {
       std::iota(
           std::begin(odom_factor_indices), std::end(odom_factor_indices), 0);
       gncParams.setKnownInliers(odom_factor_indices);
-      // Set inlier cost threshold
-      gncParams.setInlierCostThreshold(gnc_inlier_threshold_);
       // Create GNC optimizer
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::GaussNewtonParams> >
           gnc_optimizer(nfg_, values_, gncParams);
+      switch (params_.gnc_threshold_mode_) {
+        case (params_.GncThresholdMode::COST):
+          gnc_optimizer.setInlierCostThresholds(params_.gnc_inlier_threshold_);
+          break;
+        case (params_.GncThresholdMode::PROBABILITY):
+          gnc_optimizer.setInlierCostThresholdsAtProbability(
+              params_.gnc_inlier_threshold_);
+          break;
+        default:
+          log<WARNING>("Unsupported GNC threshold mode. ");
+      }
       // Optimize and get weights
       values_ = gnc_optimizer.optimize();
       gnc_weights_ = gnc_optimizer.getWeights();

@@ -34,7 +34,7 @@ TEST(RobustSolver, GncDefault) {
   RobustSolverParams params;
   // High PCM threshold so only use GNC
   params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET);
-  params.useGnc();
+  params.setGncInlierCostThresholdsAtProbability(0.01);
 
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
@@ -74,7 +74,7 @@ TEST(RobustSolver, GncHighThreshold) {
   RobustSolverParams params;
   // High PCM threshold so only use GNC
   params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET);
-  params.useGnc(100.0);
+  params.setGncInlierCostThresholdsAtProbability(0.99);
 
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
@@ -113,7 +113,7 @@ TEST(RobustSolver, GncMultirobotDefault) {
   RobustSolverParams params;
   // High PCM threshold so only use GNC
   params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET);
-  params.useGnc();
+  params.setGncInlierCostThresholds(1.0);
 
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
@@ -189,7 +189,7 @@ TEST(RobustSolver, GncMultirobotHighThreshold) {
   RobustSolverParams params;
   // High PCM threshold so only use GNC
   params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET);
-  params.useGnc(100.0);
+  params.setGncInlierCostThresholds(100.0);
 
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);

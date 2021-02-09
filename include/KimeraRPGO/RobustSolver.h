@@ -80,9 +80,9 @@ class RobustSolver : public GenericSolver {
   void optimize();
 
   // GNC variables
-  bool use_gnc_;
-  double gnc_inlier_threshold_;
   gtsam::Vector gnc_weights_;
+
+  RobustSolverParams params_;
 
  public:
   /*! \brief Save results from Solver

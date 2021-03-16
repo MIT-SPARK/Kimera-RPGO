@@ -5,6 +5,9 @@
 #include "KimeraRPGO/max_clique_finder/findClique.h"
 #include "KimeraRPGO/utils/graph_utils.h"
 
+#include "clipper/clipper.h"
+#include "clipper/find_dense_cluster.h"
+
 namespace KimeraRPGO {
 
 pmc::pmc_graph adjMatrixToPmcGraph(const Eigen::MatrixXd& adjMatrix) {
@@ -97,20 +100,12 @@ int findMaxCliqueHeu(const Eigen::MatrixXd adjMatrix,
   return max_clique->size();
 }
 
-// TODO
+// TODO FIXME not implemented yet
 int findMaxCliqueHeuIncremental(const Eigen::MatrixXd adjMatrix,
                                 size_t num_new_lc,
                                 size_t prev_maxclique_size,
                                 std::vector<int>* max_clique) {
   // Compute maximum clique (heuristic inexact version)
-  FMC::CGraphIO gio;
-  gio.ReadEigenAdjacencyMatrix(adjMatrix);
-  int max_clique_size_new_lc = 0;
-  max_clique_size_new_lc = FMC::maxCliqueHeuIncremental(
-      &gio, num_new_lc, prev_maxclique_size, max_clique);
-  if (max_clique_size_new_lc > prev_maxclique_size) {
-    return max_clique_size_new_lc;
-  }
   return 0;
 }
 
@@ -181,6 +176,22 @@ int findMaxClique(const Eigen::MatrixXd& adjMatrix,
   }
 
   return max_clique->size();
+}
+
+int findMaxCliqueClipper(const Eigen::MatrixXd& adjMatrix,
+                     std::vector<int>* max_clique) {
+
+  int n = adjMatrix.rows();
+
+  clipper::Params params;
+  clipper::Solution soln = clipper::findDenseCluster(adjMatrix, adjMatrix, params);
+
+  *max_clique = soln.nodes;
+  int clipper_max_clique_size = soln.nodes.size();
+
+  std::cout << " |x| clipper = " << clipper_max_clique_size << std::endl;
+  
+  return clipper_max_clique_size;
 }
 
 }  // namespace KimeraRPGO

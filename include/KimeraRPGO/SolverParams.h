@@ -23,6 +23,14 @@ enum class OutlierRemovalMethod {
 
 enum class Verbosity { UPDATE, QUIET, VERBOSE };
 
+// method used to search for max clique
+// TODO(Kasra): add incremental methods too
+enum class MaxCliqueMethod {
+  PMC_EXACT,
+  PMC_HEU,
+  CLIPPER
+};
+
 struct RobustSolverParams {
  public:
   RobustSolverParams()
@@ -37,7 +45,8 @@ struct RobustSolverParams {
         pcmDist_rotThreshold(0.005),   // <0.5degrees
         incremental(false),
         log_output(false),
-        use_gnc_(false) {}
+        use_gnc_(false),
+        max_clique_method(MaxCliqueMethod::PMC_HEU) {}
   /*! \brief For RobustSolver to not do outlier rejection at all
    */
   void setNoRejection(Verbosity verbos = Verbosity::UPDATE) {
@@ -48,6 +57,10 @@ struct RobustSolverParams {
   /*! \brief use incremental max clique
    */
   void setIncremental() { incremental = true; }
+
+  /*! \brief set max clique solver
+   */
+  void setMaxCliqueMethod(MaxCliqueMethod method) { max_clique_method = method; }
 
   /*! \brief 2D version of Pcm
    * This one looks at Mahalanobis distance
@@ -145,6 +158,10 @@ struct RobustSolverParams {
   // for PcmSimple
   double pcmDist_transThreshold;
   double pcmDist_rotThreshold;
+
+  // maximum clique method
+  MaxCliqueMethod max_clique_method;
+
 
   // incremental max clique
   bool incremental;

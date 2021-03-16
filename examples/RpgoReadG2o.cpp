@@ -20,9 +20,9 @@ author: Yun Chang
 using namespace KimeraRPGO;
 
 /* Usage: 
-  ./RpgoReadG2o 2d <some-2d-g2o-file> <pcm_t_simple_thresh> <pcm_R_simple_thresh> <gnc_barc_sq> <output-g2o-file> <verbosity> 
+  ./RpgoReadG2o 2d <some-2d-g2o-file> <pcm_t_simple_thresh> <pcm_R_simple_thresh> <gnc_barc_sq> <max_clique_method> <output-g2o-file> <verbosity> 
   [or]   
-  ./RpgoReadG2o 3d <some-3d-g2o-file> <pcm_t_simple_thresh> <pcm_R_simple_thresh> <gnc_barc_sq> <output-g2o-file> <verbosity>
+  ./RpgoReadG2o 3d <some-3d-g2o-file> <pcm_t_simple_thresh> <pcm_R_simple_thresh> <gnc_barc_sq> <max_clique_method> <output-g2o-file> <verbosity>
 */
 template <class T>
 void Simulate(gtsam::GraphAndValues gv,
@@ -60,13 +60,31 @@ int main(int argc, char* argv[]) {
   double pcm_t = atof(argv[3]);
   double pcm_R = atof(argv[4]);
   double gnc_barcsq = atof(argv[5]);
+  std::string max_clique_method_str = argv[6];
+
+  MaxCliqueMethod max_clique_method;
+  
+  if (max_clique_method_str == "pmc_exact") {
+    max_clique_method = MaxCliqueMethod::PMC_EXACT;
+    log<INFO>("Max Clique Solver: PMC (Exact)");
+  } else if (max_clique_method_str == "pmc_heu") {
+    max_clique_method = MaxCliqueMethod::PMC_HEU;
+    log<INFO>("Max Clique Solver: PMC (Heuristic)"); 
+  } else if (max_clique_method_str == "clipper") {
+    max_clique_method = MaxCliqueMethod::CLIPPER;
+    log<INFO>("Max Clique Solver: Clipper");
+  } else {
+    log<WARNING>("Unsupported Max Clique Method (options are: pmc_exct, pmc_heu, clipper) ");
+    log<INFO>("Max Clique Solver: PMC (Heuristic)");
+    max_clique_method = MaxCliqueMethod::PMC_HEU;
+  }
 
   std::string output_folder;
-  if (argc > 6) output_folder = argv[6];
+  if (argc > 7) output_folder = argv[7];
 
   bool verbose = false;
-  if (argc > 7) {
-    std::string flag = argv[7];
+  if (argc > 8) {
+    std::string flag = argv[8];
     if (flag == "v") verbose = true;
   }
   RobustSolverParams params;
@@ -86,6 +104,7 @@ int main(int argc, char* argv[]) {
 
     params.setPcmSimple2DParams(pcm_t, pcm_R, verbosity);
     params.setGncInlierCostThresholds(gnc_barcsq);
+    params.setMaxCliqueMethod(max_clique_method);
 
     Simulate<gtsam::Pose2>(graphNValues, params, output_folder);
 
@@ -94,6 +113,7 @@ int main(int argc, char* argv[]) {
 
     params.setPcmSimple3DParams(pcm_t, pcm_R, verbosity);
     params.setGncInlierCostThresholds(gnc_barcsq);
+    params.setMaxCliqueMethod(max_clique_method);
 
     Simulate<gtsam::Pose3>(graphNValues, params, output_folder);
 

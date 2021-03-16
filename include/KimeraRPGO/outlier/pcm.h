@@ -767,7 +767,7 @@ class Pcm : public OutlierRemoval {
       it->second.consistent_factors = gtsam::NonlinearFactorGraph();  // reset
       // find max clique
       size_t num_inliers =
-          findMaxClique(it->second.adj_matrix, &inliers_idx);
+          findMaxCliqueHeu(it->second.adj_matrix, &inliers_idx);
       // update inliers, or consistent factors, according to max clique result
       for (size_t i = 0; i < num_inliers; i++) {
         it->second.consistent_factors.add(it->second.factors[inliers_idx[i]]);

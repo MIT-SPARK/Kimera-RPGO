@@ -34,7 +34,7 @@ pmc::pmc_graph adjMatrixToPmcGraph(const Eigen::MatrixXd& adjMatrix) {
   return pmc::pmc_graph(vertices, edges);
 }
 
-int findMaxCliqueHeu(const Eigen::MatrixXd adjMatrix,
+int findMaxCliqueHeu(const Eigen::MatrixXd& adjMatrix,
                      std::vector<int>* max_clique) {
   if (adjMatrix.rows() == 1) {
     max_clique->push_back(0);

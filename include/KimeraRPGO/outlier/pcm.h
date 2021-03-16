@@ -31,6 +31,7 @@ author: Yun Chang, Luca Carlone
 #include "KimeraRPGO/outlier/OutlierRemoval.h"
 #include "KimeraRPGO/utils/geometry_utils.h"
 #include "KimeraRPGO/utils/graph_utils.h"
+#include "KimeraRPGO/SolverParams.h"
 
 namespace KimeraRPGO {
 
@@ -54,14 +55,16 @@ class Pcm : public OutlierRemoval {
   Pcm(double threshold1,
       double threshold2,
       bool incremental = false,
-      const std::vector<char>& special_symbols = std::vector<char>())
+      const std::vector<char>& special_symbols = std::vector<char>(),
+      MaxCliqueMethod method = MaxCliqueMethod::PMC_HEU)
       : OutlierRemoval(),
         threshold1_(threshold1),
         threshold2_(threshold2),
         incremental_(incremental),
         special_symbols_(special_symbols),
         total_lc_(0),
-        total_good_lc_(0) {
+        total_good_lc_(0),
+        max_clique_method_(method) {
     // check if templated value valid
     BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<poseT>));
   }
@@ -97,6 +100,9 @@ class Pcm : public OutlierRemoval {
   std::unordered_map<gtsam::Key, Measurements> landmarks_;
 
   size_t total_lc_, total_good_lc_;
+  
+  // Max Clique Method
+  MaxCliqueMethod max_clique_method_;
 
  public:
   size_t getNumLC() { return total_lc_; }
@@ -766,8 +772,33 @@ class Pcm : public OutlierRemoval {
       std::vector<int> inliers_idx;
       it->second.consistent_factors = gtsam::NonlinearFactorGraph();  // reset
       // find max clique
-      size_t num_inliers =
-          findMaxCliqueHeu(it->second.adj_matrix, &inliers_idx);
+      size_t num_inliers;
+      switch (max_clique_method_) {
+        case MaxCliqueMethod::PMC_EXACT: {
+          log<INFO>("Using PMC (Exact)");
+          num_inliers =
+              findMaxClique(it->second.adj_matrix, &inliers_idx);
+          break;
+        }
+        case MaxCliqueMethod::PMC_HEU: {
+          log<INFO>("Using PMC (Heuristic)");
+          num_inliers =
+              findMaxCliqueHeu(it->second.adj_matrix, &inliers_idx);
+          break;
+        }
+        case MaxCliqueMethod::CLIPPER: {
+          log<INFO>("Using Clipper");
+          num_inliers =
+              findMaxCliqueClipper(it->second.adj_matrix, &inliers_idx);
+          break;
+        }
+        default: {
+          log<WARNING>("Invalid maximum clique method ... going with PCM (Heuristic)");
+          num_inliers =
+              findMaxCliqueHeu(it->second.adj_matrix, &inliers_idx);
+        }
+      }
+
       // update inliers, or consistent factors, according to max clique result
       for (size_t i = 0; i < num_inliers; i++) {
         it->second.consistent_factors.add(it->second.factors[inliers_idx[i]]);

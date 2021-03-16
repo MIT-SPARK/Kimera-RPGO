@@ -37,28 +37,32 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
           KimeraRPGO::make_unique<Pcm2D>(params.pcm_odomThreshold,
                                          params.pcm_lcThreshold,
                                          params.incremental,
-                                         params.specialSymbols);
+                                         params.specialSymbols,
+                                         params.max_clique_method_);
     } break;
     case OutlierRemovalMethod::PCM3D: {
       outlier_removal_ =
           KimeraRPGO::make_unique<Pcm3D>(params.pcm_odomThreshold,
                                          params.pcm_lcThreshold,
                                          params.incremental,
-                                         params.specialSymbols);
+                                         params.specialSymbols,
+                                         params.max_clique_method_);
     } break;
     case OutlierRemovalMethod::PCM_Simple2D: {
       outlier_removal_ =
           KimeraRPGO::make_unique<PcmSimple2D>(params.pcmDist_transThreshold,
                                                params.pcmDist_rotThreshold,
                                                params.incremental,
-                                               params.specialSymbols);
+                                               params.specialSymbols,
+                                               params.max_clique_method_);
     } break;
     case OutlierRemovalMethod::PCM_Simple3D: {
       outlier_removal_ =
           KimeraRPGO::make_unique<PcmSimple3D>(params.pcmDist_transThreshold,
                                                params.pcmDist_rotThreshold,
                                                params.incremental,
-                                               params.specialSymbols);
+                                               params.specialSymbols,
+                                               params.max_clique_method_);
     } break;
     default: {
       log<WARNING>("Undefined outlier removal method");
@@ -83,6 +87,7 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
       log<WARNING>("Unrecognized verbosity. Automatically setting to UPDATE. ");
     }
   }
+  
 
   // set log output
   if (params.log_output) {

@@ -78,6 +78,7 @@ target_link_libraries(KimeraRPGO
     gtsam
     gtsam_unstable
     pmc
+	clipper
 )
 
 target_compile_options(KimeraRPGO

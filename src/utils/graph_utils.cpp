@@ -181,12 +181,17 @@ int findMaxClique(const Eigen::MatrixXd& adjMatrix,
 int findMaxCliqueClipper(const Eigen::MatrixXd& adjMatrix,
                      std::vector<int>* max_clique) {
 
-  int n = adjMatrix.rows();
+  int dim = adjMatrix.rows();
+
+  // clipper needs adjMatrix + I
+  // perhaps it'd be more efficient if we add I when constructing ajdMatrix
+  Eigen::MatrixXd adjMatrixPlusId = adjMatrix + Eigen::MatrixXd::Identity(dim,dim);
 
   clipper::Params params;
-  clipper::Solution soln = clipper::findDenseCluster(adjMatrix, adjMatrix, params);
+  clipper::Solution soln = clipper::findDenseCluster(adjMatrixPlusId, adjMatrixPlusId, params);
 
   *max_clique = soln.nodes;
+
   int clipper_max_clique_size = soln.nodes.size();
 
   std::cout << " |x| clipper = " << clipper_max_clique_size << std::endl;

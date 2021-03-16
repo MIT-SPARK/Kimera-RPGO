@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 3.5)
+
+project(clipper-download NONE)
+
+include(ExternalProject)
+ExternalProject_Add(clipper
+        GIT_REPOSITORY    https://github.com/mit-acl/clipper.git
+        SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/clipper-src"
+        BINARY_DIR        "${CMAKE_CURRENT_BINARY_DIR}/clipper-build"
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND     ""
+        INSTALL_COMMAND   ""
+        TEST_COMMAND      "")

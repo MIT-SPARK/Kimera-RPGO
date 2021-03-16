@@ -38,6 +38,18 @@ add_subdirectory("${CMAKE_BINARY_DIR}/pmc-src"
         "${CMAKE_BINARY_DIR}/pmc-build")
 
 ###########################################################################
+# clipper
+configure_file(cmake/clipper.CMakeLists.txt.in clipper-download/CMakeLists.txt)
+execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/clipper-download")
+execute_process(COMMAND "${CMAKE_COMMAND}" --build .
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/clipper-download")
+set(BUILD_BINDINGS_PYTHON OFF CACHE BOOL "Build CLIPPER's Python bindings")
+set(BUILD_BINDINGS_MATLAB OFF CACHE BOOL "Build CLIPPER's MATLAB bindings")
+add_subdirectory("${CMAKE_BINARY_DIR}/clipper-src"
+        "${CMAKE_BINARY_DIR}/clipper-build")
+
+###########################################################################
 # Compile
 add_library(KimeraRPGO SHARED
   include/KimeraRPGO/logger.h

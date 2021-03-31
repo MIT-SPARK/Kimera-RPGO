@@ -775,25 +775,25 @@ class Pcm : public OutlierRemoval {
       size_t num_inliers;
       switch (max_clique_method_) {
         case MaxCliqueMethod::PMC_EXACT: {
-          log<INFO>("Using PMC (Exact)");
+          log<INFO>(">> Using PMC (Exact)");
           num_inliers =
               findMaxClique(it->second.adj_matrix, &inliers_idx);
           break;
         }
         case MaxCliqueMethod::PMC_HEU: {
-          log<INFO>("Using PMC (Heuristic)");
+          log<INFO>(">> Using PMC (Heuristic)");
           num_inliers =
               findMaxCliqueHeu(it->second.adj_matrix, &inliers_idx);
           break;
         }
         case MaxCliqueMethod::CLIPPER: {
-          log<INFO>("Using Clipper");
+          log<INFO>(">> Using Clipper");
           num_inliers =
               findMaxCliqueClipper(it->second.adj_matrix, &inliers_idx);
           break;
         }
         default: {
-          log<WARNING>("Invalid maximum clique method ... going with PCM (Heuristic)");
+          log<WARNING>(">> Invalid maximum clique method ... going with PMC (Heuristic)");
           num_inliers =
               findMaxCliqueHeu(it->second.adj_matrix, &inliers_idx);
         }

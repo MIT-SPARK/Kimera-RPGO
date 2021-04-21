@@ -23,6 +23,7 @@ class OutlierRemoval {
 
   virtual size_t getNumLC() = 0;
   virtual size_t getNumLCInliers() = 0;
+  virtual size_t getNumOdomFactors() = 0;
 
   /*! \brief Process new measurements and reject outliers
    *  process the new measurements and update the "good set" of measurements

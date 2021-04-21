@@ -19,9 +19,11 @@ author: Yun Chang
 
 using namespace KimeraRPGO;
 
-/* Usage: ./RpgoReadG2o 2d <some-2d-g2o-file> <odom-threshold> <pcm-threshold>
-   <output-g2o-file> <verbosity> [or]   ./RpgoReadG2o 3d <some-3d-g2o-file>
-   <odom-threshold> <pcm-threshold> <output-g2o-file> <verbosity>*/
+/* Usage: 
+  ./RpgoReadG2o 2d <some-2d-g2o-file> <pcm_t_simple_thresh> <pcm_R_simple_thresh> <gnc_barc_sq> <output-g2o-file> <verbosity> 
+  [or]   
+  ./RpgoReadG2o 3d <some-3d-g2o-file> <pcm_t_simple_thresh> <pcm_R_simple_thresh> <gnc_barc_sq> <output-g2o-file> <verbosity>
+*/
 template <class T>
 void Simulate(gtsam::GraphAndValues gv,
               RobustSolverParams params,
@@ -54,12 +56,17 @@ void Simulate(gtsam::GraphAndValues gv,
 int main(int argc, char* argv[]) {
   gtsam::GraphAndValues graphNValues;
   std::string dim = argv[1];
+  std::string g2ofile = argv[2];
+  double pcm_t = atof(argv[3]);
+  double pcm_R = atof(argv[4]);
+  double gnc_barcsq = atof(argv[5]);
+
   std::string output_folder;
-  if (argc > 5) output_folder = argv[5];
+  if (argc > 6) output_folder = argv[6];
 
   bool verbose = false;
-  if (argc > 6) {
-    std::string flag = argv[6];
+  if (argc > 7) {
+    std::string flag = argv[7];
     if (flag == "v") verbose = true;
   }
   RobustSolverParams params;
@@ -70,21 +77,23 @@ int main(int argc, char* argv[]) {
   if (!verbose) verbosity = Verbosity::QUIET;
 
   if (dim == "2d") {
-    graphNValues = gtsam::load2D(argv[2],
+    graphNValues = gtsam::load2D(g2ofile,
                                  gtsam::SharedNoiseModel(),
                                  0,
                                  false,
                                  true,
                                  gtsam::NoiseFormatG2O);
 
-    params.setPcmSimple2DParams(atof(argv[3]), atof(argv[4]), verbosity);
+    params.setPcmSimple2DParams(pcm_t, pcm_R, verbosity);
+    params.setGncInlierCostThresholds(gnc_barcsq);
 
     Simulate<gtsam::Pose2>(graphNValues, params, output_folder);
 
   } else if (dim == "3d") {
-    graphNValues = gtsam::load3D(argv[2]);
+    graphNValues = gtsam::load3D(g2ofile);
 
-    params.setPcmSimple3DParams(atof(argv[3]), atof(argv[4]), verbosity);
+    params.setPcmSimple3DParams(pcm_t, pcm_R, verbosity);
+    params.setGncInlierCostThresholds(gnc_barcsq);
 
     Simulate<gtsam::Pose3>(graphNValues, params, output_folder);
 

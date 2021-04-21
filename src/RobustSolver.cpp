@@ -13,7 +13,6 @@ author: Yun Chang, Luca Carlone
 
 #include <gtsam/nonlinear/DoglegOptimizer.h>
 #include <gtsam/nonlinear/GaussNewtonOptimizer.h>
-#include <gtsam/nonlinear/GncOptimizer.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 #include <gtsam/slam/dataset.h>
 
@@ -26,7 +25,7 @@ namespace KimeraRPGO {
 typedef std::pair<gtsam::NonlinearFactorGraph, gtsam::Values> GraphAndValues;
 
 RobustSolver::RobustSolver(const RobustSolverParams& params)
-    : GenericSolver(params.solver, params.specialSymbols), params_(params) {
+    : GenericSolver(params.solver, params.specialSymbols) {
   switch (params.outlierRemovalMethod) {
     case OutlierRemovalMethod::NONE: {
       outlier_removal_ =
@@ -99,74 +98,21 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
 
 void RobustSolver::optimize() {
   if (solver_type_ == Solver::LM) {
-    gtsam::LevenbergMarquardtParams lmParams;
-    lmParams.diagonalDamping = true;
+    gtsam::LevenbergMarquardtParams params;
     if (debug_) {
-      lmParams.setVerbosityLM("SUMMARY");
+      params.setVerbosityLM("SUMMARY");
       log<INFO>("Running LM");
     }
-    if (params_.use_gnc_ && outlier_removal_) {
-      size_t num_odom_factors = outlier_removal_->getNumOdomFactors();
-      gtsam::GncParams<gtsam::LevenbergMarquardtParams> gncParams(lmParams);
-      // Set odometry as known inliers
-      std::vector<size_t> odom_factor_indices(num_odom_factors);
-      std::iota(
-          std::begin(odom_factor_indices), std::end(odom_factor_indices), 0);
-      gncParams.setKnownInliers(odom_factor_indices);
-      // Create GNC optimizer
-      gtsam::GncOptimizer<gtsam::GncParams<gtsam::LevenbergMarquardtParams> >
-          gnc_optimizer(nfg_, values_, gncParams);
-      switch (params_.gnc_threshold_mode_) {
-        case (params_.GncThresholdMode::COST):
-          gnc_optimizer.setInlierCostThresholds(params_.gnc_inlier_threshold_);
-          break;
-        case (params_.GncThresholdMode::PROBABILITY):
-          gnc_optimizer.setInlierCostThresholdsAtProbability(
-              params_.gnc_inlier_threshold_);
-          break;
-        default:
-          log<WARNING>("Unsupported GNC threshold mode. ");
-      }
-      // Optimize and get weights
-      values_ = gnc_optimizer.optimize();
-      gnc_weights_ = gnc_optimizer.getWeights();
-    } else {
-      values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, lmParams)
-                    .optimize();
-    }
+    params.diagonalDamping = true;
+    values_ =
+        gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
   } else if (solver_type_ == Solver::GN) {
-    gtsam::GaussNewtonParams gnParams;
+    gtsam::GaussNewtonParams params;
     if (debug_) {
-      gnParams.setVerbosity("ERROR");
+      params.setVerbosity("ERROR");
       log<INFO>("Running GN");
     }
-    if (params_.use_gnc_ && outlier_removal_) {
-      size_t num_odom_factors = outlier_removal_->getNumOdomFactors();
-      gtsam::GncParams<gtsam::GaussNewtonParams> gncParams(gnParams);
-      // Set odometry as known inliers
-      std::vector<size_t> odom_factor_indices(num_odom_factors);
-      std::iota(
-          std::begin(odom_factor_indices), std::end(odom_factor_indices), 0);
-      gncParams.setKnownInliers(odom_factor_indices);
-      // Create GNC optimizer
-      gtsam::GncOptimizer<gtsam::GncParams<gtsam::GaussNewtonParams> >
-          gnc_optimizer(nfg_, values_, gncParams);
-      switch (params_.gnc_threshold_mode_) {
-        case (params_.GncThresholdMode::COST):
-          gnc_optimizer.setInlierCostThresholds(params_.gnc_inlier_threshold_);
-          break;
-        case (params_.GncThresholdMode::PROBABILITY):
-          gnc_optimizer.setInlierCostThresholdsAtProbability(
-              params_.gnc_inlier_threshold_);
-          break;
-        default:
-          log<WARNING>("Unsupported GNC threshold mode. ");
-      }
-      // Optimize and get weights
-      values_ = gnc_optimizer.optimize();
-      gnc_weights_ = gnc_optimizer.getWeights();
-    }
-    values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, gnParams).optimize();
+    values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, params).optimize();
   } else {
     log<WARNING>("Unsupported Solver");
     exit(EXIT_FAILURE);

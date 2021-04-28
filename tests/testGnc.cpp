@@ -57,7 +57,7 @@ TEST(RobustSolver, GncDefault) {
   EXPECT(values_out.size() == size_t(50));
   EXPECT(weights.size() == size_t(53));
   // Expect all loop closures to be rejected
-  EXPECT(weights.segment(49, 3).norm() == 0);
+  EXPECT(weights.segment(50, 3).norm() == 0);
   EXPECT(weights.sum() == 50);
 }
 
@@ -97,7 +97,7 @@ TEST(RobustSolver, GncHighThreshold) {
   EXPECT(values_out.size() == size_t(50));
   EXPECT(weights.size() == size_t(53));
   // Expect all loop closures to be accepted
-  EXPECT(weights.segment(49, 3).sum() == 3);
+  EXPECT(weights.segment(50, 3).sum() == 3);
   EXPECT(weights.sum() == 53);
 }
 
@@ -145,7 +145,7 @@ TEST(RobustSolver, GncMultirobotDefault) {
   EXPECT(values_out.size() == size_t(92));
   EXPECT(weights.size() == size_t(96));
   // Expect all loop closures to be accepted
-  EXPECT(weights.segment(90, 5).sum() == 0);
+  EXPECT(weights.segment(91, 5).sum() == 0);
   EXPECT(weights.sum() == 91);
 
   // Add interrobot loop closures (sould be inliers)
@@ -173,7 +173,7 @@ TEST(RobustSolver, GncMultirobotDefault) {
   EXPECT(values_out.size() == size_t(92));
   EXPECT(weights.size() == size_t(98));
   // Expect all loop closures to be accepted
-  EXPECT(weights.segment(90, 7).sum() == 2);
+  EXPECT(weights.segment(91, 7).sum() == 2);
   EXPECT(weights.sum() == 93);
 }
 

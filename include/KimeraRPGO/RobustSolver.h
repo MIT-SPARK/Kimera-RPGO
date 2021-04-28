@@ -32,7 +32,15 @@ class RobustSolver : public GenericSolver {
 
   size_t getNumLC() { return outlier_removal_->getNumLC(); }
 
-  size_t getNumLCInliers() { return outlier_removal_->getNumLCInliers(); }
+  size_t getNumLCInliers() {
+    if (params_.use_gnc_) {
+      return static_cast<size_t>(gnc_weights_.sum()) -
+             (outlier_removal_->getNumOdomFactors() +
+              outlier_removal_->getNumSpecialFactors());
+    } else {
+      return outlier_removal_->getNumLCInliers();
+    }
+  }
 
   /*! \brief Update call that bypasses outlier rejection.
    *  add new factors and values and optimize, without rejecting outliers.

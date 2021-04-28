@@ -34,9 +34,7 @@ class RobustSolver : public GenericSolver {
 
   size_t getNumLCInliers() {
     if (params_.use_gnc_) {
-      return static_cast<size_t>(gnc_weights_.sum()) -
-             (outlier_removal_->getNumOdomFactors() +
-              outlier_removal_->getNumSpecialFactors());
+      return gnc_num_inliers_;
     } else {
       return outlier_removal_->getNumLCInliers();
     }
@@ -89,6 +87,7 @@ class RobustSolver : public GenericSolver {
 
   // GNC variables
   gtsam::Vector gnc_weights_;
+  size_t gnc_num_inliers_;
 
   RobustSolverParams params_;
 

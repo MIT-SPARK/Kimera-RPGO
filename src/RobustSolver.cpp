@@ -26,7 +26,9 @@ namespace KimeraRPGO {
 typedef std::pair<gtsam::NonlinearFactorGraph, gtsam::Values> GraphAndValues;
 
 RobustSolver::RobustSolver(const RobustSolverParams& params)
-    : GenericSolver(params.solver, params.specialSymbols), params_(params) {
+    : GenericSolver(params.solver, params.specialSymbols),
+      params_(params),
+      gnc_num_inliers_(0) {
   switch (params.outlierRemovalMethod) {
     case OutlierRemovalMethod::NONE: {
       outlier_removal_ =
@@ -133,6 +135,8 @@ void RobustSolver::optimize() {
       // Optimize and get weights
       values_ = gnc_optimizer.optimize();
       gnc_weights_ = gnc_optimizer.getWeights();
+      gnc_num_inliers_ = static_cast<size_t>(gnc_weights_.sum()) -
+                         known_inlier_factor_indices.size();
     } else {
       values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, lmParams)
                     .optimize();
@@ -171,6 +175,8 @@ void RobustSolver::optimize() {
       // Optimize and get weights
       values_ = gnc_optimizer.optimize();
       gnc_weights_ = gnc_optimizer.getWeights();
+      gnc_num_inliers_ = static_cast<size_t>(gnc_weights_.sum()) -
+                         known_inlier_factor_indices.size();
     }
     values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, gnParams).optimize();
   } else {

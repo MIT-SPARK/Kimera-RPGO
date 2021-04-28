@@ -107,12 +107,15 @@ void RobustSolver::optimize() {
     }
     if (params_.use_gnc_ && outlier_removal_) {
       size_t num_odom_factors = outlier_removal_->getNumOdomFactors();
+      size_t num_special_factors = outlier_removal_->getNumSpecialFactors();
       gtsam::GncParams<gtsam::LevenbergMarquardtParams> gncParams(lmParams);
-      // Set odometry as known inliers
-      std::vector<size_t> odom_factor_indices(num_odom_factors);
-      std::iota(
-          std::begin(odom_factor_indices), std::end(odom_factor_indices), 0);
-      gncParams.setKnownInliers(odom_factor_indices);
+      // Set odometry and special factors as known inliers
+      std::vector<size_t> known_inlier_factor_indices(num_odom_factors +
+                                                      num_special_factors);
+      std::iota(std::begin(known_inlier_factor_indices),
+                std::end(known_inlier_factor_indices),
+                0);
+      gncParams.setKnownInliers(known_inlier_factor_indices);
       // Create GNC optimizer
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::LevenbergMarquardtParams> >
           gnc_optimizer(nfg_, values_, gncParams);
@@ -142,12 +145,15 @@ void RobustSolver::optimize() {
     }
     if (params_.use_gnc_ && outlier_removal_) {
       size_t num_odom_factors = outlier_removal_->getNumOdomFactors();
+      size_t num_special_factors = outlier_removal_->getNumSpecialFactors();
       gtsam::GncParams<gtsam::GaussNewtonParams> gncParams(gnParams);
-      // Set odometry as known inliers
-      std::vector<size_t> odom_factor_indices(num_odom_factors);
-      std::iota(
-          std::begin(odom_factor_indices), std::end(odom_factor_indices), 0);
-      gncParams.setKnownInliers(odom_factor_indices);
+      // Set odometry and special factors as known inliers
+      std::vector<size_t> known_inlier_factor_indices(num_odom_factors +
+                                                      num_special_factors);
+      std::iota(std::begin(known_inlier_factor_indices),
+                std::end(known_inlier_factor_indices),
+                0);
+      gncParams.setKnownInliers(known_inlier_factor_indices);
       // Create GNC optimizer
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::GaussNewtonParams> >
           gnc_optimizer(nfg_, values_, gncParams);

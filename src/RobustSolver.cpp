@@ -133,10 +133,21 @@ void RobustSolver::optimize() {
           log<WARNING>("Unsupported GNC threshold mode. ");
       }
       // Optimize and get weights
+      auto opt_start_t = std::chrono::high_resolution_clock::now();
       values_ = gnc_optimizer.optimize();
       gnc_weights_ = gnc_optimizer.getWeights();
       gnc_num_inliers_ = static_cast<size_t>(gnc_weights_.sum()) -
                          known_inlier_factor_indices.size();
+      auto opt_stop_t = std::chrono::high_resolution_clock::now();
+      auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+          opt_stop_t - opt_start_t);
+      if (debug_) {
+        log<INFO>(
+            "GNC optimize took %1% milliseconds. %2% loop closures with "
+            "%3% inliers. ") %
+            opt_duration.count() % outlier_removal_->getNumLCInliers() %
+            gnc_num_inliers_;
+      }
     } else {
       values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, lmParams)
                     .optimize();
@@ -173,10 +184,21 @@ void RobustSolver::optimize() {
           log<WARNING>("Unsupported GNC threshold mode. ");
       }
       // Optimize and get weights
+      auto opt_start_t = std::chrono::high_resolution_clock::now();
       values_ = gnc_optimizer.optimize();
       gnc_weights_ = gnc_optimizer.getWeights();
       gnc_num_inliers_ = static_cast<size_t>(gnc_weights_.sum()) -
                          known_inlier_factor_indices.size();
+      auto opt_stop_t = std::chrono::high_resolution_clock::now();
+      auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+          opt_stop_t - opt_start_t);
+      if (debug_) {
+        log<INFO>(
+            "GNC optimize took %1% milliseconds. %2% loop closures with "
+            "%3% inliers. ") %
+            opt_duration.count() % outlier_removal_->getNumLCInliers() %
+            gnc_num_inliers_;
+      }
     }
     values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, gnParams).optimize();
   } else {

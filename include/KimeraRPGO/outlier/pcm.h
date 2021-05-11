@@ -446,6 +446,7 @@ class Pcm : public OutlierRemoval {
     nfg_odom_.add(odom_factor);  // - store factor in nfg_odom_
     // update trajectory(compose last value with new odom value)
     gtsam::Key new_key = odom_factor.keys().back();
+    gtsam::Key prev_key = odom_factor.keys().front();
 
     // extract prefix
     gtsam::Symbol sym = gtsam::Symbol(new_key);
@@ -453,23 +454,23 @@ class Pcm : public OutlierRemoval {
 
     // construct pose with covariance for odometry measurement
     T<poseT> odom_delta(odom_factor);
+
+    if (odom_trajectories_.find(prefix) == odom_trajectories_.end()) {
+      // prefix has not been seen before, add
+      T<poseT> initial_pose;
+      initial_pose.pose = output_values.at<poseT>(prev_key);
+      // populate trajectories
+      odom_trajectories_[prefix].poses[prev_key] = initial_pose;
+      // add to robot order since seen for the first time
+      robot_order_.push_back(prefix);
+    }
+
     // Now get the latest pose in trajectory and compose
-    gtsam::Key prev_key = odom_factor.keys().front();
     T<poseT> prev_pose;
     try {
       prev_pose = odom_trajectories_[prefix].poses[prev_key];
     } catch (...) {
-      if (odom_trajectories_.find(prefix) == odom_trajectories_.end()) {
-        // prefix has not been seen before, add
-        T<poseT> initial_pose;
-        initial_pose.pose = output_values.at<poseT>(prev_key);
-        // populate trajectories
-        odom_trajectories_[prefix].poses[prev_key] = initial_pose;
-        // add to robot order since seen for the first time
-        robot_order_.push_back(prefix);
-      } else {
-        log<WARNING>("Attempted to add odom to non-existing key. ");
-      }
+      log<WARNING>("Attempted to add odom to non-existing key. ");
     }
 
     // compose latest pose to odometry for new pose
@@ -929,45 +930,46 @@ class Pcm : public OutlierRemoval {
       const char& rj = robot_order_[i - 1];  // j = i-1
       const char& ri = robot_order_[i];
       ObservationId obs_id(rj, ri);
-      gtsam::NonlinearFactorGraph lc_factors =
-          loop_closures_.at(obs_id).factors;
-      // Create list of frame-to-fram transforms
-      std::vector<poseT> T_wj_wi_estimates;
-      for (auto factor : lc_factors) {
-        gtsam::BetweenFactor<poseT> lc =
-            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT>>(factor);
-        gtsam::Symbol front = gtsam::Symbol(lc.front());
-        gtsam::Symbol back = gtsam::Symbol(lc.back());
-        poseT T_front_back = lc.measured();
+      try {
+        gtsam::NonlinearFactorGraph lc_factors =
+            loop_closures_.at(obs_id).factors;
+        // Create list of frame-to-fram transforms
+        std::vector<poseT> T_wj_wi_estimates;
+        for (auto factor : lc_factors) {
+          gtsam::BetweenFactor<poseT> lc =
+              *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT>>(factor);
+          gtsam::Symbol front = gtsam::Symbol(lc.front());
+          gtsam::Symbol back = gtsam::Symbol(lc.back());
+          poseT T_front_back = lc.measured();
 
-        // Check order and switch if needed
-        if (front.chr() != rj) {
-          gtsam::Symbol front_temp = front;
-          front = back;
-          back = front_temp;
-          T_front_back = T_front_back.inverse();
+          // Check order and switch if needed
+          if (front.chr() != rj) {
+            gtsam::Symbol front_temp = front;
+            front = back;
+            back = front_temp;
+            T_front_back = T_front_back.inverse();
+          }
+
+          poseT T_wj_front, T_wi_back, T_wj_wi;
+          // Get T_w1_fron and T_w2_back from stored trajectories
+          T_wj_front = odom_trajectories_[rj].poses.at(front).pose;
+          T_wi_back = odom_trajectories_[ri].poses.at(back).pose;
+
+          T_wj_wi =
+              T_wj_front.compose(T_front_back).compose(T_wi_back.inverse());
+          T_wj_wi_estimates.push_back(T_wj_wi);
         }
-
-        poseT T_wj_front, T_wi_back, T_wj_wi;
-        // Get T_w1_fron and T_w2_back from stored trajectories
-        T_wj_front =
-            odom_trajectories_[rj]
-                .getBetween(odom_trajectories_[rj].getStartKey(), front)
-                .pose;
-
-        T_wi_back = odom_trajectories_[ri]
-                        .getBetween(odom_trajectories_[ri].getStartKey(), back)
-                        .pose;
-
-        T_wj_wi = T_wj_front.compose(T_front_back).compose(T_wi_back.inverse());
-        T_wj_wi_estimates.push_back(T_wj_wi);
+        // Pose averaging to find transform
+        poseT T_wj_wi_est = gncRobustPoseAveraging(T_wj_wi_estimates);
+        initialized_values.update(
+            getRobotOdomValues(robot_order_[i], T_w0_wj.compose(T_wj_wi_est)));
+        T_w0_wj = T_w0_wj.compose(T_wj_wi_est);  // Update T_w0_wj (j = i-1)
+      } catch (std::out_of_range e) {
+        log<WARNING>(
+            "No inter-robot loop closures between robots with prefix %1% and "
+            "%2% for multirobot frame alignment. ") %
+            rj % ri;
       }
-      // Pose averaging to find transform
-      poseT T_wj_wi_est = gncRobustPoseAveraging(T_wj_wi_estimates);
-
-      initialized_values.update(
-          getRobotOdomValues(robot_order_[i], T_w0_wj.compose(T_wj_wi_est)));
-      T_w0_wj = T_w0_wj.compose(T_wj_wi_est);  // Update T_w0_wj (j = i-1)
     }
     return initialized_values;
   }
@@ -980,7 +982,7 @@ class Pcm : public OutlierRemoval {
                                    const poseT& transform = poseT::identity()) {
     gtsam::Values robot_values;
     for (auto key_pose : odom_trajectories_.at(robot_prefix).poses) {
-      poseT new_pose = key_pose.second.pose.compose(transform);
+      poseT new_pose = transform.compose(key_pose.second.pose);
       robot_values.insert(key_pose.first, new_pose);
     }
     return robot_values;

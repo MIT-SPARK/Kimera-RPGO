@@ -22,6 +22,7 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/linear/NoiseModel.h>
+#include <gtsam/nonlinear/GncOptimizer.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam/slam/BetweenFactor.h>
@@ -54,11 +55,13 @@ class Pcm : public OutlierRemoval {
   Pcm(double threshold1,
       double threshold2,
       bool incremental = false,
+      bool multirobot_frame_align = false,
       const std::vector<char>& special_symbols = std::vector<char>())
       : OutlierRemoval(),
         threshold1_(threshold1),
         threshold2_(threshold2),
         incremental_(incremental),
+        multirobot_frame_align_(multirobot_frame_align),
         special_symbols_(special_symbols),
         total_lc_(0),
         total_good_lc_(0) {
@@ -97,6 +100,11 @@ class Pcm : public OutlierRemoval {
   std::unordered_map<gtsam::Key, Measurements> landmarks_;
 
   size_t total_lc_, total_good_lc_;
+
+  // Pose averaging for multirobot initialization
+  bool multirobot_frame_align_;
+  // Keep track of the order of robots when applying world transforms
+  std::vector<char> robot_order_;
 
  public:
   size_t getNumLC() { return total_lc_; }
@@ -226,6 +234,9 @@ class Pcm : public OutlierRemoval {
       do_optimize = true;
     }
     *output_nfg = buildGraphToOptimize();
+    if (multirobot_frame_align_ && robot_order_.size() > 1) {
+      *output_values = multirobotValueInitialization(*output_values);
+    }
 
     // End clock
     auto stop = std::chrono::high_resolution_clock::now();
@@ -454,6 +465,8 @@ class Pcm : public OutlierRemoval {
         initial_pose.pose = output_values.at<poseT>(prev_key);
         // populate trajectories
         odom_trajectories_[prefix].poses[prev_key] = initial_pose;
+        // add to robot order since seen for the first time
+        robot_order_.push_back(prefix);
       } else {
         log<WARNING>("Attempted to add odom to non-existing key. ");
       }
@@ -892,6 +905,110 @@ class Pcm : public OutlierRemoval {
     }
     // still need to update the class overall factorgraph
     return output_nfg;
+  }
+
+  /*
+   * use GNC pose averaging to estimate transforms between frames of the robots
+   * and update the initial values
+   */
+  gtsam::Values multirobotValueInitialization(
+      const gtsam::Values& input_values) {
+    gtsam::Values initialized_values = input_values;
+    if (robot_order_.size() == 0) {
+      log<INFO>("No robot poses received. ");
+      return initialized_values;
+    }
+    // Do not transform first robot
+    initialized_values.update(getRobotOdomValues(robot_order_[0]));
+    poseT T_w0_wj = poseT::identity();  // choose from of first robot in
+                                        // robot_order_ as global world frame
+    // Start estimating the frame-to-frame transforms between robots
+    for (size_t i = 1; i < robot_order_.size(); i++) {
+      // Get loop closures between robots robot_order_[i - 1] and
+      // robot_order_[i]
+      const char& rj = robot_order_[i - 1];  // j = i-1
+      const char& ri = robot_order_[i];
+      ObservationId obs_id(rj, ri);
+      gtsam::NonlinearFactorGraph lc_factors =
+          loop_closures_.at(obs_id).factors;
+      // Create list of frame-to-fram transforms
+      std::vector<poseT> T_wj_wi_estimates;
+      for (auto factor : lc_factors) {
+        gtsam::BetweenFactor<poseT> lc =
+            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT>>(factor);
+        gtsam::Symbol front = gtsam::Symbol(lc.front());
+        gtsam::Symbol back = gtsam::Symbol(lc.back());
+        poseT T_front_back = lc.measured();
+
+        // Check order and switch if needed
+        if (front.chr() != rj) {
+          gtsam::Symbol front_temp = front;
+          front = back;
+          back = front_temp;
+          T_front_back = T_front_back.inverse();
+        }
+
+        poseT T_wj_front, T_wi_back, T_wj_wi;
+        // Get T_w1_fron and T_w2_back from stored trajectories
+        T_wj_front =
+            odom_trajectories_[rj]
+                .getBetween(odom_trajectories_[rj].getStartKey(), front)
+                .pose;
+
+        T_wi_back = odom_trajectories_[ri]
+                        .getBetween(odom_trajectories_[ri].getStartKey(), back)
+                        .pose;
+
+        T_wj_wi = T_wj_front.compose(T_front_back).compose(T_wi_back.inverse());
+        T_wj_wi_estimates.push_back(T_wj_wi);
+      }
+      // Pose averaging to find transform
+      poseT T_wj_wi_est = gncRobustPoseAveraging(T_wj_wi_estimates);
+
+      initialized_values.update(
+          getRobotOdomValues(robot_order_[i], T_w0_wj.compose(T_wj_wi_est)));
+      T_w0_wj = T_w0_wj.compose(T_wj_wi_est);  // Update T_w0_wj (j = i-1)
+    }
+    return initialized_values;
+  }
+
+  /*
+   * get the odometry poses of a robot as values, apply by some transform if
+   * desired
+   */
+  gtsam::Values getRobotOdomValues(const char& robot_prefix,
+                                   const poseT& transform = poseT::identity()) {
+    gtsam::Values robot_values;
+    for (auto key_pose : odom_trajectories_.at(robot_prefix).poses) {
+      poseT new_pose = key_pose.second.pose.compose(transform);
+      robot_values.insert(key_pose.first, new_pose);
+    }
+    return robot_values;
+  }
+
+  /*
+   * GNC Pose Averaging
+   */
+  poseT gncRobustPoseAveraging(const std::vector<poseT>& input_poses,
+                               const double& sigma = 0.05) {
+    gtsam::Values initial;
+    initial.insert(0, poseT::identity());  // identity pose as initialization
+
+    gtsam::NonlinearFactorGraph graph;
+    const gtsam::noiseModel::Isotropic::shared_ptr noise =
+        gtsam::noiseModel::Isotropic::Sigma(6, sigma);
+    // create inliers
+    for (auto pose : input_poses) {
+      graph.add(gtsam::PriorFactor<poseT>(0, pose, noise));
+    }
+
+    gtsam::GncParams<gtsam::LevenbergMarquardtParams> gncParams;
+    auto gnc =
+        gtsam::GncOptimizer<gtsam::GncParams<gtsam::LevenbergMarquardtParams>>(
+            graph, initial, gncParams);
+
+    gtsam::Values estimate = gnc.optimize();
+    return estimate.at<poseT>(0);
   }
 
   /*

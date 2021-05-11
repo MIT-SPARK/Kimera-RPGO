@@ -934,12 +934,16 @@ class Pcm : public OutlierRemoval {
         gtsam::NonlinearFactorGraph lc_factors =
             loop_closures_.at(obs_id).factors;
         // Create list of frame-to-fram transforms
-        std::vector<poseT> T_wj_wi_estimates;
+        std::vector<poseT> T_wj_wi_measured;
         for (auto factor : lc_factors) {
+          assert(factor != nullptr);
+          assert(
+              boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT>>(factor));
           gtsam::BetweenFactor<poseT> lc =
               *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT>>(factor);
-          gtsam::Symbol front = gtsam::Symbol(lc.front());
-          gtsam::Symbol back = gtsam::Symbol(lc.back());
+
+          gtsam::Symbol front = gtsam::Symbol(lc.key1());
+          gtsam::Symbol back = gtsam::Symbol(lc.key2());
           poseT T_front_back = lc.measured();
 
           // Check order and switch if needed
@@ -957,13 +961,14 @@ class Pcm : public OutlierRemoval {
 
           T_wj_wi =
               T_wj_front.compose(T_front_back).compose(T_wi_back.inverse());
-          T_wj_wi_estimates.push_back(T_wj_wi);
+          T_wj_wi_measured.push_back(T_wj_wi);
         }
         // Pose averaging to find transform
-        poseT T_wj_wi_est = gncRobustPoseAveraging(T_wj_wi_estimates);
-        initialized_values.update(
-            getRobotOdomValues(robot_order_[i], T_w0_wj.compose(T_wj_wi_est)));
-        T_w0_wj = T_w0_wj.compose(T_wj_wi_est);  // Update T_w0_wj (j = i-1)
+        poseT T_wj_wi_est = gncRobustPoseAveraging(T_wj_wi_measured);
+        poseT T_w0_wi = T_w0_wj.compose(T_wj_wi_est);
+        initialized_values.update(getRobotOdomValues(robot_order_[i], T_w0_wi));
+        T_w0_wj = T_w0_wi;  // Update T_w0_wj (j = i-1) to prepare for next pair
+                            // of robots
       } catch (std::out_of_range e) {
         log<WARNING>(
             "No inter-robot loop closures between robots with prefix %1% and "
@@ -992,14 +997,18 @@ class Pcm : public OutlierRemoval {
    * GNC Pose Averaging
    */
   poseT gncRobustPoseAveraging(const std::vector<poseT>& input_poses,
-                               const double& sigma = 0.05) {
+                               const double& rot_sigma = 0.1,
+                               const double& trans_sigma = 0.5) {
     gtsam::Values initial;
     initial.insert(0, poseT::identity());  // identity pose as initialization
 
     gtsam::NonlinearFactorGraph graph;
-    const gtsam::noiseModel::Isotropic::shared_ptr noise =
-        gtsam::noiseModel::Isotropic::Sigma(6, sigma);
-    // create inliers
+    gtsam::Vector6 sigmas;
+    sigmas.head<3>().setConstant(rot_sigma);
+    sigmas.tail<3>().setConstant(trans_sigma);
+    const gtsam::noiseModel::Diagonal::shared_ptr noise =
+        gtsam::noiseModel::Diagonal::Sigmas(sigmas);
+    // add measurements
     for (auto pose : input_poses) {
       graph.add(gtsam::PriorFactor<poseT>(0, pose, noise));
     }

@@ -142,7 +142,7 @@ macro(gtsamAddTestsGlob_impl groupName globPatterns excludedFiles linkLibraries 
 			# Default on MSVC and XCode - combine test group into a single exectuable
 			set(target_name check_${groupName}_program)
 
-      set(script_src_all "${script_src}" "${otherCppFiles}")
+			set(script_src_all "${script_srcs}" "${otherCppFiles}")
 			# Add executable
 			add_executable(${target_name} "${script_src_all}" ${script_headers})
 			target_link_libraries(${target_name} CppUnitLite ${linkLibraries})

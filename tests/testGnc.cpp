@@ -57,8 +57,9 @@ TEST(RobustSolver, GncDefault) {
   EXPECT(values_out.size() == size_t(50));
   EXPECT(weights.size() == size_t(53));
   // Expect all loop closures to be rejected
-  EXPECT(weights.segment(49, 3).norm() == 0);
+  EXPECT(weights.segment(50, 3).sum() == 0);
   EXPECT(weights.sum() == 50);
+  EXPECT(pgo->getNumLCInliers() == 0);
 }
 
 /* ************************************************************************* */
@@ -97,8 +98,9 @@ TEST(RobustSolver, GncHighThreshold) {
   EXPECT(values_out.size() == size_t(50));
   EXPECT(weights.size() == size_t(53));
   // Expect all loop closures to be accepted
-  EXPECT(weights.segment(49, 3).sum() == 3);
+  EXPECT(weights.segment(50, 3).sum() == 3);
   EXPECT(weights.sum() == 53);
+  EXPECT(pgo->getNumLCInliers() == 3);
 }
 
 /* ************************************************************************* */
@@ -144,9 +146,10 @@ TEST(RobustSolver, GncMultirobotDefault) {
   EXPECT(nfg_out.size() == size_t(96));
   EXPECT(values_out.size() == size_t(92));
   EXPECT(weights.size() == size_t(96));
-  // Expect all loop closures to be accepted
-  EXPECT(weights.segment(90, 5).sum() == 0);
+  // Expect all loop closures to be rejected
+  EXPECT(weights.segment(91, 5).sum() == 0);
   EXPECT(weights.sum() == 91);
+  EXPECT(pgo->getNumLCInliers() == 0);
 
   // Add interrobot loop closures (sould be inliers)
   gtsam::Key key_b1 = gtsam::Symbol('b', 1);
@@ -172,9 +175,10 @@ TEST(RobustSolver, GncMultirobotDefault) {
   EXPECT(nfg_out.size() == size_t(98));
   EXPECT(values_out.size() == size_t(92));
   EXPECT(weights.size() == size_t(98));
-  // Expect all loop closures to be accepted
-  EXPECT(weights.segment(90, 7).sum() == 2);
+  // Expect new loop closures to be accepted
+  EXPECT(weights.segment(91, 7).sum() == 2);
   EXPECT(weights.sum() == 93);
+  EXPECT(pgo->getNumLCInliers() == 2);
 }
 
 /* ************************************************************************* */
@@ -221,8 +225,9 @@ TEST(RobustSolver, GncMultirobotHighThreshold) {
   EXPECT(values_out.size() == size_t(92));
   EXPECT(weights.size() == size_t(96));
   // Expect all loop closures to be accepted
-  EXPECT(weights.segment(90, 5).sum() == 5);
+  EXPECT(weights.segment(91, 5).sum() == 5);
   EXPECT(weights.sum() == 96);
+  EXPECT(pgo->getNumLCInliers() == 5);
 
   // Add interrobot loop closures (sould be inliers)
   gtsam::Key key_b1 = gtsam::Symbol('b', 1);
@@ -249,8 +254,9 @@ TEST(RobustSolver, GncMultirobotHighThreshold) {
   EXPECT(values_out.size() == size_t(92));
   EXPECT(weights.size() == size_t(98));
   // Expect all loop closures to be accepted
-  EXPECT(weights.segment(90, 7).sum() == 7);
+  EXPECT(weights.segment(91, 7).sum() == 7);
   EXPECT(weights.sum() == 98);
+  EXPECT(pgo->getNumLCInliers() == 7);
 }
 
 /* ************************************************************************* */

@@ -26,7 +26,9 @@ namespace KimeraRPGO {
 typedef std::pair<gtsam::NonlinearFactorGraph, gtsam::Values> GraphAndValues;
 
 RobustSolver::RobustSolver(const RobustSolverParams& params)
-    : GenericSolver(params.solver, params.specialSymbols), params_(params) {
+    : GenericSolver(params.solver, params.specialSymbols),
+      params_(params),
+      gnc_num_inliers_(0) {
   switch (params.outlierRemovalMethod) {
     case OutlierRemovalMethod::NONE: {
       outlier_removal_ =
@@ -37,32 +39,36 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
           KimeraRPGO::make_unique<Pcm2D>(params.pcm_odomThreshold,
                                          params.pcm_lcThreshold,
                                          params.incremental,
-                                         params.specialSymbols,
-                                         params.max_clique_method_);
+                                         params.multirobot_frame_alignment,
+                                         params.max_clique_method_,
+                                         params.specialSymbols);
     } break;
     case OutlierRemovalMethod::PCM3D: {
       outlier_removal_ =
           KimeraRPGO::make_unique<Pcm3D>(params.pcm_odomThreshold,
                                          params.pcm_lcThreshold,
                                          params.incremental,
-                                         params.specialSymbols,
-                                         params.max_clique_method_);
+                                         params.multirobot_frame_alignment,
+                                         params.max_clique_method_,
+                                         params.specialSymbols);
     } break;
     case OutlierRemovalMethod::PCM_Simple2D: {
       outlier_removal_ =
           KimeraRPGO::make_unique<PcmSimple2D>(params.pcmDist_transThreshold,
                                                params.pcmDist_rotThreshold,
                                                params.incremental,
-                                               params.specialSymbols,
-                                               params.max_clique_method_);
+                                               params.multirobot_frame_alignment,
+                                               params.max_clique_method_,
+                                               params.specialSymbols);
     } break;
     case OutlierRemovalMethod::PCM_Simple3D: {
       outlier_removal_ =
           KimeraRPGO::make_unique<PcmSimple3D>(params.pcmDist_transThreshold,
                                                params.pcmDist_rotThreshold,
                                                params.incremental,
-                                               params.specialSymbols,
-                                               params.max_clique_method_);
+                                               params.multirobot_frame_alignment,
+                                               params.max_clique_method_,
+                                               params.specialSymbols);
     } break;
     default: {
       log<WARNING>("Undefined outlier removal method");
@@ -112,12 +118,15 @@ void RobustSolver::optimize() {
     }
     if (params_.use_gnc_ && outlier_removal_) {
       size_t num_odom_factors = outlier_removal_->getNumOdomFactors();
+      size_t num_special_factors = outlier_removal_->getNumSpecialFactors();
       gtsam::GncParams<gtsam::LevenbergMarquardtParams> gncParams(lmParams);
-      // Set odometry as known inliers
-      std::vector<size_t> odom_factor_indices(num_odom_factors);
-      std::iota(
-          std::begin(odom_factor_indices), std::end(odom_factor_indices), 0);
-      gncParams.setKnownInliers(odom_factor_indices);
+      // Set odometry and special factors as known inliers
+      std::vector<size_t> known_inlier_factor_indices(num_odom_factors +
+                                                      num_special_factors);
+      std::iota(std::begin(known_inlier_factor_indices),
+                std::end(known_inlier_factor_indices),
+                0);
+      gncParams.setKnownInliers(known_inlier_factor_indices);
       // Create GNC optimizer
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::LevenbergMarquardtParams> >
           gnc_optimizer(nfg_, values_, gncParams);
@@ -133,8 +142,21 @@ void RobustSolver::optimize() {
           log<WARNING>("Unsupported GNC threshold mode. ");
       }
       // Optimize and get weights
+      auto opt_start_t = std::chrono::high_resolution_clock::now();
       values_ = gnc_optimizer.optimize();
       gnc_weights_ = gnc_optimizer.getWeights();
+      gnc_num_inliers_ = static_cast<size_t>(gnc_weights_.sum()) -
+                         known_inlier_factor_indices.size();
+      auto opt_stop_t = std::chrono::high_resolution_clock::now();
+      auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+          opt_stop_t - opt_start_t);
+      if (debug_) {
+        log<INFO>(
+            "GNC optimize took %1% milliseconds. %2% loop closures with "
+            "%3% inliers. ") %
+            opt_duration.count() % outlier_removal_->getNumLCInliers() %
+            gnc_num_inliers_;
+      }
     } else {
       values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, lmParams)
                     .optimize();
@@ -147,12 +169,15 @@ void RobustSolver::optimize() {
     }
     if (params_.use_gnc_ && outlier_removal_) {
       size_t num_odom_factors = outlier_removal_->getNumOdomFactors();
+      size_t num_special_factors = outlier_removal_->getNumSpecialFactors();
       gtsam::GncParams<gtsam::GaussNewtonParams> gncParams(gnParams);
-      // Set odometry as known inliers
-      std::vector<size_t> odom_factor_indices(num_odom_factors);
-      std::iota(
-          std::begin(odom_factor_indices), std::end(odom_factor_indices), 0);
-      gncParams.setKnownInliers(odom_factor_indices);
+      // Set odometry and special factors as known inliers
+      std::vector<size_t> known_inlier_factor_indices(num_odom_factors +
+                                                      num_special_factors);
+      std::iota(std::begin(known_inlier_factor_indices),
+                std::end(known_inlier_factor_indices),
+                0);
+      gncParams.setKnownInliers(known_inlier_factor_indices);
       // Create GNC optimizer
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::GaussNewtonParams> >
           gnc_optimizer(nfg_, values_, gncParams);
@@ -168,8 +193,21 @@ void RobustSolver::optimize() {
           log<WARNING>("Unsupported GNC threshold mode. ");
       }
       // Optimize and get weights
+      auto opt_start_t = std::chrono::high_resolution_clock::now();
       values_ = gnc_optimizer.optimize();
       gnc_weights_ = gnc_optimizer.getWeights();
+      gnc_num_inliers_ = static_cast<size_t>(gnc_weights_.sum()) -
+                         known_inlier_factor_indices.size();
+      auto opt_stop_t = std::chrono::high_resolution_clock::now();
+      auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+          opt_stop_t - opt_start_t);
+      if (debug_) {
+        log<INFO>(
+            "GNC optimize took %1% milliseconds. %2% loop closures with "
+            "%3% inliers. ") %
+            opt_duration.count() % outlier_removal_->getNumLCInliers() %
+            gnc_num_inliers_;
+      }
     }
     values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, gnParams).optimize();
   } else {

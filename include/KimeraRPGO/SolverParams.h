@@ -47,7 +47,8 @@ struct RobustSolverParams {
         incremental(false),
         log_output(false),
         use_gnc_(false),
-        max_clique_method_(MaxCliqueMethod::PMC_HEU) {}
+        max_clique_method_(MaxCliqueMethod::PMC_HEU),
+        multirobot_frame_alignment(false) {}
   /*! \brief For RobustSolver to not do outlier rejection at all
    */
   void setNoRejection(Verbosity verbos = Verbosity::UPDATE) {
@@ -137,6 +138,10 @@ struct RobustSolverParams {
     gnc_inlier_threshold_ = cost;
   }
 
+  /*! \brief use multirobot frame alignment for initialization
+   */
+  void setMultirobotFrameAlignment() { multirobot_frame_alignment = true; }
+
   /*! \brief set folder to log data
    */
   void logOutput(const std::string& output_folder) {
@@ -165,6 +170,9 @@ struct RobustSolverParams {
 
   // incremental max clique
   bool incremental;
+
+  // multirobot frame alignment
+  bool multirobot_frame_alignment;
 
   // GNC variables
   enum class GncThresholdMode { COST = 0u, PROBABILITY = 1u };

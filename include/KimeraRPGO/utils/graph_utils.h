@@ -34,7 +34,7 @@ int findMaxCliqueClipper(const Eigen::MatrixXd& adjMatrix,
  */
 template <class poseT, template <class> class T>
 struct Trajectory {
-  std::unordered_map<gtsam::Key, T<poseT>> poses;
+  std::map<gtsam::Key, T<poseT> > poses;
 
   /** \brief Get transform (along with node number and covariance)
    *  between two keys in trajectory
@@ -62,6 +62,8 @@ struct Trajectory {
       return result;
     }
   }
+
+  inline gtsam::Key getStartKey() { return poses.begin()->first; }
 };
 
 }  // namespace KimeraRPGO

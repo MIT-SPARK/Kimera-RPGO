@@ -21,9 +21,7 @@ author: Yun Chang
 using namespace KimeraRPGO;
 
 /* Usage: 
-  ./RpgoReadG2o {NoPCM,PCM2dOrig,PCM2dSimp} {NoGNC,GNC} <some-2d-g2o-file> {pcm_t_simple_thresh,pcm_odo_thresh} {pcm_R_simple_thresh,pcm_lc_thresh} <gnc_barc_sq> <max_clique_method> <output-g2o-file> <verbosity> 
-  [or]   
-  ./RpgoReadG2o 3d <some-3d-g2o-file> <pcm_t_simple_thresh> <pcm_R_simple_thresh> <gnc_barc_sq> <max_clique_method> <output-g2o-file> <verbosity>
+  ./RpgoReadG2o {NoPCM,PCM2dOrig,PCM2dSimp} {NoGNC,GNC} {NoAlign,Align} <some-2d-g2o-file> {pcm_t_simple_thresh,pcm_odo_thresh} {pcm_R_simple_thresh,pcm_lc_thresh} <gnc_barc_sq> <max_clique_method> <output-g2o-file> <verbosity> 
 */
 template <class T>
 void Simulate(gtsam::GraphAndValues gv,
@@ -58,11 +56,12 @@ int main(int argc, char* argv[]) {
   gtsam::GraphAndValues graphNValues;
   std::string pcm_str = argv[1];
   std::string gnc_str = argv[2];
-  std::string g2ofile = argv[3];
-  double pcm_t = atof(argv[4]);
-  double pcm_R = atof(argv[5]);
-  double gnc_barcsq = atof(argv[6]);
-  std::string max_clique_method_str = argv[7];
+  std::string align_str = argv[3];
+  std::string g2ofile = argv[4];
+  double pcm_t = atof(argv[5]);
+  double pcm_R = atof(argv[6]);
+  double gnc_barcsq = atof(argv[7]);
+  std::string max_clique_method_str = argv[8];
 
   MaxCliqueMethod max_clique_method;
   
@@ -82,11 +81,11 @@ int main(int argc, char* argv[]) {
   }
 
   std::string output_folder;
-  if (argc > 8) output_folder = argv[8];
+  if (argc > 9) output_folder = argv[9];
 
   bool verbose = false;
-  if (argc > 9) {
-    std::string flag = argv[9];
+  if (argc > 10) {
+    std::string flag = argv[10];
     if (flag == "v") verbose = true;
   }
   RobustSolverParams params;
@@ -156,6 +155,16 @@ int main(int argc, char* argv[]) {
   } else {
     // error
     log<WARNING>("Unsupported PCM option");
+  }
+
+  if (align_str == "NoAlign") {
+    log<INFO>("Frame alignment OFF.");
+  } else if (align_str == "Align") {
+    log<INFO>("Frame alignment ON.");
+    params.setMultirobotFrameAlignment();
+  } else {
+    log<WARNING>("Unsupported alignment option.");
+    std::cout << align_str << std::endl;
   }
 
   // currently only 2D

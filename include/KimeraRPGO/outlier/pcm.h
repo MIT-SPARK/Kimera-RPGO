@@ -1003,9 +1003,13 @@ class Pcm : public OutlierRemoval {
     initial.insert(0, poseT::identity());  // identity pose as initialization
 
     gtsam::NonlinearFactorGraph graph;
-    gtsam::Vector6 sigmas;
-    sigmas.head<3>().setConstant(rot_sigma);
-    sigmas.tail<3>().setConstant(trans_sigma);
+    size_t dim = getDim<poseT>();
+    size_t r_dim = getRotationDim<poseT>();
+    size_t t_dim = getTranslationDim<poseT>();
+    gtsam::Vector sigmas;
+    sigmas.resize(dim);
+    sigmas.head(r_dim).setConstant(rot_sigma);
+    sigmas.tail(t_dim).setConstant(trans_sigma);
     const gtsam::noiseModel::Diagonal::shared_ptr noise =
         gtsam::noiseModel::Diagonal::Sigmas(sigmas);
     // add measurements

@@ -1028,8 +1028,8 @@ class Pcm : public OutlierRemoval {
    * GNC Pose Averaging
    */
   poseT gncRobustPoseAveraging(const std::vector<poseT>& input_poses,
-                               const double& rot_sigma = 0.1,
-                               const double& trans_sigma = 0.5) {
+                               const double& rot_sigma = 0.5,
+                               const double& trans_sigma = 1.0) {
     gtsam::Values initial;
     initial.insert(0, poseT::identity());  // identity pose as initialization
 
@@ -1054,6 +1054,8 @@ class Pcm : public OutlierRemoval {
             graph, initial, gncParams);
 
     gtsam::Values estimate = gnc.optimize();
+
+    std::cout << "GNC num inliers: " << gnc.getWeights().sum() << "/" << gnc.getWeights().rows() << std::endl;
     return estimate.at<poseT>(0);
   }
 

@@ -241,6 +241,10 @@ void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
     do_optimize = addAndCheckIfOptimize(factors, values);
   }
 
+  // Save initial guess
+  std::string g2o_file_path = log_folder_ + "/init.g2o";
+  gtsam::writeG2o(nfg_, values_, g2o_file_path);
+
   if (do_optimize & optimize_graph) optimize();  // optimize once after loading
 
   // Stop timer and save

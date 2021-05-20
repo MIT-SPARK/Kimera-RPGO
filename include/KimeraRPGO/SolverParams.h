@@ -23,6 +23,13 @@ enum class OutlierRemovalMethod {
 
 enum class Verbosity { UPDATE, QUIET, VERBOSE };
 
+// Method used for multi-robot frame alignment
+enum class MultiRobotAlignMethod {
+  NONE,  // Use provided initial guess
+  L2,    // Use L2 pose averaging
+  GNC    // Use robust pose averaging with GNC
+};
+
 struct RobustSolverParams {
  public:
   RobustSolverParams()
@@ -38,7 +45,7 @@ struct RobustSolverParams {
         incremental(false),
         log_output(false),
         use_gnc_(false),
-        multirobot_frame_alignment(false) {}
+        multirobot_align_method(MultiRobotAlignMethod::NONE) {}
   /*! \brief For RobustSolver to not do outlier rejection at all
    */
   void setNoRejection(Verbosity verbos = Verbosity::UPDATE) {
@@ -126,7 +133,9 @@ struct RobustSolverParams {
 
   /*! \brief use multirobot frame alignment for initialization
    */
-  void setMultirobotFrameAlignment() { multirobot_frame_alignment = true; }
+  void setMultiRobotAlignMethod(MultiRobotAlignMethod method) {
+    multirobot_align_method = method;
+  }
 
   /*! \brief set folder to log data
    */
@@ -155,7 +164,7 @@ struct RobustSolverParams {
   bool incremental;
 
   // multirobot frame alignment
-  bool multirobot_frame_alignment;
+  MultiRobotAlignMethod multirobot_align_method;
 
   // GNC variables
   enum class GncThresholdMode { COST = 0u, PROBABILITY = 1u };

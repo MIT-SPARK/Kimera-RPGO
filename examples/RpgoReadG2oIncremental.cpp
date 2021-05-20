@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
   }
 
   if (frame_align == 1) {
-    params.setMultirobotFrameAlignment();
+    params.setMultiRobotAlignMethod(MultiRobotAlignMethod::GNC);
   }
 
   Verbosity verbosity = Verbosity::VERBOSE;

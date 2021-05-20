@@ -39,7 +39,7 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
           KimeraRPGO::make_unique<Pcm2D>(params.pcm_odomThreshold,
                                          params.pcm_lcThreshold,
                                          params.incremental,
-                                         params.multirobot_frame_alignment,
+                                         params.multirobot_align_method,
                                          params.specialSymbols);
     } break;
     case OutlierRemovalMethod::PCM3D: {
@@ -47,7 +47,7 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
           KimeraRPGO::make_unique<Pcm3D>(params.pcm_odomThreshold,
                                          params.pcm_lcThreshold,
                                          params.incremental,
-                                         params.multirobot_frame_alignment,
+                                         params.multirobot_align_method,
                                          params.specialSymbols);
     } break;
     case OutlierRemovalMethod::PCM_Simple2D: {
@@ -55,7 +55,7 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
           params.pcmDist_transThreshold,
           params.pcmDist_rotThreshold,
           params.incremental,
-          params.multirobot_frame_alignment,
+          params.multirobot_align_method,
           params.specialSymbols);
     } break;
     case OutlierRemovalMethod::PCM_Simple3D: {
@@ -63,7 +63,7 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
           params.pcmDist_transThreshold,
           params.pcmDist_rotThreshold,
           params.incremental,
-          params.multirobot_frame_alignment,
+          params.multirobot_align_method,
           params.specialSymbols);
     } break;
     default: {

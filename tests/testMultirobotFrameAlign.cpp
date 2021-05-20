@@ -11,13 +11,15 @@
 #include <gtsam/inference/Symbol.h>
 
 #include "KimeraRPGO/outlier/pcm.h"
+#include "KimeraRPGO/SolverParams.h"
 
 using KimeraRPGO::OutlierRemoval;
 using KimeraRPGO::Pcm3D;
 
 /* ************************************************************************* */
 TEST(Pcm, MultirobotFrameAlign) {
-  OutlierRemoval* pcm = new Pcm3D(0.3, 100.0, false, true);
+  OutlierRemoval* pcm = new Pcm3D(0.3, 100.0, false,
+                                  KimeraRPGO::MultiRobotAlignMethod::GNC);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =

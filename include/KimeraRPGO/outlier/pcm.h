@@ -29,6 +29,7 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/slam/PriorFactor.h>
 
 #include "KimeraRPGO/logger.h"
+#include "KimeraRPGO/RobustSolver.h"
 #include "KimeraRPGO/outlier/OutlierRemoval.h"
 #include "KimeraRPGO/utils/geometry_utils.h"
 #include "KimeraRPGO/utils/graph_utils.h"
@@ -55,13 +56,13 @@ class Pcm : public OutlierRemoval {
   Pcm(double threshold1,
       double threshold2,
       bool incremental = false,
-      bool multirobot_frame_align = false,
+      MultiRobotAlignMethod align_method = MultiRobotAlignMethod::NONE,
       const std::vector<char>& special_symbols = std::vector<char>())
       : OutlierRemoval(),
         threshold1_(threshold1),
         threshold2_(threshold2),
         incremental_(incremental),
-        multirobot_frame_align_(multirobot_frame_align),
+        multirobot_align_method_(align_method),
         special_symbols_(special_symbols),
         total_lc_(0),
         total_good_lc_(0) {
@@ -101,8 +102,8 @@ class Pcm : public OutlierRemoval {
 
   size_t total_lc_, total_good_lc_;
 
-  // Pose averaging for multirobot initialization
-  bool multirobot_frame_align_;
+  // Multirobot initialization method
+  MultiRobotAlignMethod multirobot_align_method_;
   // Keep track of the order of robots when applying world transforms
   std::vector<char> robot_order_;
 
@@ -234,7 +235,7 @@ class Pcm : public OutlierRemoval {
       do_optimize = true;
     }
     *output_nfg = buildGraphToOptimize();
-    if (multirobot_frame_align_ && robot_order_.size() > 1) {
+    if (multirobot_align_method_ != MultiRobotAlignMethod::NONE && robot_order_.size() > 1) {
       *output_values = multirobotValueInitialization(*output_values);
     }
 
@@ -932,7 +933,7 @@ class Pcm : public OutlierRemoval {
       ObservationId obs_id(rj, ri);
       try {
         gtsam::NonlinearFactorGraph lc_factors =
-            loop_closures_.at(obs_id).factors;
+            loop_closures_.at(obs_id).consistent_factors;
         // Create list of frame-to-fram transforms
         std::vector<poseT> T_wj_wi_measured;
         for (auto factor : lc_factors) {
@@ -1021,6 +1022,14 @@ class Pcm : public OutlierRemoval {
     auto gnc =
         gtsam::GncOptimizer<gtsam::GncParams<gtsam::LevenbergMarquardtParams>>(
             graph, initial, gncParams);
+
+    if (multirobot_align_method_ == MultiRobotAlignMethod::L2) {
+      gnc.setInlierCostThresholds(std::numeric_limits<double>::max());
+    } else if (multirobot_align_method_ == MultiRobotAlignMethod::GNC) {
+      gnc.setInlierCostThresholdsAtProbability(0.99);
+    } else {
+      log<WARNING>("Invalid multirobot alignment method in gncRobustPoseAveraging!");
+    }
 
     gtsam::Values estimate = gnc.optimize();
     return estimate.at<poseT>(0);

@@ -28,8 +28,8 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/slam/PriorFactor.h>
 
-#include "KimeraRPGO/logger.h"
 #include "KimeraRPGO/SolverParams.h"
+#include "KimeraRPGO/logger.h"
 #include "KimeraRPGO/outlier/OutlierRemoval.h"
 #include "KimeraRPGO/utils/geometry_utils.h"
 #include "KimeraRPGO/utils/graph_utils.h"
@@ -235,7 +235,8 @@ class Pcm : public OutlierRemoval {
       do_optimize = true;
     }
     *output_nfg = buildGraphToOptimize();
-    if (multirobot_align_method_ != MultiRobotAlignMethod::NONE && robot_order_.size() > 1) {
+    if (multirobot_align_method_ != MultiRobotAlignMethod::NONE &&
+        robot_order_.size() > 1) {
       *output_values = multirobotValueInitialization(*output_values);
     }
 
@@ -920,22 +921,23 @@ class Pcm : public OutlierRemoval {
       log<INFO>("No robot poses received. ");
       return initialized_values;
     }
+    // Sort robot order from smallest prefix to larges
+    std::sort(robot_order_.begin(), robot_order_.end());
     // Do not transform first robot
     initialized_values.update(getRobotOdomValues(robot_order_[0]));
-    poseT T_w0_wj = poseT::identity();  // choose from of first robot in
-                                        // robot_order_ as global world frame
+
     // Start estimating the frame-to-frame transforms between robots
     for (size_t i = 1; i < robot_order_.size(); i++) {
-      // Get loop closures between robots robot_order_[i - 1] and
+      // Get loop closures between robots robot_order_[0] and
       // robot_order_[i]
-      const char& rj = robot_order_[i - 1];  // j = i-1
+      const char& r0 = robot_order_[0];  // j = 0
       const char& ri = robot_order_[i];
-      ObservationId obs_id(rj, ri);
+      ObservationId obs_id(r0, ri);
       try {
         gtsam::NonlinearFactorGraph lc_factors =
             loop_closures_.at(obs_id).consistent_factors;
         // Create list of frame-to-fram transforms
-        std::vector<poseT> T_wj_wi_measured;
+        std::vector<poseT> T_w0_wi_measured;
         for (auto factor : lc_factors) {
           assert(factor != nullptr);
           assert(
@@ -948,33 +950,31 @@ class Pcm : public OutlierRemoval {
           poseT T_front_back = lc.measured();
 
           // Check order and switch if needed
-          if (front.chr() != rj) {
+          if (front.chr() != r0) {
             gtsam::Symbol front_temp = front;
             front = back;
             back = front_temp;
             T_front_back = T_front_back.inverse();
           }
 
-          poseT T_wj_front, T_wi_back, T_wj_wi;
+          poseT T_w0_front, T_wi_back, T_w0_wi;
           // Get T_w1_fron and T_w2_back from stored trajectories
-          T_wj_front = odom_trajectories_[rj].poses.at(front).pose;
+          T_w0_front = odom_trajectories_[r0].poses.at(front).pose;
           T_wi_back = odom_trajectories_[ri].poses.at(back).pose;
 
-          T_wj_wi =
-              T_wj_front.compose(T_front_back).compose(T_wi_back.inverse());
-          T_wj_wi_measured.push_back(T_wj_wi);
+          T_w0_wi =
+              T_w0_front.compose(T_front_back).compose(T_wi_back.inverse());
+          T_w0_wi_measured.push_back(T_w0_wi);
         }
         // Pose averaging to find transform
-        poseT T_wj_wi_est = gncRobustPoseAveraging(T_wj_wi_measured);
-        poseT T_w0_wi = T_w0_wj.compose(T_wj_wi_est);
-        initialized_values.update(getRobotOdomValues(robot_order_[i], T_w0_wi));
-        T_w0_wj = T_w0_wi;  // Update T_w0_wj (j = i-1) to prepare for next pair
-                            // of robots
+        poseT T_w0_wi_est = gncRobustPoseAveraging(T_w0_wi_measured);
+        initialized_values.update(
+            getRobotOdomValues(robot_order_[i], T_w0_wi_est));
       } catch (std::out_of_range e) {
         log<WARNING>(
             "No inter-robot loop closures between robots with prefix %1% and "
             "%2% for multirobot frame alignment. ") %
-            rj % ri;
+            r0 % ri;
       }
     }
     return initialized_values;
@@ -1028,7 +1028,8 @@ class Pcm : public OutlierRemoval {
     } else if (multirobot_align_method_ == MultiRobotAlignMethod::GNC) {
       gnc.setInlierCostThresholdsAtProbability(0.99);
     } else {
-      log<WARNING>("Invalid multirobot alignment method in gncRobustPoseAveraging!");
+      log<WARNING>(
+          "Invalid multirobot alignment method in gncRobustPoseAveraging!");
     }
 
     gtsam::Values estimate = gnc.optimize();

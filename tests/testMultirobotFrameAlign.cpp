@@ -10,16 +10,16 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/inference/Symbol.h>
 
-#include "KimeraRPGO/outlier/pcm.h"
 #include "KimeraRPGO/SolverParams.h"
+#include "KimeraRPGO/outlier/pcm.h"
 
 using KimeraRPGO::OutlierRemoval;
 using KimeraRPGO::Pcm3D;
 
 /* ************************************************************************* */
 TEST(Pcm, MultirobotFrameAlign) {
-  OutlierRemoval* pcm = new Pcm3D(0.3, 100.0, false,
-                                  KimeraRPGO::MultiRobotAlignMethod::GNC);
+  OutlierRemoval* pcm =
+      new Pcm3D(0.3, 100.0, false, KimeraRPGO::MultiRobotAlignMethod::GNC);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =
@@ -65,11 +65,14 @@ TEST(Pcm, MultirobotFrameAlign) {
       gtsam::Symbol('b', 1),
       gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 0, 0)),
       noise));
-  //// robot 2-3
+  //// robot 1-3
   nfg.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      gtsam::Symbol('b', 0), gtsam::Symbol('c', 0), gtsam::Pose3(), noise));
+      gtsam::Symbol('a', 0), gtsam::Symbol('c', 0), gtsam::Pose3(), noise));
   nfg.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      gtsam::Symbol('b', 1), gtsam::Symbol('c', 1), gtsam::Pose3(), noise));
+      gtsam::Symbol('a', 1),
+      gtsam::Symbol('c', 1),
+      gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(1, 0, 0)),
+      noise));
 
   gtsam::NonlinearFactorGraph output_nfg;
   gtsam::Values output_vals;

@@ -11,6 +11,7 @@
 #include <gtsam/sam/RangeFactor.h>
 #include "KimeraRPGO/outlier/pcm.h"
 
+using KimeraRPGO::MultiRobotAlignMethod;
 using KimeraRPGO::OutlierRemoval;
 using KimeraRPGO::Pcm3D;
 
@@ -131,7 +132,8 @@ TEST(PcmDoOptimize, landmarks) {
   // first observation: do_optimize = false
   // repeated observatio: do_optimize = true
   std::vector<char> special_symbs{'l', 'u'};  // for landmarks
-  OutlierRemoval* pcm = new Pcm3D(10.0, 10.0, true, true, special_symbs);
+  OutlierRemoval* pcm =
+      new Pcm3D(10.0, 10.0, true, MultiRobotAlignMethod::NONE, special_symbs);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =
@@ -190,7 +192,8 @@ TEST(PcmDoOptimize, Beacon) {
   // first observation: do_optimize = false
   // repeated observatio: do_optimize = true
   std::vector<char> special_symbs{'l', 'u'};  // for landmarks
-  OutlierRemoval* pcm = new Pcm3D(1.0, 1.0, true, true, special_symbs);
+  OutlierRemoval* pcm =
+      new Pcm3D(1.0, 1.0, true, MultiRobotAlignMethod::NONE, special_symbs);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =

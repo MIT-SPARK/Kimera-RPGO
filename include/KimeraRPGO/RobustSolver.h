@@ -32,7 +32,13 @@ class RobustSolver : public GenericSolver {
 
   size_t getNumLC() { return outlier_removal_->getNumLC(); }
 
-  size_t getNumLCInliers() { return outlier_removal_->getNumLCInliers(); }
+  size_t getNumLCInliers() {
+    if (params_.use_gnc_) {
+      return gnc_num_inliers_;
+    } else {
+      return outlier_removal_->getNumLCInliers();
+    }
+  }
 
   /*! \brief Update call that bypasses outlier rejection.
    *  add new factors and values and optimize, without rejecting outliers.
@@ -65,6 +71,10 @@ class RobustSolver : public GenericSolver {
   void removePriorFactorsWithPrefix(const char& prefix,
                                     bool optimize_graph = false);
 
+  /*! \brief get weights from GNC to check the inliers / outliers
+   */
+  inline gtsam::Vector getGncWeights() const { return gnc_weights_; }
+
  private:
   std::unique_ptr<OutlierRemoval> outlier_removal_;  // outlier removal
                                                      // method;
@@ -74,6 +84,12 @@ class RobustSolver : public GenericSolver {
    *  Solver based on what was set in RobustSolverParams
    */
   void optimize();
+
+  // GNC variables
+  gtsam::Vector gnc_weights_;
+  size_t gnc_num_inliers_;
+
+  RobustSolverParams params_;
 
  public:
   /*! \brief Save results from Solver

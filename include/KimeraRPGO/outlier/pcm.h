@@ -101,6 +101,8 @@ class Pcm : public OutlierRemoval {
  public:
   size_t getNumLC() { return total_lc_; }
   size_t getNumLCInliers() { return total_good_lc_; }
+  size_t getNumOdomFactors() { return nfg_odom_.size(); }
+  size_t getNumSpecialFactors() { return nfg_special_.size(); }
 
   /*! \brief Process new measurements and reject outliers
    *  process the new measurements and update the "good set" of measurements
@@ -870,8 +872,10 @@ class Pcm : public OutlierRemoval {
    */
   gtsam::NonlinearFactorGraph buildGraphToOptimize() {
     gtsam::NonlinearFactorGraph output_nfg;  // reset
-    output_nfg.add(nfg_odom_);               // add the odometry factors
-
+    // important for gnc that we add the odom factors first
+    output_nfg.add(nfg_odom_);  // add the odometry factors
+    // important for gnc that we add the "special" non lc no odom factors second
+    output_nfg.add(nfg_special_);
     // add the good loop closures
     std::unordered_map<ObservationId, Measurements>::iterator it =
         loop_closures_.begin();
@@ -886,8 +890,7 @@ class Pcm : public OutlierRemoval {
       output_nfg.add(it_ldmrk->second.consistent_factors);
       it_ldmrk++;
     }
-    output_nfg.add(
-        nfg_special_);  // still need to update the class overall factorgraph
+    // still need to update the class overall factorgraph
     return output_nfg;
   }
 

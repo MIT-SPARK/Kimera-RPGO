@@ -59,7 +59,6 @@ target_link_libraries(KimeraRPGO
 
 target_compile_options(KimeraRPGO
   PRIVATE -Wall -pipe
-  PRIVATE -march=native
 )
 
 ###########################################################################

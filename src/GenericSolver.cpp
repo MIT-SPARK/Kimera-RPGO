@@ -58,6 +58,7 @@ bool GenericSolver::addAndCheckIfOptimize(
 void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
                            const gtsam::Values& values,
                            const gtsam::FactorIndices& factorsToRemove) {
+  // TODO(Yun) Do we have unittests for generic (no outlier-rejection) update?
   // remove factors
   bool remove_factors = false;
   if (factorsToRemove.size() > 0) {
@@ -71,6 +72,11 @@ void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
 
   if (process_lc || remove_factors) {
     // optimize
+    gtsam::Values result;
+    gtsam::Values full_values = values_;
+    gtsam::NonlinearFactorGraph full_nfg = nfg_;
+    full_values.insert(temp_values_);
+    full_nfg.add(temp_nfg_);
     if (solver_type_ == Solver::LM) {
       gtsam::LevenbergMarquardtParams params;
       if (debug_) {
@@ -78,7 +84,7 @@ void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
         log<INFO>("Running LM");
       }
       params.diagonalDamping = true;
-      values_ =
+      result =
           gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
     } else if (solver_type_ == Solver::GN) {
       gtsam::GaussNewtonParams params;
@@ -86,11 +92,13 @@ void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
         params.setVerbosity("ERROR");
         log<INFO>("Running GN");
       }
-      values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, params).optimize();
+      result = gtsam::GaussNewtonOptimizer(nfg_, values_, params).optimize();
     } else {
       log<WARNING>("Unsupported Solver");
       exit(EXIT_FAILURE);
     }
+    values_.update(result);
+    temp_values_.update(result);
   }
 }
 

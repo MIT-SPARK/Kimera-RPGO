@@ -42,6 +42,17 @@ class GenericSolver {
   inline gtsam::Values getLinearizationPoint() const { return values_; }
   inline gtsam::NonlinearFactorGraph getFactorsUnsafe() const { return nfg_; }
 
+  inline gtsam::Values getTempValues() const { return temp_values_; }
+  inline gtsam::NonlinearFactorGraph getTempFactorsUnsafe() const {
+    return temp_nfg_;
+  }
+  inline void updateTempValuesFactors(
+      const gtsam::NonlinearFactorGraph& temp_nfg,
+      const gtsam::Values& temp_values) {
+    temp_nfg_ = temp_nfg;
+    temp_values_ = temp_values;
+  }
+
   void print() const { values_.print(""); }
 
   void setQuiet() { debug_ = false; }
@@ -59,6 +70,10 @@ class GenericSolver {
   bool isSpecialSymbol(char symb) const;
   gtsam::Values values_;
   gtsam::NonlinearFactorGraph nfg_;
+  // Factors and values subjected to change
+  gtsam::Values temp_values_;
+  gtsam::NonlinearFactorGraph temp_nfg_;
+
   Solver solver_type_;
   std::vector<char> special_symbols_;
   bool debug_;

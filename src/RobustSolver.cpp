@@ -104,6 +104,13 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
 }
 
 void RobustSolver::optimize() {
+  gtsam::Values result;
+  gtsam::Values full_values = values_;
+  gtsam::NonlinearFactorGraph full_nfg = nfg_;
+  // Merge in temporary values and factors
+  full_values.insert(temp_values_);
+  full_nfg.add(temp_nfg_);
+
   if (solver_type_ == Solver::LM) {
     gtsam::LevenbergMarquardtParams lmParams;
     lmParams.diagonalDamping = true;
@@ -124,7 +131,7 @@ void RobustSolver::optimize() {
       gncParams.setKnownInliers(known_inlier_factor_indices);
       // Create GNC optimizer
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::LevenbergMarquardtParams> >
-          gnc_optimizer(nfg_, values_, gncParams);
+          gnc_optimizer(full_nfg, full_values, gncParams);
       switch (params_.gnc_threshold_mode_) {
         case (params_.GncThresholdMode::COST):
           gnc_optimizer.setInlierCostThresholds(params_.gnc_inlier_threshold_);
@@ -138,10 +145,10 @@ void RobustSolver::optimize() {
       }
       // Optimize and get weights
       auto opt_start_t = std::chrono::high_resolution_clock::now();
-      values_ = gnc_optimizer.optimize();
+      result = gnc_optimizer.optimize();
       gnc_weights_ = gnc_optimizer.getWeights();
       gnc_num_inliers_ = static_cast<size_t>(gnc_weights_.sum()) -
-                         known_inlier_factor_indices.size();
+                         temp_nfg_.size() - known_inlier_factor_indices.size();
       auto opt_stop_t = std::chrono::high_resolution_clock::now();
       auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
           opt_stop_t - opt_start_t);
@@ -153,8 +160,9 @@ void RobustSolver::optimize() {
             gnc_num_inliers_;
       }
     } else {
-      values_ = gtsam::LevenbergMarquardtOptimizer(nfg_, values_, lmParams)
-                    .optimize();
+      result =
+          gtsam::LevenbergMarquardtOptimizer(full_nfg, full_values, lmParams)
+              .optimize();
     }
   } else if (solver_type_ == Solver::GN) {
     gtsam::GaussNewtonParams gnParams;
@@ -175,7 +183,7 @@ void RobustSolver::optimize() {
       gncParams.setKnownInliers(known_inlier_factor_indices);
       // Create GNC optimizer
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::GaussNewtonParams> >
-          gnc_optimizer(nfg_, values_, gncParams);
+          gnc_optimizer(full_nfg, full_values, gncParams);
       switch (params_.gnc_threshold_mode_) {
         case (params_.GncThresholdMode::COST):
           gnc_optimizer.setInlierCostThresholds(params_.gnc_inlier_threshold_);
@@ -189,10 +197,10 @@ void RobustSolver::optimize() {
       }
       // Optimize and get weights
       auto opt_start_t = std::chrono::high_resolution_clock::now();
-      values_ = gnc_optimizer.optimize();
+      result = gnc_optimizer.optimize();
       gnc_weights_ = gnc_optimizer.getWeights();
       gnc_num_inliers_ = static_cast<size_t>(gnc_weights_.sum()) -
-                         known_inlier_factor_indices.size();
+                         temp_nfg_.size() - known_inlier_factor_indices.size();
       auto opt_stop_t = std::chrono::high_resolution_clock::now();
       auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
           opt_stop_t - opt_start_t);
@@ -203,12 +211,18 @@ void RobustSolver::optimize() {
             opt_duration.count() % outlier_removal_->getNumLCInliers() %
             gnc_num_inliers_;
       }
+    } else {
+      result = gtsam::GaussNewtonOptimizer(full_nfg, full_values, gnParams)
+                   .optimize();
     }
-    values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, gnParams).optimize();
+
   } else {
     log<WARNING>("Unsupported Solver");
     exit(EXIT_FAILURE);
   }
+  std::cout << "before: " << values_.size() << std::endl;
+  updateValues(result);
+  std::cout << "after: " << values_.size() << std::endl;
 }
 
 void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,

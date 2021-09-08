@@ -66,6 +66,8 @@ class GenericSolver {
       const gtsam::NonlinearFactorGraph& nfg = gtsam::NonlinearFactorGraph(),
       const gtsam::Values& values = gtsam::Values());
 
+  void updateValues(const gtsam::Values& values);
+
  protected:
   bool isSpecialSymbol(char symb) const;
   gtsam::Values values_;

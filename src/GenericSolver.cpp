@@ -34,6 +34,16 @@ bool GenericSolver::isSpecialSymbol(char symb) const {
   return false;
 }
 
+void GenericSolver::updateValues(const gtsam::Values& values) {
+  for (const auto& v : values) {
+    if (values_.exists(v.key)) {
+      values_.update(v.key, v.value);
+    } else if (temp_values_.exists(v.key)) {
+      temp_values_.update(v.key, v.value);
+    }
+  }
+}
+
 bool GenericSolver::addAndCheckIfOptimize(
     const gtsam::NonlinearFactorGraph& nfg,
     const gtsam::Values& values) {
@@ -84,21 +94,21 @@ void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
         log<INFO>("Running LM");
       }
       params.diagonalDamping = true;
-      result =
-          gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
+      result = gtsam::LevenbergMarquardtOptimizer(full_nfg, full_values, params)
+                   .optimize();
     } else if (solver_type_ == Solver::GN) {
       gtsam::GaussNewtonParams params;
       if (debug_) {
         params.setVerbosity("ERROR");
         log<INFO>("Running GN");
       }
-      result = gtsam::GaussNewtonOptimizer(nfg_, values_, params).optimize();
+      result =
+          gtsam::GaussNewtonOptimizer(full_nfg, full_values, params).optimize();
     } else {
       log<WARNING>("Unsupported Solver");
       exit(EXIT_FAILURE);
     }
-    values_.update(result);
-    temp_values_.update(result);
+    updateValues(result);
   }
 }
 

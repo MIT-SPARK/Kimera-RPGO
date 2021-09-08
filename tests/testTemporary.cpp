@@ -79,7 +79,7 @@ TEST(RobustSolver, TemporaryFactors) {
   temp_values = gtsam::Values();
   temp_factors = gtsam::NonlinearFactorGraph();
 
-  pgo->updateTempValuesFactors(temp_values, temp_factors);
+  pgo->clearTempValuesFactors();
   pgo->forceUpdate();
 
   nfg_out = pgo->getFactorsUnsafe();

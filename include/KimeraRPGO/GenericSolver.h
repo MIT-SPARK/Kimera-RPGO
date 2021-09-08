@@ -49,8 +49,18 @@ class GenericSolver {
   inline void updateTempValuesFactors(
       const gtsam::Values& temp_values,
       const gtsam::NonlinearFactorGraph& temp_nfg) {
+    temp_nfg_.add(temp_nfg);
+    temp_values_.insert(temp_values);
+  }
+  inline void replaceTempValuesFactors(
+      const gtsam::Values& temp_values,
+      const gtsam::NonlinearFactorGraph& temp_nfg) {
     temp_nfg_ = temp_nfg;
     temp_values_ = temp_values;
+  }
+  inline void clearTempValuesFactors() {
+    temp_nfg_ = gtsam::NonlinearFactorGraph();
+    temp_values_ = gtsam::Values();
   }
 
   void print() const { values_.print(""); }

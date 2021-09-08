@@ -33,7 +33,7 @@ TEST(RobustSolver, GncDefault) {
   // set up KimeraRPGO solver
   RobustSolverParams params;
   // High PCM threshold so only use GNC
-  params.setPcm3DParams(100.0, 100.0, Verbosity::VERBOSE);
+  params.setPcm3DParams(100.0, 100.0, Verbosity::QUIET);
   params.setGncInlierCostThresholdsAtProbability(0.01);
 
   std::unique_ptr<RobustSolver> pgo =

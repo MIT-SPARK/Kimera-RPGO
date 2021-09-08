@@ -47,8 +47,8 @@ class GenericSolver {
     return temp_nfg_;
   }
   inline void updateTempValuesFactors(
-      const gtsam::NonlinearFactorGraph& temp_nfg,
-      const gtsam::Values& temp_values) {
+      const gtsam::Values& temp_values,
+      const gtsam::NonlinearFactorGraph& temp_nfg) {
     temp_nfg_ = temp_nfg;
     temp_values_ = temp_values;
   }

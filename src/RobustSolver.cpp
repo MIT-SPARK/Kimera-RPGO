@@ -220,9 +220,7 @@ void RobustSolver::optimize() {
     log<WARNING>("Unsupported Solver");
     exit(EXIT_FAILURE);
   }
-  std::cout << "before: " << values_.size() << std::endl;
   updateValues(result);
-  std::cout << "after: " << values_.size() << std::endl;
 }
 
 void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,

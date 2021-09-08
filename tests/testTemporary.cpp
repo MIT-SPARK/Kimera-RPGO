@@ -61,7 +61,7 @@ TEST(RobustSolver, TemporaryFactors) {
   temp_factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
       gtsam::Symbol('a', 0), gtsam::Symbol('b', 0), gtsam::Pose3(), noise));
 
-  pgo->updateTempValuesFactors(temp_values, temp_factors);
+  pgo->updateTempFactorsValues(temp_factors, temp_values);
   pgo->forceUpdate();
 
   nfg_out = pgo->getFactorsUnsafe();
@@ -79,7 +79,7 @@ TEST(RobustSolver, TemporaryFactors) {
   temp_values = gtsam::Values();
   temp_factors = gtsam::NonlinearFactorGraph();
 
-  pgo->clearTempValuesFactors();
+  pgo->clearTempFactorsValues();
   pgo->forceUpdate();
 
   nfg_out = pgo->getFactorsUnsafe();

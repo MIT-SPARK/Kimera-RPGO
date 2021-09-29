@@ -98,7 +98,7 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
     std::string filename = log_folder_ + "/rpgo_status.csv";
     std::ofstream outfile;
     outfile.open(filename);
-    outfile << "graph-size,spin-time(mu-s)\n";
+    outfile << "graph-size,spin-time(mu-s),num-lc,num-inliers\n";
     outfile.close();
   }
 }
@@ -260,7 +260,8 @@ void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
     std::string filename = log_folder_ + "/rpgo_status.csv";
     std::ofstream outfile;
     outfile.open(filename, std::ofstream::out | std::ofstream::app);
-    outfile << nfg_.size() << "," << spin_time.count() << std::endl;
+    outfile << nfg_.size() << "," << spin_time.count() << "," << getNumLC()
+            << "," << getNumLCInliers() << std::endl;
     outfile.close();
   }
   return;

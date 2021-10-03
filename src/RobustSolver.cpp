@@ -225,6 +225,8 @@ void RobustSolver::optimize() {
 
 void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,
                                const gtsam::Values& values) {
+  // Start timer
+  auto start = std::chrono::high_resolution_clock::now();
   if (outlier_removal_) {
     outlier_removal_->removeOutliers(nfg, values, &nfg_, &values_);
   } else {
@@ -232,6 +234,21 @@ void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,
   }
   // optimize
   optimize();
+
+  // Stop timer and save
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto spin_time =
+      std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+
+  // Log status
+  if (log_) {
+    std::string filename = log_folder_ + "/rpgo_status.csv";
+    std::ofstream outfile;
+    outfile.open(filename, std::ofstream::out | std::ofstream::app);
+    outfile << nfg_.size() << "," << spin_time.count() << "," << getNumLC()
+            << "," << getNumLCInliers() << std::endl;
+    outfile.close();
+  }
 }
 
 void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
@@ -256,7 +273,7 @@ void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
       std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 
   // Log status
-  if (log_) {
+  if (log_ && optimize_graph) {
     std::string filename = log_folder_ + "/rpgo_status.csv";
     std::ofstream outfile;
     outfile.open(filename, std::ofstream::out | std::ofstream::app);

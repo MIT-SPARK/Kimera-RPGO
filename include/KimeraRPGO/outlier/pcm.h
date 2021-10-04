@@ -53,15 +53,11 @@ enum class FactorType {
 template <class poseT, template <class> class T>
 class Pcm : public OutlierRemoval {
  public:
-  Pcm(double threshold1,
-      double threshold2,
-      bool incremental = false,
+  Pcm(PcmParams params,
       MultiRobotAlignMethod align_method = MultiRobotAlignMethod::NONE,
       const std::vector<char>& special_symbols = std::vector<char>())
       : OutlierRemoval(),
-        threshold1_(threshold1),
-        threshold2_(threshold2),
-        incremental_(incremental),
+        params_(params),
         multirobot_align_method_(align_method),
         special_symbols_(special_symbols),
         total_lc_(0),
@@ -76,8 +72,7 @@ class Pcm : public OutlierRemoval {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
  private:
-  double threshold1_;
-  double threshold2_;
+  PcmParams params_;
 
   // NonlinearFactorGraph storing all odometry factors
   gtsam::NonlinearFactorGraph nfg_odom_;
@@ -90,9 +85,6 @@ class Pcm : public OutlierRemoval {
 
   // trajectory maping robot prefix to its keys and poses
   std::unordered_map<char, Trajectory<poseT, T>> odom_trajectories_;
-
-  // Incremental max clique
-  bool incremental_;
 
   // these are the symbols corresponding to landmarks
   std::vector<char> special_symbols_;
@@ -222,7 +214,7 @@ class Pcm : public OutlierRemoval {
       parseAndIncrementAdjMatrix(
           loop_closure_factors, *output_values, &num_new_loopclosures);
       auto max_clique_start = std::chrono::high_resolution_clock::now();
-      if (incremental_) {
+      if (params_.incremental) {
         findInliersIncremental(num_new_loopclosures);
       } else {
         findInliers();
@@ -491,7 +483,7 @@ class Pcm : public OutlierRemoval {
                            double* dist) const {
     *dist = result.mahalanobis_norm();  // for PCM
     if (debug_) log<INFO>("odometry consistency distance: %1%") % *dist;
-    if (*dist < threshold1_) {
+    if (*dist < params_.odom_threshold) {
       return true;
     }
     return false;
@@ -511,7 +503,8 @@ class Pcm : public OutlierRemoval {
       log<INFO>("odometry consistency translation distance: %1%") % *dist;
     if (debug_)
       log<INFO>("odometry consistency rotation distance: %1%") % rot_dist;
-    if (*dist < threshold1_ && rot_dist < threshold2_) {
+    if (*dist < params_.odom_trans_threshold &&
+        rot_dist < params_.odom_rot_threshold) {
       return true;
     }
     return false;
@@ -559,7 +552,7 @@ class Pcm : public OutlierRemoval {
   bool checkLoopConsistent(const PoseWithCovariance<poseT>& result,
                            double* dist) {
     *dist = result.mahalanobis_norm();
-    if (*dist < threshold2_) {
+    if (*dist < params_.lc_threshold) {
       return true;
     }
     return false;
@@ -575,7 +568,8 @@ class Pcm : public OutlierRemoval {
   bool checkLoopConsistent(const PoseWithNode<poseT>& result, double* dist) {
     *dist = result.avg_trans_norm();
     double rot_dist = result.avg_rot_norm();
-    if (*dist < threshold1_ && rot_dist < threshold2_) {
+    if (*dist < params_.dist_trans_threshold &&
+        rot_dist < params_.dist_rot_threshold) {
       return true;
     }
     return false;

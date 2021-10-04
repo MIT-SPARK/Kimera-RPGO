@@ -30,6 +30,30 @@ enum class MultiRobotAlignMethod {
   GNC    // Use robust pose averaging with GNC
 };
 
+struct PcmParams {
+public:
+ PcmParams()
+     : odom_threshold(10.0),
+       lc_threshold(5.0),
+       odom_trans_threshold(0.05),
+       odom_rot_threshold(0.005),
+       dist_trans_threshold(0.01),
+       dist_rot_threshold(0.001),
+       incremental(false) {}
+ // for Pcm
+ double odom_threshold;
+ double lc_threshold;
+
+ // for PcmSimple
+ double odom_trans_threshold;
+ double odom_rot_threshold;
+ double dist_trans_threshold;
+ double dist_rot_threshold;
+
+ // incremental max clique
+ bool incremental;
+};
+
 struct RobustSolverParams {
  public:
   RobustSolverParams()
@@ -38,11 +62,7 @@ struct RobustSolverParams {
         outlierRemovalMethod(OutlierRemovalMethod::PCM3D),
         specialSymbols(),
         verbosity(Verbosity::UPDATE),
-        pcm_odomThreshold(10.0),
-        pcm_lcThreshold(5.0),
-        pcmDist_transThreshold(0.05),  // 5cm
-        pcmDist_rotThreshold(0.005),   // <0.5degrees
-        incremental(false),
+        pcm_params(),
         log_output(false),
         use_gnc_(false),
         multirobot_align_method(MultiRobotAlignMethod::NONE) {}
@@ -55,7 +75,7 @@ struct RobustSolverParams {
 
   /*! \brief use incremental max clique
    */
-  void setIncremental() { incremental = true; }
+  void setIncremental() { pcm_params.incremental = true; }
 
   /*! \brief 2D version of Pcm
    * This one looks at Mahalanobis distance
@@ -67,8 +87,8 @@ struct RobustSolverParams {
                       double lcThreshold,
                       Verbosity verbos = Verbosity::UPDATE) {
     outlierRemovalMethod = OutlierRemovalMethod::PCM2D;
-    pcm_odomThreshold = odomThreshold;
-    pcm_lcThreshold = lcThreshold;
+    pcm_params.odom_threshold = odomThreshold;
+    pcm_params.lc_threshold = lcThreshold;
     verbosity = verbos;
   }
 
@@ -82,8 +102,8 @@ struct RobustSolverParams {
                       double lcThreshold,
                       Verbosity verbos = Verbosity::UPDATE) {
     outlierRemovalMethod = OutlierRemovalMethod::PCM3D;
-    pcm_odomThreshold = odomThreshold;
-    pcm_lcThreshold = lcThreshold;
+    pcm_params.odom_threshold = odomThreshold;
+    pcm_params.lc_threshold = lcThreshold;
     verbosity = verbos;
   }
 
@@ -96,8 +116,10 @@ struct RobustSolverParams {
                             double rotThreshold,
                             Verbosity verbos = Verbosity::UPDATE) {
     outlierRemovalMethod = OutlierRemovalMethod::PCM_Simple2D;
-    pcmDist_transThreshold = transThreshold;
-    pcmDist_rotThreshold = rotThreshold;
+    pcm_params.odom_trans_threshold = transThreshold;
+    pcm_params.odom_rot_threshold = rotThreshold;
+    pcm_params.dist_trans_threshold = transThreshold;
+    pcm_params.dist_rot_threshold = rotThreshold;
     verbosity = verbos;
   }
 
@@ -110,8 +132,46 @@ struct RobustSolverParams {
                             double rotThreshold,
                             Verbosity verbos = Verbosity::UPDATE) {
     outlierRemovalMethod = OutlierRemovalMethod::PCM_Simple3D;
-    pcmDist_transThreshold = transThreshold;
-    pcmDist_rotThreshold = rotThreshold;
+    pcm_params.odom_trans_threshold = transThreshold;
+    pcm_params.odom_rot_threshold = rotThreshold;
+    pcm_params.dist_trans_threshold = transThreshold;
+    pcm_params.dist_rot_threshold = rotThreshold;
+    verbosity = verbos;
+  }
+
+  /*! \brief 2D version of PcmSimple with separate parameters for odom check
+   * This one looks at average translation and rotation error per node
+   * transThreshold: Estimated max drift in translation per node (in meters)
+   * rotThreshold: Estimated max drift in rotation per node (in radians)
+   */
+  void setPcmSimple2DParams(double transOdomThreshold,
+                            double rotOdomThreshold,
+                            double transPcmThreshold,
+                            double rotPcmThreshold,
+                            Verbosity verbos = Verbosity::UPDATE) {
+    outlierRemovalMethod = OutlierRemovalMethod::PCM_Simple2D;
+    pcm_params.odom_trans_threshold = transOdomThreshold;
+    pcm_params.odom_rot_threshold = rotOdomThreshold;
+    pcm_params.dist_trans_threshold = transPcmThreshold;
+    pcm_params.dist_rot_threshold = rotPcmThreshold;
+    verbosity = verbos;
+  }
+
+  /*! \brief 3D version of PcmSimple with separate parameters for odom check
+   * This one looks at average translation and rotation error per node
+   * transThreshold: Estimated max drift in translation per node (in meters)
+   * rotThreshold: Estimated max drift in rotation per node (in radians)
+   */
+  void setPcmSimple3DParams(double transOdomThreshold,
+                            double rotOdomThreshold,
+                            double transPcmThreshold,
+                            double rotPcmThreshold,
+                            Verbosity verbos = Verbosity::UPDATE) {
+    outlierRemovalMethod = OutlierRemovalMethod::PCM_Simple3D;
+    pcm_params.odom_trans_threshold = transOdomThreshold;
+    pcm_params.odom_rot_threshold = rotOdomThreshold;
+    pcm_params.dist_trans_threshold = transPcmThreshold;
+    pcm_params.dist_rot_threshold = rotPcmThreshold;
     verbosity = verbos;
   }
 
@@ -152,16 +212,7 @@ struct RobustSolverParams {
   bool log_output;
   std::string log_folder;
 
-  // for Pcm
-  double pcm_odomThreshold;
-  double pcm_lcThreshold;
-
-  // for PcmSimple
-  double pcmDist_transThreshold;
-  double pcmDist_rotThreshold;
-
-  // incremental max clique
-  bool incremental;
+  PcmParams pcm_params;
 
   // multirobot frame alignment
   MultiRobotAlignMethod multirobot_align_method;

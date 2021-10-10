@@ -40,6 +40,7 @@ public:
        dist_trans_threshold(0.01),
        dist_rot_threshold(0.001),
        incremental(false) {}
+ // if threshold is < 0, check disabled
  // for Pcm
  double odom_threshold;
  double lc_threshold;

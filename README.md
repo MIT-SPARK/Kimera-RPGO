@@ -72,6 +72,7 @@ RobustSolverParams params;
 params.setPcm3DParams(0.0, 10.0, Verbosity::QUIET);
 // Verbosity levels are QUIET, UPDATE, and, VERBOSE in order of increasing number of messages (the default is UPDATE)
 // For 2D params.setPcm2DParams(0.0, 10.0); Have been tested
+// If threshold is set to < 0, either odom check or loop consistency check disabled
 
 // To use GaussNewton instead of LM: params.solver = Solver::GN;
 

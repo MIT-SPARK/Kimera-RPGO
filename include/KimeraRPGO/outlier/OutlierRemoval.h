@@ -12,7 +12,7 @@ author: Yun Chang
 #include <fstream>
 #include <string>
 
-#include "KimeraRPGO/utils/type_utils.h"
+#include "KimeraRPGO/utils/TypeUtils.h"
 
 namespace KimeraRPGO {
 

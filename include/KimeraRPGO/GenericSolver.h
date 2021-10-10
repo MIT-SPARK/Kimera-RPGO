@@ -14,7 +14,7 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/nonlinear/Values.h>
 
 #include "KimeraRPGO/SolverParams.h"
-#include "KimeraRPGO/logger.h"
+#include "KimeraRPGO/Logger.h"
 
 namespace KimeraRPGO {
 

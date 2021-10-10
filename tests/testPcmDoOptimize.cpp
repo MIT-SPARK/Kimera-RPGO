@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <gtsam/sam/RangeFactor.h>
-#include "KimeraRPGO/outlier/pcm.h"
+#include "KimeraRPGO/outlier/Pcm.h"
 
 using KimeraRPGO::MultiRobotAlignMethod;
 using KimeraRPGO::OutlierRemoval;

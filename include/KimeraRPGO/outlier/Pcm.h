@@ -29,10 +29,10 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/slam/PriorFactor.h>
 
 #include "KimeraRPGO/SolverParams.h"
-#include "KimeraRPGO/logger.h"
+#include "KimeraRPGO/Logger.h"
 #include "KimeraRPGO/outlier/OutlierRemoval.h"
-#include "KimeraRPGO/utils/geometry_utils.h"
-#include "KimeraRPGO/utils/graph_utils.h"
+#include "KimeraRPGO/utils/GeometryUtils.h"
+#include "KimeraRPGO/utils/GraphUtils.h"
 
 namespace KimeraRPGO {
 

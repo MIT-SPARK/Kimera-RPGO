@@ -2,7 +2,7 @@
 #include <vector>
 
 #include "KimeraRPGO/max_clique_finder/findClique.h"
-#include "KimeraRPGO/utils/graph_utils.h"
+#include "KimeraRPGO/utils/GraphUtils.h"
 
 namespace KimeraRPGO {
 

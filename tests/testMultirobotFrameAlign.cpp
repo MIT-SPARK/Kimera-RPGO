@@ -11,7 +11,7 @@
 #include <gtsam/inference/Symbol.h>
 
 #include "KimeraRPGO/SolverParams.h"
-#include "KimeraRPGO/outlier/pcm.h"
+#include "KimeraRPGO/outlier/Pcm.h"
 
 using KimeraRPGO::OutlierRemoval;
 using KimeraRPGO::Pcm3D;

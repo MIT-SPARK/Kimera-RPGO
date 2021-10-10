@@ -17,9 +17,9 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 #include <gtsam/slam/dataset.h>
 
-#include "KimeraRPGO/logger.h"
-#include "KimeraRPGO/outlier/pcm.h"
-#include "KimeraRPGO/utils/type_utils.h"
+#include "KimeraRPGO/Logger.h"
+#include "KimeraRPGO/outlier/Pcm.h"
+#include "KimeraRPGO/utils/TypeUtils.h"
 
 namespace KimeraRPGO {
 

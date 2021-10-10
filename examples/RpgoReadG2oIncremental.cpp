@@ -13,9 +13,9 @@ author: Yun Chang
 
 #include "KimeraRPGO/RobustSolver.h"
 #include "KimeraRPGO/SolverParams.h"
-#include "KimeraRPGO/logger.h"
-#include "KimeraRPGO/utils/geometry_utils.h"
-#include "KimeraRPGO/utils/type_utils.h"
+#include "KimeraRPGO/Logger.h"
+#include "KimeraRPGO/utils/GeometryUtils.h"
+#include "KimeraRPGO/utils/TypeUtils.h"
 
 using namespace KimeraRPGO;
 

@@ -61,7 +61,9 @@ class Pcm : public OutlierRemoval {
         multirobot_align_method_(align_method),
         special_symbols_(special_symbols),
         total_lc_(0),
-        total_good_lc_(0) {
+        total_good_lc_(0),
+        odom_check_(true),
+        loop_consistency_check_(true) {
     // check if templated value valid
     BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<poseT>));
 

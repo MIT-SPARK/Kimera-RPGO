@@ -14,11 +14,18 @@
 using KimeraRPGO::MultiRobotAlignMethod;
 using KimeraRPGO::OutlierRemoval;
 using KimeraRPGO::Pcm3D;
+using KimeraRPGO::PcmParams;
 
 /* ************************************************************************* */
 TEST(PcmDoOptimize, Odometry) {
   // test that when opdemtry edge is received added but return false
-  OutlierRemoval* pcm = new Pcm3D(1.0, 1.0);
+  PcmParams params;
+  params.odom_trans_threshold = -1;
+  params.odom_rot_threshold = -1;
+  params.dist_trans_threshold = 1.0;
+  params.dist_rot_threshold = 1.0;
+
+  OutlierRemoval* pcm = new Pcm3D(params);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =
@@ -51,7 +58,13 @@ TEST(PcmDoOptimize, Odometry) {
 
 TEST(PcmDoOptimize, OdometryNoPrior) {
   // test that when opdemtry edge is received added but return false
-  OutlierRemoval* pcm = new Pcm3D(1.0, 1.0);
+  PcmParams params;
+  params.odom_trans_threshold = -1;
+  params.odom_rot_threshold = -1;
+  params.dist_trans_threshold = 1.0;
+  params.dist_rot_threshold = 1.0;
+
+  OutlierRemoval* pcm = new Pcm3D(params);
   // pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =
@@ -82,7 +95,13 @@ TEST(PcmDoOptimize, OdometryNoPrior) {
 /* ************************************************************************* */
 TEST(PcmDoOptimize, LoopClosure) {
   // test that when loop closure edge is received added and return true
-  OutlierRemoval* pcm = new Pcm3D(1.0, 1.0);
+  PcmParams params;
+  params.odom_trans_threshold = -1;
+  params.odom_rot_threshold = -1;
+  params.dist_trans_threshold = 1.0;
+  params.dist_rot_threshold = 1.0;
+
+  OutlierRemoval* pcm = new Pcm3D(params);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =
@@ -131,9 +150,16 @@ TEST(PcmDoOptimize, landmarks) {
   // test optimize condition for landmarks
   // first observation: do_optimize = false
   // repeated observatio: do_optimize = true
+  PcmParams params;
+  params.odom_trans_threshold = -1;
+  params.odom_rot_threshold = -1;
+  params.dist_trans_threshold = 10.0;
+  params.dist_rot_threshold = 10.0;
+  params.incremental = true;
+
   std::vector<char> special_symbs{'l', 'u'};  // for landmarks
   OutlierRemoval* pcm =
-      new Pcm3D(10.0, 10.0, true, MultiRobotAlignMethod::NONE, special_symbs);
+      new Pcm3D(params, MultiRobotAlignMethod::NONE, special_symbs);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =
@@ -191,9 +217,16 @@ TEST(PcmDoOptimize, Beacon) {
   // test optimize condition for Beacon
   // first observation: do_optimize = false
   // repeated observatio: do_optimize = true
+  PcmParams params;
+  params.odom_trans_threshold = -1;
+  params.odom_rot_threshold = -1;
+  params.dist_trans_threshold = 1.0;
+  params.dist_rot_threshold = 1.0;
+  params.incremental = true;
+
   std::vector<char> special_symbs{'l', 'u'};  // for landmarks
   OutlierRemoval* pcm =
-      new Pcm3D(1.0, 1.0, true, MultiRobotAlignMethod::NONE, special_symbs);
+      new Pcm3D(params, MultiRobotAlignMethod::NONE, special_symbs);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =

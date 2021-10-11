@@ -15,11 +15,18 @@
 
 using KimeraRPGO::OutlierRemoval;
 using KimeraRPGO::Pcm3D;
+using KimeraRPGO::PcmParams;
 
 /* ************************************************************************* */
 TEST(Pcm, MultirobotFrameAlign) {
+  PcmParams params;
+  params.odom_trans_threshold = -1;
+  params.odom_rot_threshold = -1;
+  params.dist_trans_threshold = 0.3;
+  params.dist_rot_threshold = 100.0;
+
   OutlierRemoval* pcm =
-      new Pcm3D(0.3, 100.0, false, KimeraRPGO::MultiRobotAlignMethod::GNC);
+      new Pcm3D(params, KimeraRPGO::MultiRobotAlignMethod::GNC);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =

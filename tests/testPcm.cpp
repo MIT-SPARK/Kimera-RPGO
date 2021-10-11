@@ -11,12 +11,19 @@
 
 using KimeraRPGO::OutlierRemoval;
 using KimeraRPGO::Pcm3D;
+using KimeraRPGO::PcmParams;
 
 /* ************************************************************************* */
 TEST(Pcm, OdometryCheck) {
   // Here want to test carefully pcm
   // first test odometry check so set pcm thres high
-  OutlierRemoval* pcm = new Pcm3D(0.3, 100.0);
+  PcmParams params;
+  params.odom_trans_threshold = -1;
+  params.odom_rot_threshold = -1;
+  params.dist_trans_threshold = 0.3;
+  params.dist_rot_threshold = 100.0;
+
+  OutlierRemoval* pcm = new Pcm3D(params);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =
@@ -85,7 +92,13 @@ TEST(Pcm, OdometryCheck) {
 TEST(Pcm, ConsistencyCheck) {
   // Here want to test carefully pcm
   // test pcm check so set odom thres high
-  OutlierRemoval* pcm = new Pcm3D(100.0, 0.5);
+  PcmParams params;
+  params.odom_trans_threshold = -1;
+  params.odom_rot_threshold = -1;
+  params.dist_trans_threshold = 100.0;
+  params.dist_rot_threshold = 0.5;
+
+  OutlierRemoval* pcm = new Pcm3D(params);
   // pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =

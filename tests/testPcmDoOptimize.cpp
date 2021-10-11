@@ -20,10 +20,8 @@ using KimeraRPGO::PcmParams;
 TEST(PcmDoOptimize, Odometry) {
   // test that when opdemtry edge is received added but return false
   PcmParams params;
-  params.odom_trans_threshold = -1;
-  params.odom_rot_threshold = -1;
-  params.dist_trans_threshold = 1.0;
-  params.dist_rot_threshold = 1.0;
+  params.lc_threshold = 1.0;
+  params.odom_threshold = -1;
 
   OutlierRemoval* pcm = new Pcm3D(params);
   pcm->setQuiet();
@@ -59,10 +57,8 @@ TEST(PcmDoOptimize, Odometry) {
 TEST(PcmDoOptimize, OdometryNoPrior) {
   // test that when opdemtry edge is received added but return false
   PcmParams params;
-  params.odom_trans_threshold = -1;
-  params.odom_rot_threshold = -1;
-  params.dist_trans_threshold = 1.0;
-  params.dist_rot_threshold = 1.0;
+  params.lc_threshold = 1.0;
+  params.odom_threshold = -1;
 
   OutlierRemoval* pcm = new Pcm3D(params);
   // pcm->setQuiet();
@@ -96,10 +92,8 @@ TEST(PcmDoOptimize, OdometryNoPrior) {
 TEST(PcmDoOptimize, LoopClosure) {
   // test that when loop closure edge is received added and return true
   PcmParams params;
-  params.odom_trans_threshold = -1;
-  params.odom_rot_threshold = -1;
-  params.dist_trans_threshold = 1.0;
-  params.dist_rot_threshold = 1.0;
+  params.lc_threshold = 1.0;
+  params.odom_threshold = -1;
 
   OutlierRemoval* pcm = new Pcm3D(params);
   pcm->setQuiet();
@@ -151,10 +145,8 @@ TEST(PcmDoOptimize, landmarks) {
   // first observation: do_optimize = false
   // repeated observatio: do_optimize = true
   PcmParams params;
-  params.odom_trans_threshold = -1;
-  params.odom_rot_threshold = -1;
-  params.dist_trans_threshold = 10.0;
-  params.dist_rot_threshold = 10.0;
+  params.lc_threshold = 10.0;
+  params.odom_threshold = -1;
   params.incremental = true;
 
   std::vector<char> special_symbs{'l', 'u'};  // for landmarks
@@ -218,10 +210,8 @@ TEST(PcmDoOptimize, Beacon) {
   // first observation: do_optimize = false
   // repeated observatio: do_optimize = true
   PcmParams params;
-  params.odom_trans_threshold = -1;
-  params.odom_rot_threshold = -1;
-  params.dist_trans_threshold = 1.0;
-  params.dist_rot_threshold = 1.0;
+  params.lc_threshold = 1.0;
+  params.odom_threshold = -1;
   params.incremental = true;
 
   std::vector<char> special_symbs{'l', 'u'};  // for landmarks

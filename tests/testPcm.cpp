@@ -18,10 +18,8 @@ TEST(Pcm, OdometryCheck) {
   // Here want to test carefully pcm
   // first test odometry check so set pcm thres high
   PcmParams params;
-  params.odom_trans_threshold = -1;
-  params.odom_rot_threshold = -1;
-  params.dist_trans_threshold = 0.3;
-  params.dist_rot_threshold = 100.0;
+  params.lc_threshold = -1;
+  params.odom_threshold = 0.3;
 
   OutlierRemoval* pcm = new Pcm3D(params);
   pcm->setQuiet();
@@ -93,10 +91,8 @@ TEST(Pcm, ConsistencyCheck) {
   // Here want to test carefully pcm
   // test pcm check so set odom thres high
   PcmParams params;
-  params.odom_trans_threshold = -1;
-  params.odom_rot_threshold = -1;
-  params.dist_trans_threshold = 100.0;
-  params.dist_rot_threshold = 0.5;
+  params.lc_threshold = 0.5;
+  params.odom_threshold = -1;
 
   OutlierRemoval* pcm = new Pcm3D(params);
   // pcm->setQuiet();

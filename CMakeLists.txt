@@ -16,6 +16,7 @@ find_package(GTSAM REQUIRED)
 if (NOT GTSAM_FOUND)
   message(FATAL_ERROR "This program requires the GTSAM library.")
 endif(NOT GTSAM_FOUND)
+find_package(GTSAM_UNSTABLE QUIET)
 
 ###########################################################################
 # Find Boost

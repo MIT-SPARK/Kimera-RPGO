@@ -133,10 +133,10 @@ void RobustSolver::optimize() {
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::LevenbergMarquardtParams> >
           gnc_optimizer(full_nfg, full_values, gncParams);
       switch (params_.gnc_threshold_mode_) {
-        case (params_.GncThresholdMode::COST):
+        case (RobustSolverParams::GncThresholdMode::COST):
           gnc_optimizer.setInlierCostThresholds(params_.gnc_inlier_threshold_);
           break;
-        case (params_.GncThresholdMode::PROBABILITY):
+        case (RobustSolverParams::GncThresholdMode::PROBABILITY):
           gnc_optimizer.setInlierCostThresholdsAtProbability(
               params_.gnc_inlier_threshold_);
           break;
@@ -185,10 +185,10 @@ void RobustSolver::optimize() {
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::GaussNewtonParams> >
           gnc_optimizer(full_nfg, full_values, gncParams);
       switch (params_.gnc_threshold_mode_) {
-        case (params_.GncThresholdMode::COST):
+        case (RobustSolverParams::GncThresholdMode::COST):
           gnc_optimizer.setInlierCostThresholds(params_.gnc_inlier_threshold_);
           break;
-        case (params_.GncThresholdMode::PROBABILITY):
+        case (RobustSolverParams::GncThresholdMode::PROBABILITY):
           gnc_optimizer.setInlierCostThresholdsAtProbability(
               params_.gnc_inlier_threshold_);
           break;

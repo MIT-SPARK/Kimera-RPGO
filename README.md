@@ -34,7 +34,11 @@ Outlier Rejection based on:
 ## Dependencies
 
 *[GTSAM](https://github.com/borglab/gtsam)*
+Latest commit tested: `59d902760ea2e2eb407930007439259c0cb62fcf`
+
+Minimum required commit: `566e4c4a0a2d6c4336c70ae8b67d1a59c65ec273`
 (Note that the BUILD_WITH_MARCH_NATIVE flag caused some problems on some machines. )
+
 
 Clone GTSAM to your preferred location:
 ```bash

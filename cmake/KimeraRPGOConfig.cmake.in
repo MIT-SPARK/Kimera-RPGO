@@ -11,6 +11,7 @@ if(NOT TARGET Boost::boost)
   INTERFACE_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")
 endif()
 find_dependency(GTSAM REQUIRED)
+find_package(GTSAM_UNSTABLE QUIET)
 
 list(REMOVE_AT CMAKE_MODULE_PATH -1)
 

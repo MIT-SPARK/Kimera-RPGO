@@ -160,9 +160,20 @@ void RobustSolver::optimize() {
             gnc_num_inliers_;
       }
     } else {
+      auto opt_start_t = std::chrono::high_resolution_clock::now();
       result =
           gtsam::LevenbergMarquardtOptimizer(full_nfg, full_values, lmParams)
               .optimize();
+      auto opt_stop_t = std::chrono::high_resolution_clock::now();
+      auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+          opt_stop_t - opt_start_t);
+      if (debug_) {
+        log<INFO>(
+            "Optimize took %1% milliseconds. %2% loop closures with "
+            "%3% inliers. ") %
+            opt_duration.count() % outlier_removal_->getNumLC() %
+            getNumLCInliers();
+      }
     }
   } else if (solver_type_ == Solver::GN) {
     gtsam::GaussNewtonParams gnParams;

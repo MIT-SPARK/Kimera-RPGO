@@ -11,7 +11,7 @@
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/slam/PriorFactor.h>
 
-#include "KimeraRPGO/logger.h"
+#include "KimeraRPGO/Logger.h"
 
 #include <map>
 #include <vector>

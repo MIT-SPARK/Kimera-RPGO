@@ -31,7 +31,7 @@ endif()
 ###########################################################################
 # Compile
 add_library(KimeraRPGO SHARED
-  include/KimeraRPGO/logger.h
+  include/KimeraRPGO/Logger.h
   src/GenericSolver.cpp
   src/RobustSolver.cpp
   include/KimeraRPGO/SolverParams.h )

@@ -7,8 +7,8 @@
 #include <CppUnitLite/TestHarness.h>
 #include <random>
 
-#include "KimeraRPGO/utils/geometry_utils.h"
-#include "KimeraRPGO/utils/graph_utils.h"
+#include "KimeraRPGO/utils/GeometryUtils.h"
+#include "KimeraRPGO/utils/GraphUtils.h"
 
 using KimeraRPGO::PoseWithCovariance;
 using KimeraRPGO::PoseWithNode;

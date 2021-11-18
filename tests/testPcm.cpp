@@ -7,16 +7,21 @@
 #include <CppUnitLite/TestHarness.h>
 #include <random>
 
-#include "KimeraRPGO/outlier/pcm.h"
+#include "KimeraRPGO/outlier/Pcm.h"
 
 using KimeraRPGO::OutlierRemoval;
 using KimeraRPGO::Pcm3D;
+using KimeraRPGO::PcmParams;
 
 /* ************************************************************************* */
 TEST(Pcm, OdometryCheck) {
   // Here want to test carefully pcm
   // first test odometry check so set pcm thres high
-  OutlierRemoval* pcm = new Pcm3D(0.3, 100.0);
+  PcmParams params;
+  params.lc_threshold = -1;
+  params.odom_threshold = 0.3;
+
+  OutlierRemoval* pcm = new Pcm3D(params);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =
@@ -85,7 +90,11 @@ TEST(Pcm, OdometryCheck) {
 TEST(Pcm, ConsistencyCheck) {
   // Here want to test carefully pcm
   // test pcm check so set odom thres high
-  OutlierRemoval* pcm = new Pcm3D(100.0, 0.5);
+  PcmParams params;
+  params.lc_threshold = 0.5;
+  params.odom_threshold = -1;
+
+  OutlierRemoval* pcm = new Pcm3D(params);
   // pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =

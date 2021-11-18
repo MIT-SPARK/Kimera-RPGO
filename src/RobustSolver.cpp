@@ -17,9 +17,9 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 #include <gtsam/slam/dataset.h>
 
-#include "KimeraRPGO/logger.h"
-#include "KimeraRPGO/outlier/pcm.h"
-#include "KimeraRPGO/utils/type_utils.h"
+#include "KimeraRPGO/Logger.h"
+#include "KimeraRPGO/outlier/Pcm.h"
+#include "KimeraRPGO/utils/TypeUtils.h"
 
 namespace KimeraRPGO {
 
@@ -36,35 +36,27 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
     } break;
     case OutlierRemovalMethod::PCM2D: {
       outlier_removal_ =
-          KimeraRPGO::make_unique<Pcm2D>(params.pcm_odomThreshold,
-                                         params.pcm_lcThreshold,
-                                         params.incremental,
+          KimeraRPGO::make_unique<Pcm2D>(params.pcm_params,
                                          params.multirobot_align_method,
                                          params.specialSymbols);
     } break;
     case OutlierRemovalMethod::PCM3D: {
       outlier_removal_ =
-          KimeraRPGO::make_unique<Pcm3D>(params.pcm_odomThreshold,
-                                         params.pcm_lcThreshold,
-                                         params.incremental,
+          KimeraRPGO::make_unique<Pcm3D>(params.pcm_params,
                                          params.multirobot_align_method,
                                          params.specialSymbols);
     } break;
     case OutlierRemovalMethod::PCM_Simple2D: {
-      outlier_removal_ = KimeraRPGO::make_unique<PcmSimple2D>(
-          params.pcmDist_transThreshold,
-          params.pcmDist_rotThreshold,
-          params.incremental,
-          params.multirobot_align_method,
-          params.specialSymbols);
+      outlier_removal_ =
+          KimeraRPGO::make_unique<PcmSimple2D>(params.pcm_params,
+                                               params.multirobot_align_method,
+                                               params.specialSymbols);
     } break;
     case OutlierRemovalMethod::PCM_Simple3D: {
-      outlier_removal_ = KimeraRPGO::make_unique<PcmSimple3D>(
-          params.pcmDist_transThreshold,
-          params.pcmDist_rotThreshold,
-          params.incremental,
-          params.multirobot_align_method,
-          params.specialSymbols);
+      outlier_removal_ =
+          KimeraRPGO::make_unique<PcmSimple3D>(params.pcm_params,
+                                               params.multirobot_align_method,
+                                               params.specialSymbols);
     } break;
     default: {
       log<WARNING>("Undefined outlier removal method");

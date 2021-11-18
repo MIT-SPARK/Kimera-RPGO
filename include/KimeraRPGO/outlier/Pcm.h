@@ -29,10 +29,10 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/slam/PriorFactor.h>
 
 #include "KimeraRPGO/SolverParams.h"
-#include "KimeraRPGO/logger.h"
+#include "KimeraRPGO/Logger.h"
 #include "KimeraRPGO/outlier/OutlierRemoval.h"
-#include "KimeraRPGO/utils/geometry_utils.h"
-#include "KimeraRPGO/utils/graph_utils.h"
+#include "KimeraRPGO/utils/GeometryUtils.h"
+#include "KimeraRPGO/utils/GraphUtils.h"
 
 namespace KimeraRPGO {
 
@@ -53,21 +53,29 @@ enum class FactorType {
 template <class poseT, template <class> class T>
 class Pcm : public OutlierRemoval {
  public:
-  Pcm(double threshold1,
-      double threshold2,
-      bool incremental = false,
+  Pcm(PcmParams params,
       MultiRobotAlignMethod align_method = MultiRobotAlignMethod::NONE,
       const std::vector<char>& special_symbols = std::vector<char>())
       : OutlierRemoval(),
-        threshold1_(threshold1),
-        threshold2_(threshold2),
-        incremental_(incremental),
+        params_(params),
         multirobot_align_method_(align_method),
         special_symbols_(special_symbols),
         total_lc_(0),
-        total_good_lc_(0) {
+        total_good_lc_(0),
+        odom_check_(true),
+        loop_consistency_check_(true) {
     // check if templated value valid
     BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<poseT>));
+
+    if (params_.odom_threshold < 0 || params_.odom_rot_threshold < 0 ||
+        params_.odom_trans_threshold < 0) {
+      odom_check_ = false;
+    }
+
+    if (params_.lc_threshold < 0 || params_.dist_rot_threshold < 0 ||
+        params_.dist_trans_threshold < 0) {
+      loop_consistency_check_ = false;
+    }
   }
   ~Pcm() = default;
   // initialize with odometry detect threshold and pairwise consistency
@@ -76,8 +84,7 @@ class Pcm : public OutlierRemoval {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
  private:
-  double threshold1_;
-  double threshold2_;
+  PcmParams params_;
 
   // NonlinearFactorGraph storing all odometry factors
   gtsam::NonlinearFactorGraph nfg_odom_;
@@ -91,9 +98,6 @@ class Pcm : public OutlierRemoval {
   // trajectory maping robot prefix to its keys and poses
   std::unordered_map<char, Trajectory<poseT, T>> odom_trajectories_;
 
-  // Incremental max clique
-  bool incremental_;
-
   // these are the symbols corresponding to landmarks
   std::vector<char> special_symbols_;
 
@@ -106,6 +110,10 @@ class Pcm : public OutlierRemoval {
   MultiRobotAlignMethod multirobot_align_method_;
   // Keep track of the order of robots when applying world transforms
   std::vector<char> robot_order_;
+
+  // Toggle odom and loop consistency check
+  bool odom_check_;
+  bool loop_consistency_check_;
 
  public:
   size_t getNumLC() { return total_lc_; }
@@ -222,7 +230,7 @@ class Pcm : public OutlierRemoval {
       parseAndIncrementAdjMatrix(
           loop_closure_factors, *output_values, &num_new_loopclosures);
       auto max_clique_start = std::chrono::high_resolution_clock::now();
-      if (incremental_) {
+      if (params_.incremental) {
         findInliersIncremental(num_new_loopclosures);
       } else {
         findInliers();
@@ -491,7 +499,7 @@ class Pcm : public OutlierRemoval {
                            double* dist) const {
     *dist = result.mahalanobis_norm();  // for PCM
     if (debug_) log<INFO>("odometry consistency distance: %1%") % *dist;
-    if (*dist < threshold1_) {
+    if (*dist < params_.odom_threshold) {
       return true;
     }
     return false;
@@ -511,7 +519,8 @@ class Pcm : public OutlierRemoval {
       log<INFO>("odometry consistency translation distance: %1%") % *dist;
     if (debug_)
       log<INFO>("odometry consistency rotation distance: %1%") % rot_dist;
-    if (*dist < threshold1_ && rot_dist < threshold2_) {
+    if (*dist < params_.odom_trans_threshold &&
+        rot_dist < params_.odom_rot_threshold) {
       return true;
     }
     return false;
@@ -525,6 +534,7 @@ class Pcm : public OutlierRemoval {
    */
   bool isOdomConsistent(const gtsam::BetweenFactor<poseT>& lc_factor,
                         double* dist) {
+    if (!odom_check_) return true;
     // say: loop is between pose i and j
     gtsam::Key key_i = lc_factor.keys().front();  // extract the keys
     gtsam::Key key_j = lc_factor.keys().back();
@@ -559,7 +569,7 @@ class Pcm : public OutlierRemoval {
   bool checkLoopConsistent(const PoseWithCovariance<poseT>& result,
                            double* dist) {
     *dist = result.mahalanobis_norm();
-    if (*dist < threshold2_) {
+    if (*dist < params_.lc_threshold) {
       return true;
     }
     return false;
@@ -575,7 +585,8 @@ class Pcm : public OutlierRemoval {
   bool checkLoopConsistent(const PoseWithNode<poseT>& result, double* dist) {
     *dist = result.avg_trans_norm();
     double rot_dist = result.avg_rot_norm();
-    if (*dist < threshold1_ && rot_dist < threshold2_) {
+    if (*dist < params_.dist_trans_threshold &&
+        rot_dist < params_.dist_rot_threshold) {
       return true;
     }
     return false;
@@ -590,6 +601,7 @@ class Pcm : public OutlierRemoval {
   bool areLoopsConsistent(const gtsam::BetweenFactor<poseT>& a_lcBetween_b,
                           const gtsam::BetweenFactor<poseT>& c_lcBetween_d,
                           double* dist) {
+    if (!loop_consistency_check_) return true;
     // check if two loop closures are consistent
     // say: loop closure 1 is (a,b)
     gtsam::Key key_a = a_lcBetween_b.keys().front();
@@ -780,14 +792,19 @@ class Pcm : public OutlierRemoval {
     std::unordered_map<ObservationId, Measurements>::iterator it =
         loop_closures_.begin();
     while (it != loop_closures_.end()) {
-      std::vector<int> inliers_idx;
-      it->second.consistent_factors = gtsam::NonlinearFactorGraph();  // reset
-      // find max clique
-      size_t num_inliers =
-          findMaxCliqueHeu(it->second.adj_matrix, &inliers_idx);
-      // update inliers, or consistent factors, according to max clique result
-      for (size_t i = 0; i < num_inliers; i++) {
-        it->second.consistent_factors.add(it->second.factors[inliers_idx[i]]);
+      size_t num_inliers;
+      if (loop_consistency_check_) {
+        std::vector<int> inliers_idx;
+        it->second.consistent_factors = gtsam::NonlinearFactorGraph();  // reset
+        // find max clique
+        num_inliers = findMaxCliqueHeu(it->second.adj_matrix, &inliers_idx);
+        // update inliers, or consistent factors, according to max clique result
+        for (size_t i = 0; i < num_inliers; i++) {
+          it->second.consistent_factors.add(it->second.factors[inliers_idx[i]]);
+        }
+      } else {
+        it->second.consistent_factors = it->second.factors;
+        num_inliers = it->second.factors.size();
       }
       it++;
       total_good_lc_ = total_good_lc_ + num_inliers;

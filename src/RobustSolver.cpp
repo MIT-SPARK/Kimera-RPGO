@@ -106,7 +106,7 @@ void RobustSolver::getGncKnownInliers(std::vector<size_t>* known_inliers) {
             0);
   std::iota(std::end(*known_inliers) - temp_nfg_.size(),
             std::end(*known_inliers),
-            temp_nfg_.size());
+            nfg_.size());
 }
 
 void RobustSolver::optimize() {

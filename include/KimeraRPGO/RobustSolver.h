@@ -79,6 +79,10 @@ class RobustSolver : public GenericSolver {
   std::unique_ptr<OutlierRemoval> outlier_removal_;  // outlier removal
                                                      // method;
 
+  /*! \brief Get the index of the known inliers for GNC
+   */
+  void getGncKnownInliers(std::vector<size_t>* known_inliers);
+
   /*! \brief Calling the optimization
    *  Optimize the factor graph with the stroed values
    *  Solver based on what was set in RobustSolverParams

@@ -95,6 +95,20 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
   }
 }
 
+void RobustSolver::getGncKnownInliers(std::vector<size_t>* known_inliers) {
+  size_t num_odom_factors = outlier_removal_->getNumOdomFactors();
+  size_t num_special_factors = outlier_removal_->getNumSpecialFactors();
+  // Set odometry and special factors as known inliers
+  known_inliers->resize(num_odom_factors + num_special_factors +
+                        temp_nfg_.size());
+  std::iota(std::begin(*known_inliers),
+            std::begin(*known_inliers) + num_odom_factors + num_special_factors,
+            0);
+  std::iota(std::end(*known_inliers) - temp_nfg_.size(),
+            std::end(*known_inliers),
+            temp_nfg_.size());
+}
+
 void RobustSolver::optimize() {
   gtsam::Values result;
   gtsam::Values full_values = values_;
@@ -111,15 +125,9 @@ void RobustSolver::optimize() {
       log<INFO>("Running LM");
     }
     if (params_.use_gnc_ && outlier_removal_) {
-      size_t num_odom_factors = outlier_removal_->getNumOdomFactors();
-      size_t num_special_factors = outlier_removal_->getNumSpecialFactors();
       gtsam::GncParams<gtsam::LevenbergMarquardtParams> gncParams(lmParams);
-      // Set odometry and special factors as known inliers
-      std::vector<size_t> known_inlier_factor_indices(num_odom_factors +
-                                                      num_special_factors);
-      std::iota(std::begin(known_inlier_factor_indices),
-                std::end(known_inlier_factor_indices),
-                0);
+      std::vector<size_t> known_inlier_factor_indices;
+      getGncKnownInliers(&known_inlier_factor_indices);
       gncParams.setKnownInliers(known_inlier_factor_indices);
       // Create GNC optimizer
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::LevenbergMarquardtParams> >
@@ -140,7 +148,7 @@ void RobustSolver::optimize() {
       result = gnc_optimizer.optimize();
       gnc_weights_ = gnc_optimizer.getWeights();
       gnc_num_inliers_ = static_cast<size_t>(gnc_weights_.sum()) -
-                         temp_nfg_.size() - known_inlier_factor_indices.size();
+                         known_inlier_factor_indices.size();
       auto opt_stop_t = std::chrono::high_resolution_clock::now();
       auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
           opt_stop_t - opt_start_t);
@@ -174,15 +182,9 @@ void RobustSolver::optimize() {
       log<INFO>("Running GN");
     }
     if (params_.use_gnc_ && outlier_removal_) {
-      size_t num_odom_factors = outlier_removal_->getNumOdomFactors();
-      size_t num_special_factors = outlier_removal_->getNumSpecialFactors();
       gtsam::GncParams<gtsam::GaussNewtonParams> gncParams(gnParams);
-      // Set odometry and special factors as known inliers
-      std::vector<size_t> known_inlier_factor_indices(num_odom_factors +
-                                                      num_special_factors);
-      std::iota(std::begin(known_inlier_factor_indices),
-                std::end(known_inlier_factor_indices),
-                0);
+      std::vector<size_t> known_inlier_factor_indices;
+      getGncKnownInliers(&known_inlier_factor_indices);
       gncParams.setKnownInliers(known_inlier_factor_indices);
       // Create GNC optimizer
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::GaussNewtonParams> >
@@ -203,7 +205,7 @@ void RobustSolver::optimize() {
       result = gnc_optimizer.optimize();
       gnc_weights_ = gnc_optimizer.getWeights();
       gnc_num_inliers_ = static_cast<size_t>(gnc_weights_.sum()) -
-                         temp_nfg_.size() - known_inlier_factor_indices.size();
+                         known_inlier_factor_indices.size();
       auto opt_stop_t = std::chrono::high_resolution_clock::now();
       auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
           opt_stop_t - opt_start_t);

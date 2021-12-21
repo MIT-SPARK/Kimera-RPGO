@@ -253,6 +253,7 @@ void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,
     outfile << nfg_.size() << "," << spin_time.count() << "," << getNumLC()
             << "," << getNumLCInliers() << std::endl;
     outfile.close();
+    saveData(log_folder_);
   }
 }
 
@@ -285,6 +286,7 @@ void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
     outfile << nfg_.size() << "," << spin_time.count() << "," << getNumLC()
             << "," << getNumLCInliers() << std::endl;
     outfile.close();
+    saveData(log_folder_);
   }
   return;
 }
@@ -316,7 +318,7 @@ void RobustSolver::removeLastLoopClosure(char prefix_1, char prefix_2) {
 
 void RobustSolver::saveData(std::string folder_path) const {
   std::string g2o_file_path = folder_path + "/result.g2o";
-  gtsam::writeG2o(nfg_, values_, g2o_file_path);
+  KimeraRPGO::writeG2o(nfg_, values_, g2o_file_path);
   if (outlier_removal_) {
     outlier_removal_->saveData(folder_path);
   }

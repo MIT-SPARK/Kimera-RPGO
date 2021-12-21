@@ -6,8 +6,13 @@ author: Yun Chang
 #pragma once
 
 #include <boost/format.hpp>
+#include <fstream>
 #include <iostream>
 #include <sstream>
+#include <string>
+
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
+#include <gtsam/nonlinear/Values.h>
 
 using std::cout;
 using std::endl;
@@ -45,5 +50,9 @@ template <log_level_t level>
 log_impl::formatted_log_t log(const char* msg) {
   return log_impl::formatted_log_t(level, msg);
 }
+
+void writeG2o(const gtsam::NonlinearFactorGraph& graph,
+              const gtsam::Values& estimate,
+              const std::string& filename);
 
 }  // namespace KimeraRPGO

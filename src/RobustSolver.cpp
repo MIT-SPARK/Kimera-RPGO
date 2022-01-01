@@ -129,16 +129,21 @@ void RobustSolver::optimize() {
       std::vector<size_t> known_inlier_factor_indices;
       getGncKnownInliers(&known_inlier_factor_indices);
       gncParams.setKnownInliers(known_inlier_factor_indices);
+      gncParams.setMaxIterations(params_.gnc_params.max_iterations_);
+      gncParams.setMuStep(params_.gnc_params.mu_step_);
+      gncParams.setRelativeCostTol(params_.gnc_params.relative_cost_tol_);
+      gncParams.setWeightsTol(params_.gnc_params.weights_tol_);
       // Create GNC optimizer
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::LevenbergMarquardtParams> >
           gnc_optimizer(full_nfg, full_values, gncParams);
-      switch (params_.gnc_threshold_mode_) {
-        case (RobustSolverParams::GncThresholdMode::COST):
-          gnc_optimizer.setInlierCostThresholds(params_.gnc_inlier_threshold_);
+      switch (params_.gnc_params.gnc_threshold_mode_) {
+        case (GncParams::GncThresholdMode::COST):
+          gnc_optimizer.setInlierCostThresholds(
+              params_.gnc_params.gnc_inlier_threshold_);
           break;
-        case (RobustSolverParams::GncThresholdMode::PROBABILITY):
+        case (GncParams::GncThresholdMode::PROBABILITY):
           gnc_optimizer.setInlierCostThresholdsAtProbability(
-              params_.gnc_inlier_threshold_);
+              params_.gnc_params.gnc_inlier_threshold_);
           break;
         default:
           log<WARNING>("Unsupported GNC threshold mode. ");
@@ -186,16 +191,21 @@ void RobustSolver::optimize() {
       std::vector<size_t> known_inlier_factor_indices;
       getGncKnownInliers(&known_inlier_factor_indices);
       gncParams.setKnownInliers(known_inlier_factor_indices);
+      gncParams.setMaxIterations(params_.gnc_params.max_iterations_);
+      gncParams.setMuStep(params_.gnc_params.mu_step_);
+      gncParams.setRelativeCostTol(params_.gnc_params.relative_cost_tol_);
+      gncParams.setWeightsTol(params_.gnc_params.weights_tol_);
       // Create GNC optimizer
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::GaussNewtonParams> >
           gnc_optimizer(full_nfg, full_values, gncParams);
-      switch (params_.gnc_threshold_mode_) {
-        case (RobustSolverParams::GncThresholdMode::COST):
-          gnc_optimizer.setInlierCostThresholds(params_.gnc_inlier_threshold_);
+      switch (params_.gnc_params.gnc_threshold_mode_) {
+        case (GncParams::GncThresholdMode::COST):
+          gnc_optimizer.setInlierCostThresholds(
+              params_.gnc_params.gnc_inlier_threshold_);
           break;
-        case (RobustSolverParams::GncThresholdMode::PROBABILITY):
+        case (GncParams::GncThresholdMode::PROBABILITY):
           gnc_optimizer.setInlierCostThresholdsAtProbability(
-              params_.gnc_inlier_threshold_);
+              params_.gnc_params.gnc_inlier_threshold_);
           break;
         default:
           log<WARNING>("Unsupported GNC threshold mode. ");

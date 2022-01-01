@@ -55,6 +55,24 @@ public:
  bool incremental;
 };
 
+struct GncParams {
+ public:
+  GncParams()
+      : gnc_threshold_mode_(GncThresholdMode::PROBABILITY),
+        gnc_inlier_threshold_(0.9),
+        max_iterations_(100),
+        mu_step_(1.4),
+        relative_cost_tol_(1e-5),
+        weights_tol_(1e-4) {}
+  enum class GncThresholdMode { COST = 0u, PROBABILITY = 1u };
+  GncThresholdMode gnc_threshold_mode_;
+  double gnc_inlier_threshold_;
+  size_t max_iterations_;  // Maximum number of iterations
+  double mu_step_;         // Factor to reduce/increase the mu in gnc
+  double relative_cost_tol_;
+  double weights_tol_;
+};
+
 struct RobustSolverParams {
  public:
   RobustSolverParams()
@@ -180,16 +198,48 @@ struct RobustSolverParams {
    */
   void setGncInlierCostThresholdsAtProbability(const double& alpha) {
     use_gnc_ = true;
-    gnc_threshold_mode_ = GncThresholdMode::PROBABILITY;
-    gnc_inlier_threshold_ = alpha;
+    gnc_params.gnc_threshold_mode_ = GncParams::GncThresholdMode::PROBABILITY;
+    gnc_params.gnc_inlier_threshold_ = alpha;
+  }
+
+  /*! \brief one way of setting GNC parameters (confidence threshold + others)
+   */
+  void setGncInlierCostThresholdsAtProbability(const double& alpha,
+                                               const size_t& max_iterations,
+                                               const double& mu_step,
+                                               const double& rel_cost_tol,
+                                               const double& weight_tol) {
+    use_gnc_ = true;
+    gnc_params.gnc_threshold_mode_ = GncParams::GncThresholdMode::PROBABILITY;
+    gnc_params.gnc_inlier_threshold_ = alpha;
+    gnc_params.max_iterations_ = max_iterations;
+    gnc_params.mu_step_ = mu_step;
+    gnc_params.relative_cost_tol_ = rel_cost_tol;
+    gnc_params.weights_tol_ = weight_tol;
   }
 
   /*! \brief one way of setting GNC parameters (cost threshold)
    */
   void setGncInlierCostThresholds(const double& cost) {
     use_gnc_ = true;
-    gnc_threshold_mode_ = GncThresholdMode::COST;
-    gnc_inlier_threshold_ = cost;
+    gnc_params.gnc_threshold_mode_ = GncParams::GncThresholdMode::COST;
+    gnc_params.gnc_inlier_threshold_ = cost;
+  }
+
+  /*! \brief one way of setting GNC parameters (cost threshold + others)
+   */
+  void setGncInlierCostThresholds(const double& cost,
+                                  const size_t& max_iterations,
+                                  const double& mu_step,
+                                  const double& rel_cost_tol,
+                                  const double& weight_tol) {
+    use_gnc_ = true;
+    gnc_params.gnc_threshold_mode_ = GncParams::GncThresholdMode::COST;
+    gnc_params.gnc_inlier_threshold_ = cost;
+    gnc_params.max_iterations_ = max_iterations;
+    gnc_params.mu_step_ = mu_step;
+    gnc_params.relative_cost_tol_ = rel_cost_tol;
+    gnc_params.weights_tol_ = weight_tol;
   }
 
   /*! \brief use multirobot frame alignment for initialization
@@ -214,15 +264,11 @@ struct RobustSolverParams {
   std::string log_folder;
 
   PcmParams pcm_params;
+  GncParams gnc_params;
 
   // multirobot frame alignment
   MultiRobotAlignMethod multirobot_align_method;
-
-  // GNC variables
-  enum class GncThresholdMode { COST = 0u, PROBABILITY = 1u };
   bool use_gnc_;
-  GncThresholdMode gnc_threshold_mode_;
-  double gnc_inlier_threshold_;
 };
 
 }  // namespace KimeraRPGO

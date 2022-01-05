@@ -81,7 +81,9 @@ struct RobustSolverParams {
         outlierRemovalMethod(OutlierRemovalMethod::PCM3D),
         specialSymbols(),
         verbosity(Verbosity::UPDATE),
+        gnc_params(),
         pcm_params(),
+        lm_diagonal_damping(true),
         log_output(false),
         use_gnc_(false),
         multirobot_align_method(MultiRobotAlignMethod::NONE) {}
@@ -95,6 +97,13 @@ struct RobustSolverParams {
   /*! \brief use incremental max clique
    */
   void setIncremental() { pcm_params.incremental = true; }
+
+  /*! \brief toggle diagonal damping
+   * diagonal_damping: use diagonal damping (bool)
+   */
+  void setLmDiagonalDamping(bool diagonal_damping) {
+    lm_diagonal_damping = diagonal_damping;
+  }
 
   /*! \brief 2D version of Pcm
    * This one looks at Mahalanobis distance
@@ -265,6 +274,9 @@ struct RobustSolverParams {
 
   PcmParams pcm_params;
   GncParams gnc_params;
+
+  // Additional params
+  bool lm_diagonal_damping;
 
   // multirobot frame alignment
   MultiRobotAlignMethod multirobot_align_method;

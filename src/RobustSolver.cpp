@@ -119,7 +119,7 @@ void RobustSolver::optimize() {
 
   if (solver_type_ == Solver::LM) {
     gtsam::LevenbergMarquardtParams lmParams;
-    lmParams.diagonalDamping = true;
+    lmParams.diagonalDamping = params_.lm_diagonal_damping;
     if (debug_) {
       lmParams.setVerbosityLM("SUMMARY");
       log<INFO>("Running LM");

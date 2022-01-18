@@ -28,7 +28,8 @@ typedef std::pair<gtsam::NonlinearFactorGraph, gtsam::Values> GraphAndValues;
 RobustSolver::RobustSolver(const RobustSolverParams& params)
     : GenericSolver(params.solver, params.specialSymbols),
       params_(params),
-      gnc_num_inliers_(0) {
+      gnc_num_inliers_(0),
+      gnc_weights_() {
   switch (params.outlierRemovalMethod) {
     case OutlierRemovalMethod::NONE: {
       outlier_removal_ =
@@ -151,8 +152,9 @@ void RobustSolver::optimize() {
       // Optimize and get weights
       auto opt_start_t = std::chrono::high_resolution_clock::now();
       result = gnc_optimizer.optimize();
-      gnc_weights_ = gnc_optimizer.getWeights();
-      gnc_num_inliers_ = static_cast<size_t>(gnc_weights_.sum()) -
+      gtsam::Vector gnc_all_weights = gnc_optimizer.getWeights();
+      gnc_weights_ = gnc_all_weights.head(nfg_.size());
+      gnc_num_inliers_ = static_cast<size_t>(gnc_all_weights.sum()) -
                          known_inlier_factor_indices.size();
       auto opt_stop_t = std::chrono::high_resolution_clock::now();
       auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -213,8 +215,9 @@ void RobustSolver::optimize() {
       // Optimize and get weights
       auto opt_start_t = std::chrono::high_resolution_clock::now();
       result = gnc_optimizer.optimize();
-      gnc_weights_ = gnc_optimizer.getWeights();
-      gnc_num_inliers_ = static_cast<size_t>(gnc_weights_.sum()) -
+      gtsam::Vector gnc_all_weights = gnc_optimizer.getWeights();
+      gnc_weights_ = gnc_all_weights.head(nfg_.size());
+      gnc_num_inliers_ = static_cast<size_t>(gnc_all_weights.sum()) -
                          known_inlier_factor_indices.size();
       auto opt_stop_t = std::chrono::high_resolution_clock::now();
       auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(

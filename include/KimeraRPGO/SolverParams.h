@@ -63,7 +63,8 @@ struct GncParams {
         max_iterations_(100),
         mu_step_(1.4),
         relative_cost_tol_(1e-5),
-        weights_tol_(1e-4) {}
+        weights_tol_(1e-4),
+        fix_prev_inliers_(false) {}
   enum class GncThresholdMode { COST = 0u, PROBABILITY = 1u };
   GncThresholdMode gnc_threshold_mode_;
   double gnc_inlier_threshold_;
@@ -71,6 +72,7 @@ struct GncParams {
   double mu_step_;         // Factor to reduce/increase the mu in gnc
   double relative_cost_tol_;
   double weights_tol_;
+  double fix_prev_inliers_;
 };
 
 struct RobustSolverParams {
@@ -217,7 +219,8 @@ struct RobustSolverParams {
                                                const size_t& max_iterations,
                                                const double& mu_step,
                                                const double& rel_cost_tol,
-                                               const double& weight_tol) {
+                                               const double& weight_tol,
+                                               const bool& fix_prev_inliers) {
     use_gnc_ = true;
     gnc_params.gnc_threshold_mode_ = GncParams::GncThresholdMode::PROBABILITY;
     gnc_params.gnc_inlier_threshold_ = alpha;
@@ -225,6 +228,7 @@ struct RobustSolverParams {
     gnc_params.mu_step_ = mu_step;
     gnc_params.relative_cost_tol_ = rel_cost_tol;
     gnc_params.weights_tol_ = weight_tol;
+    gnc_params.fix_prev_inliers_ = fix_prev_inliers;
   }
 
   /*! \brief one way of setting GNC parameters (cost threshold)
@@ -241,7 +245,8 @@ struct RobustSolverParams {
                                   const size_t& max_iterations,
                                   const double& mu_step,
                                   const double& rel_cost_tol,
-                                  const double& weight_tol) {
+                                  const double& weight_tol,
+                                  const bool& fix_prev_inliers) {
     use_gnc_ = true;
     gnc_params.gnc_threshold_mode_ = GncParams::GncThresholdMode::COST;
     gnc_params.gnc_inlier_threshold_ = cost;
@@ -249,6 +254,7 @@ struct RobustSolverParams {
     gnc_params.mu_step_ = mu_step;
     gnc_params.relative_cost_tol_ = rel_cost_tol;
     gnc_params.weights_tol_ = weight_tol;
+    gnc_params.fix_prev_inliers_ = fix_prev_inliers;
   }
 
   /*! \brief use multirobot frame alignment for initialization

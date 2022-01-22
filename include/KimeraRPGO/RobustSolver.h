@@ -30,6 +30,7 @@ class RobustSolver : public GenericSolver {
 
   virtual ~RobustSolver() = default;
 
+  // TODO(yun) this seg faults we disable outlier removal
   size_t getNumLC() { return outlier_removal_->getNumLC(); }
 
   size_t getNumLCInliers() {
@@ -92,6 +93,7 @@ class RobustSolver : public GenericSolver {
   // GNC variables
   gtsam::Vector gnc_weights_;
   size_t gnc_num_inliers_;
+  size_t latest_num_lc_;
 
   RobustSolverParams params_;
 

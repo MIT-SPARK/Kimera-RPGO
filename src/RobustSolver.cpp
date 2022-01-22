@@ -29,7 +29,8 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
     : GenericSolver(params.solver, params.specialSymbols),
       params_(params),
       gnc_num_inliers_(0),
-      gnc_weights_() {
+      gnc_weights_(),
+      latest_num_lc_(0) {
   switch (params.outlierRemovalMethod) {
     case OutlierRemovalMethod::NONE: {
       outlier_removal_ =
@@ -125,7 +126,9 @@ void RobustSolver::optimize() {
       lmParams.setVerbosityLM("SUMMARY");
       log<INFO>("Running LM");
     }
-    if (params_.use_gnc_ && outlier_removal_) {
+    if (params_.use_gnc_ && outlier_removal_ &&
+        !(params_.gnc_params.fix_prev_inliers_ &&
+          outlier_removal_->getNumLC() == latest_num_lc_)) {
       gtsam::GncParams<gtsam::LevenbergMarquardtParams> gncParams(lmParams);
       std::vector<size_t> known_inlier_factor_indices;
       getGncKnownInliers(&known_inlier_factor_indices);
@@ -168,6 +171,23 @@ void RobustSolver::optimize() {
       }
     } else {
       auto opt_start_t = std::chrono::high_resolution_clock::now();
+      if (params_.gnc_params.fix_prev_inliers_) {
+        // TODO(yun) clean up
+        // remove gnc inliers from previous iterations
+        size_t prev_k = gnc_weights_.size() - latest_num_lc_;
+        size_t k = outlier_removal_->getNumOdomFactors() +
+                   outlier_removal_->getNumSpecialFactors();
+        full_nfg = gtsam::NonlinearFactorGraph(nfg_.begin(), nfg_.begin() + k);
+        // for (size_t i = 0; i < k; i++) {
+        //   full_nfg.add(nfg_[i]);
+        // }
+        for (size_t i = 0; i < latest_num_lc_; i++) {
+          if (gnc_weights_(prev_k + i) > 0.5) {
+            full_nfg.add(nfg_.at(k + i));
+          }
+        }
+        full_nfg.add(temp_nfg_);
+      }
       result =
           gtsam::LevenbergMarquardtOptimizer(full_nfg, full_values, lmParams)
               .optimize();
@@ -239,6 +259,9 @@ void RobustSolver::optimize() {
     exit(EXIT_FAILURE);
   }
   updateValues(result);
+  if (outlier_removal_) {
+    latest_num_lc_ = outlier_removal_->getNumLC();
+  }
 }
 
 void RobustSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,

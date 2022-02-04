@@ -23,6 +23,58 @@ enum class OutlierRemovalMethod {
 
 enum class Verbosity { UPDATE, QUIET, VERBOSE };
 
+// Method used for multi-robot frame alignment
+enum class MultiRobotAlignMethod {
+  NONE,  // Use provided initial guess
+  L2,    // Use L2 pose averaging
+  GNC    // Use robust pose averaging with GNC
+};
+
+struct PcmParams {
+public:
+ PcmParams()
+     : odom_threshold(10.0),
+       lc_threshold(5.0),
+       odom_trans_threshold(0.05),
+       odom_rot_threshold(0.005),
+       dist_trans_threshold(0.01),
+       dist_rot_threshold(0.001),
+       incremental(false) {}
+ // if threshold is < 0, check disabled
+ // for Pcm
+ double odom_threshold;
+ double lc_threshold;
+
+ // for PcmSimple
+ double odom_trans_threshold;
+ double odom_rot_threshold;
+ double dist_trans_threshold;
+ double dist_rot_threshold;
+
+ // incremental max clique
+ bool incremental;
+};
+
+struct GncParams {
+ public:
+  GncParams()
+      : gnc_threshold_mode_(GncThresholdMode::PROBABILITY),
+        gnc_inlier_threshold_(0.9),
+        max_iterations_(100),
+        mu_step_(1.4),
+        relative_cost_tol_(1e-5),
+        weights_tol_(1e-4),
+        fix_prev_inliers_(false) {}
+  enum class GncThresholdMode { COST = 0u, PROBABILITY = 1u };
+  GncThresholdMode gnc_threshold_mode_;
+  double gnc_inlier_threshold_;
+  size_t max_iterations_;  // Maximum number of iterations
+  double mu_step_;         // Factor to reduce/increase the mu in gnc
+  double relative_cost_tol_;
+  double weights_tol_;
+  double fix_prev_inliers_;
+};
+
 struct RobustSolverParams {
  public:
   RobustSolverParams()
@@ -31,13 +83,12 @@ struct RobustSolverParams {
         outlierRemovalMethod(OutlierRemovalMethod::PCM3D),
         specialSymbols(),
         verbosity(Verbosity::UPDATE),
-        pcm_odomThreshold(10.0),
-        pcm_lcThreshold(5.0),
-        pcmDist_transThreshold(0.05),  // 5cm
-        pcmDist_rotThreshold(0.005),   // <0.5degrees
-        incremental(false),
+        gnc_params(),
+        pcm_params(),
+        lm_diagonal_damping(true),
         log_output(false),
-        use_gnc_(false) {}
+        use_gnc_(false),
+        multirobot_align_method(MultiRobotAlignMethod::NONE) {}
   /*! \brief For RobustSolver to not do outlier rejection at all
    */
   void setNoRejection(Verbosity verbos = Verbosity::UPDATE) {
@@ -47,7 +98,14 @@ struct RobustSolverParams {
 
   /*! \brief use incremental max clique
    */
-  void setIncremental() { incremental = true; }
+  void setIncremental() { pcm_params.incremental = true; }
+
+  /*! \brief toggle diagonal damping
+   * diagonal_damping: use diagonal damping (bool)
+   */
+  void setLmDiagonalDamping(bool diagonal_damping) {
+    lm_diagonal_damping = diagonal_damping;
+  }
 
   /*! \brief 2D version of Pcm
    * This one looks at Mahalanobis distance
@@ -59,8 +117,8 @@ struct RobustSolverParams {
                       double lcThreshold,
                       Verbosity verbos = Verbosity::UPDATE) {
     outlierRemovalMethod = OutlierRemovalMethod::PCM2D;
-    pcm_odomThreshold = odomThreshold;
-    pcm_lcThreshold = lcThreshold;
+    pcm_params.odom_threshold = odomThreshold;
+    pcm_params.lc_threshold = lcThreshold;
     verbosity = verbos;
   }
 
@@ -74,8 +132,8 @@ struct RobustSolverParams {
                       double lcThreshold,
                       Verbosity verbos = Verbosity::UPDATE) {
     outlierRemovalMethod = OutlierRemovalMethod::PCM3D;
-    pcm_odomThreshold = odomThreshold;
-    pcm_lcThreshold = lcThreshold;
+    pcm_params.odom_threshold = odomThreshold;
+    pcm_params.lc_threshold = lcThreshold;
     verbosity = verbos;
   }
 
@@ -88,8 +146,10 @@ struct RobustSolverParams {
                             double rotThreshold,
                             Verbosity verbos = Verbosity::UPDATE) {
     outlierRemovalMethod = OutlierRemovalMethod::PCM_Simple2D;
-    pcmDist_transThreshold = transThreshold;
-    pcmDist_rotThreshold = rotThreshold;
+    pcm_params.odom_trans_threshold = transThreshold;
+    pcm_params.odom_rot_threshold = rotThreshold;
+    pcm_params.dist_trans_threshold = transThreshold;
+    pcm_params.dist_rot_threshold = rotThreshold;
     verbosity = verbos;
   }
 
@@ -102,8 +162,46 @@ struct RobustSolverParams {
                             double rotThreshold,
                             Verbosity verbos = Verbosity::UPDATE) {
     outlierRemovalMethod = OutlierRemovalMethod::PCM_Simple3D;
-    pcmDist_transThreshold = transThreshold;
-    pcmDist_rotThreshold = rotThreshold;
+    pcm_params.odom_trans_threshold = transThreshold;
+    pcm_params.odom_rot_threshold = rotThreshold;
+    pcm_params.dist_trans_threshold = transThreshold;
+    pcm_params.dist_rot_threshold = rotThreshold;
+    verbosity = verbos;
+  }
+
+  /*! \brief 2D version of PcmSimple with separate parameters for odom check
+   * This one looks at average translation and rotation error per node
+   * transThreshold: Estimated max drift in translation per node (in meters)
+   * rotThreshold: Estimated max drift in rotation per node (in radians)
+   */
+  void setPcmSimple2DParams(double transOdomThreshold,
+                            double rotOdomThreshold,
+                            double transPcmThreshold,
+                            double rotPcmThreshold,
+                            Verbosity verbos = Verbosity::UPDATE) {
+    outlierRemovalMethod = OutlierRemovalMethod::PCM_Simple2D;
+    pcm_params.odom_trans_threshold = transOdomThreshold;
+    pcm_params.odom_rot_threshold = rotOdomThreshold;
+    pcm_params.dist_trans_threshold = transPcmThreshold;
+    pcm_params.dist_rot_threshold = rotPcmThreshold;
+    verbosity = verbos;
+  }
+
+  /*! \brief 3D version of PcmSimple with separate parameters for odom check
+   * This one looks at average translation and rotation error per node
+   * transThreshold: Estimated max drift in translation per node (in meters)
+   * rotThreshold: Estimated max drift in rotation per node (in radians)
+   */
+  void setPcmSimple3DParams(double transOdomThreshold,
+                            double rotOdomThreshold,
+                            double transPcmThreshold,
+                            double rotPcmThreshold,
+                            Verbosity verbos = Verbosity::UPDATE) {
+    outlierRemovalMethod = OutlierRemovalMethod::PCM_Simple3D;
+    pcm_params.odom_trans_threshold = transOdomThreshold;
+    pcm_params.odom_rot_threshold = rotOdomThreshold;
+    pcm_params.dist_trans_threshold = transPcmThreshold;
+    pcm_params.dist_rot_threshold = rotPcmThreshold;
     verbosity = verbos;
   }
 
@@ -111,16 +209,58 @@ struct RobustSolverParams {
    */
   void setGncInlierCostThresholdsAtProbability(const double& alpha) {
     use_gnc_ = true;
-    gnc_threshold_mode_ = GncThresholdMode::PROBABILITY;
-    gnc_inlier_threshold_ = alpha;
+    gnc_params.gnc_threshold_mode_ = GncParams::GncThresholdMode::PROBABILITY;
+    gnc_params.gnc_inlier_threshold_ = alpha;
+  }
+
+  /*! \brief one way of setting GNC parameters (confidence threshold + others)
+   */
+  void setGncInlierCostThresholdsAtProbability(const double& alpha,
+                                               const size_t& max_iterations,
+                                               const double& mu_step,
+                                               const double& rel_cost_tol,
+                                               const double& weight_tol,
+                                               const bool& fix_prev_inliers) {
+    use_gnc_ = true;
+    gnc_params.gnc_threshold_mode_ = GncParams::GncThresholdMode::PROBABILITY;
+    gnc_params.gnc_inlier_threshold_ = alpha;
+    gnc_params.max_iterations_ = max_iterations;
+    gnc_params.mu_step_ = mu_step;
+    gnc_params.relative_cost_tol_ = rel_cost_tol;
+    gnc_params.weights_tol_ = weight_tol;
+    gnc_params.fix_prev_inliers_ = fix_prev_inliers;
   }
 
   /*! \brief one way of setting GNC parameters (cost threshold)
    */
   void setGncInlierCostThresholds(const double& cost) {
     use_gnc_ = true;
-    gnc_threshold_mode_ = GncThresholdMode::COST;
-    gnc_inlier_threshold_ = cost;
+    gnc_params.gnc_threshold_mode_ = GncParams::GncThresholdMode::COST;
+    gnc_params.gnc_inlier_threshold_ = cost;
+  }
+
+  /*! \brief one way of setting GNC parameters (cost threshold + others)
+   */
+  void setGncInlierCostThresholds(const double& cost,
+                                  const size_t& max_iterations,
+                                  const double& mu_step,
+                                  const double& rel_cost_tol,
+                                  const double& weight_tol,
+                                  const bool& fix_prev_inliers) {
+    use_gnc_ = true;
+    gnc_params.gnc_threshold_mode_ = GncParams::GncThresholdMode::COST;
+    gnc_params.gnc_inlier_threshold_ = cost;
+    gnc_params.max_iterations_ = max_iterations;
+    gnc_params.mu_step_ = mu_step;
+    gnc_params.relative_cost_tol_ = rel_cost_tol;
+    gnc_params.weights_tol_ = weight_tol;
+    gnc_params.fix_prev_inliers_ = fix_prev_inliers;
+  }
+
+  /*! \brief use multirobot frame alignment for initialization
+   */
+  void setMultiRobotAlignMethod(MultiRobotAlignMethod method) {
+    multirobot_align_method = method;
   }
 
   /*! \brief set folder to log data
@@ -138,22 +278,15 @@ struct RobustSolverParams {
   bool log_output;
   std::string log_folder;
 
-  // for Pcm
-  double pcm_odomThreshold;
-  double pcm_lcThreshold;
+  PcmParams pcm_params;
+  GncParams gnc_params;
 
-  // for PcmSimple
-  double pcmDist_transThreshold;
-  double pcmDist_rotThreshold;
+  // Additional params
+  bool lm_diagonal_damping;
 
-  // incremental max clique
-  bool incremental;
-
-  // GNC variables
-  enum class GncThresholdMode { COST = 0u, PROBABILITY = 1u };
+  // multirobot frame alignment
+  MultiRobotAlignMethod multirobot_align_method;
   bool use_gnc_;
-  GncThresholdMode gnc_threshold_mode_;
-  double gnc_inlier_threshold_;
 };
 
 }  // namespace KimeraRPGO

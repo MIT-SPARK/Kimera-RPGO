@@ -8,7 +8,7 @@
 #include <gtsam/base/Vector.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
-#include "KimeraRPGO/logger.h"
+#include "KimeraRPGO/Logger.h"
 
 namespace KimeraRPGO {
 

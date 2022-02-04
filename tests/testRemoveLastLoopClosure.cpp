@@ -13,7 +13,7 @@
 
 #include "KimeraRPGO/RobustSolver.h"
 #include "KimeraRPGO/SolverParams.h"
-#include "KimeraRPGO/utils/type_utils.h"
+#include "KimeraRPGO/utils/TypeUtils.h"
 #include "test_config.h"
 
 using KimeraRPGO::RobustSolver;

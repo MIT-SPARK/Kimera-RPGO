@@ -14,7 +14,7 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/nonlinear/Values.h>
 
 #include "KimeraRPGO/SolverParams.h"
-#include "KimeraRPGO/logger.h"
+#include "KimeraRPGO/Logger.h"
 
 namespace KimeraRPGO {
 
@@ -42,6 +42,27 @@ class GenericSolver {
   inline gtsam::Values getLinearizationPoint() const { return values_; }
   inline gtsam::NonlinearFactorGraph getFactorsUnsafe() const { return nfg_; }
 
+  inline gtsam::Values getTempValues() const { return temp_values_; }
+  inline gtsam::NonlinearFactorGraph getTempFactorsUnsafe() const {
+    return temp_nfg_;
+  }
+  inline void updateTempFactorsValues(
+      const gtsam::NonlinearFactorGraph& temp_nfg,
+      const gtsam::Values& temp_values) {
+    temp_nfg_.add(temp_nfg);
+    temp_values_.insert(temp_values);
+  }
+  inline void replaceTempFactorsValues(
+      const gtsam::NonlinearFactorGraph& temp_nfg,
+      const gtsam::Values& temp_values) {
+    temp_nfg_ = temp_nfg;
+    temp_values_ = temp_values;
+  }
+  inline void clearTempFactorsValues() {
+    temp_nfg_ = gtsam::NonlinearFactorGraph();
+    temp_values_ = gtsam::Values();
+  }
+
   void print() const { values_.print(""); }
 
   void setQuiet() { debug_ = false; }
@@ -55,10 +76,16 @@ class GenericSolver {
       const gtsam::NonlinearFactorGraph& nfg = gtsam::NonlinearFactorGraph(),
       const gtsam::Values& values = gtsam::Values());
 
+  void updateValues(const gtsam::Values& values);
+
  protected:
   bool isSpecialSymbol(char symb) const;
   gtsam::Values values_;
   gtsam::NonlinearFactorGraph nfg_;
+  // Factors and values subjected to change
+  gtsam::Values temp_values_;
+  gtsam::NonlinearFactorGraph temp_nfg_;
+
   Solver solver_type_;
   std::vector<char> special_symbols_;
   bool debug_;

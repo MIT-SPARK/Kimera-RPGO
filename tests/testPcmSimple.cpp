@@ -7,16 +7,24 @@
 #include <CppUnitLite/TestHarness.h>
 #include <random>
 
-#include "KimeraRPGO/outlier/pcm.h"
+#include "KimeraRPGO/SolverParams.h"
+#include "KimeraRPGO/outlier/Pcm.h"
 
 using KimeraRPGO::OutlierRemoval;
+using KimeraRPGO::PcmParams;
 using KimeraRPGO::PcmSimple3D;
 
 /* ************************************************************************* */
 TEST(PcmSimple, OdomTransCheck) {
   // Here want to test carefully pcm
   // first test tanslation check
-  OutlierRemoval* pcm = new PcmSimple3D(0.051, 100.0);
+  PcmParams params;
+  params.dist_trans_threshold = -1;
+  params.dist_rot_threshold = -1;
+  params.odom_trans_threshold = 0.051;
+  params.odom_rot_threshold = 100.0;
+
+  OutlierRemoval* pcm = new PcmSimple3D(params);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =
@@ -92,7 +100,13 @@ TEST(PcmSimple, OdomTransCheck) {
 TEST(PcmSimple, OdomRotCheck) {
   // Here want to test carefully pcm
   // test rotation check
-  OutlierRemoval* pcm = new PcmSimple3D(100.0, 0.005);
+  PcmParams params;
+  params.dist_trans_threshold = -1;
+  params.dist_rot_threshold = -1;
+  params.odom_trans_threshold = 100.0;
+  params.odom_rot_threshold = 0.005;
+
+  OutlierRemoval* pcm = new PcmSimple3D(params);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =
@@ -161,7 +175,13 @@ TEST(PcmSimple, OdomRotCheck) {
 TEST(Pcm, ConsistencyTransCheck) {
   // Here want to test carefully pcm
   // test pcm translation check
-  OutlierRemoval* pcm = new PcmSimple3D(0.05, 100.0);
+  PcmParams params;
+  params.odom_trans_threshold = -1;
+  params.odom_rot_threshold = -1;
+  params.dist_trans_threshold = 0.05;
+  params.dist_rot_threshold = 100.0;
+
+  OutlierRemoval* pcm = new PcmSimple3D(params);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =
@@ -264,7 +284,13 @@ TEST(Pcm, ConsistencyTransCheck) {
 TEST(Pcm, ConsistencyRotCheck) {
   // Here want to test carefully pcm
   // test pcm translation check
-  OutlierRemoval* pcm = new PcmSimple3D(100.0, 0.005);
+  PcmParams params;
+  params.odom_trans_threshold = -1;
+  params.odom_rot_threshold = -1;
+  params.dist_trans_threshold = 100.0;
+  params.dist_rot_threshold = 0.005;
+
+  OutlierRemoval* pcm = new PcmSimple3D(params);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =

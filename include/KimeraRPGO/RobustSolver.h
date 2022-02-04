@@ -30,6 +30,7 @@ class RobustSolver : public GenericSolver {
 
   virtual ~RobustSolver() = default;
 
+  // TODO(yun) this seg faults we disable outlier removal
   size_t getNumLC() { return outlier_removal_->getNumLC(); }
 
   size_t getNumLCInliers() {
@@ -79,6 +80,10 @@ class RobustSolver : public GenericSolver {
   std::unique_ptr<OutlierRemoval> outlier_removal_;  // outlier removal
                                                      // method;
 
+  /*! \brief Get the index of the known inliers for GNC
+   */
+  void getGncKnownInliers(std::vector<size_t>* known_inliers);
+
   /*! \brief Calling the optimization
    *  Optimize the factor graph with the stroed values
    *  Solver based on what was set in RobustSolverParams
@@ -88,6 +93,7 @@ class RobustSolver : public GenericSolver {
   // GNC variables
   gtsam::Vector gnc_weights_;
   size_t gnc_num_inliers_;
+  size_t latest_num_lc_;
 
   RobustSolverParams params_;
 

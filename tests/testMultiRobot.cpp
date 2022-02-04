@@ -13,7 +13,7 @@
 
 #include "KimeraRPGO/RobustSolver.h"
 #include "KimeraRPGO/SolverParams.h"
-#include "KimeraRPGO/utils/type_utils.h"
+#include "KimeraRPGO/utils/TypeUtils.h"
 #include "test_config.h"
 
 using namespace KimeraRPGO;
@@ -30,6 +30,7 @@ TEST(RobustSolver, multiRobotPcm) {
   // set up KimeraRPGO solver
   RobustSolverParams params;
   params.setPcm3DParams(3.0, 0.05, Verbosity::QUIET);
+  params.setMultiRobotAlignMethod(MultiRobotAlignMethod::GNC);
 
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
@@ -198,6 +199,7 @@ TEST(RobustSolver, multiRobotPcmSimple) {
   // set up KimeraRPGO solver
   RobustSolverParams params;
   params.setPcmSimple3DParams(0.04, 0.01, Verbosity::QUIET);
+  params.setMultiRobotAlignMethod(MultiRobotAlignMethod::GNC);
 
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);

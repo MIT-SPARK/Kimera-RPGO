@@ -34,6 +34,16 @@ bool GenericSolver::isSpecialSymbol(char symb) const {
   return false;
 }
 
+void GenericSolver::updateValues(const gtsam::Values& values) {
+  for (const auto& v : values) {
+    if (values_.exists(v.key)) {
+      values_.update(v.key, v.value);
+    } else if (temp_values_.exists(v.key)) {
+      temp_values_.update(v.key, v.value);
+    }
+  }
+}
+
 bool GenericSolver::addAndCheckIfOptimize(
     const gtsam::NonlinearFactorGraph& nfg,
     const gtsam::Values& values) {
@@ -58,6 +68,7 @@ bool GenericSolver::addAndCheckIfOptimize(
 void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
                            const gtsam::Values& values,
                            const gtsam::FactorIndices& factorsToRemove) {
+  // TODO(Yun) Do we have unittests for generic (no outlier-rejection) update?
   // remove factors
   bool remove_factors = false;
   if (factorsToRemove.size() > 0) {
@@ -71,6 +82,11 @@ void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
 
   if (process_lc || remove_factors) {
     // optimize
+    gtsam::Values result;
+    gtsam::Values full_values = values_;
+    gtsam::NonlinearFactorGraph full_nfg = nfg_;
+    full_values.insert(temp_values_);
+    full_nfg.add(temp_nfg_);
     if (solver_type_ == Solver::LM) {
       gtsam::LevenbergMarquardtParams params;
       if (debug_) {
@@ -78,19 +94,21 @@ void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
         log<INFO>("Running LM");
       }
       params.diagonalDamping = true;
-      values_ =
-          gtsam::LevenbergMarquardtOptimizer(nfg_, values_, params).optimize();
+      result = gtsam::LevenbergMarquardtOptimizer(full_nfg, full_values, params)
+                   .optimize();
     } else if (solver_type_ == Solver::GN) {
       gtsam::GaussNewtonParams params;
       if (debug_) {
         params.setVerbosity("ERROR");
         log<INFO>("Running GN");
       }
-      values_ = gtsam::GaussNewtonOptimizer(nfg_, values_, params).optimize();
+      result =
+          gtsam::GaussNewtonOptimizer(full_nfg, full_values, params).optimize();
     } else {
       log<WARNING>("Unsupported Solver");
       exit(EXIT_FAILURE);
     }
+    updateValues(result);
   }
 }
 

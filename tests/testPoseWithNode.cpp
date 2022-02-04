@@ -8,7 +8,7 @@
 #include <limits>
 #include <random>
 
-#include "KimeraRPGO/utils/geometry_utils.h"
+#include "KimeraRPGO/utils/GeometryUtils.h"
 
 using KimeraRPGO::PoseWithNode;
 

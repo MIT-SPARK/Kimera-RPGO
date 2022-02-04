@@ -31,9 +31,9 @@ endif()
 ###########################################################################
 # Compile
 add_library(KimeraRPGO SHARED
-  include/KimeraRPGO/logger.h
   src/GenericSolver.cpp
   src/RobustSolver.cpp
+  src/Logger.cpp
   include/KimeraRPGO/SolverParams.h )
 include_directories(include)
 # Add source code for max clique finder

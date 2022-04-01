@@ -64,7 +64,8 @@ struct GncParams {
         mu_step_(1.4),
         relative_cost_tol_(1e-5),
         weights_tol_(1e-4),
-        fix_prev_inliers_(false) {}
+        fix_prev_inliers_(false),
+        bias_odom_(false) {}
   enum class GncThresholdMode { COST = 0u, PROBABILITY = 1u };
   GncThresholdMode gnc_threshold_mode_;
   double gnc_inlier_threshold_;
@@ -73,6 +74,7 @@ struct GncParams {
   double relative_cost_tol_;
   double weights_tol_;
   double fix_prev_inliers_;
+  bool bias_odom_;  // Bias odometry in initialization
 };
 
 struct RobustSolverParams {
@@ -205,22 +207,16 @@ struct RobustSolverParams {
     verbosity = verbos;
   }
 
-  /*! \brief one way of setting GNC parameters (confidence threshold)
-   */
-  void setGncInlierCostThresholdsAtProbability(const double& alpha) {
-    use_gnc_ = true;
-    gnc_params.gnc_threshold_mode_ = GncParams::GncThresholdMode::PROBABILITY;
-    gnc_params.gnc_inlier_threshold_ = alpha;
-  }
-
   /*! \brief one way of setting GNC parameters (confidence threshold + others)
    */
-  void setGncInlierCostThresholdsAtProbability(const double& alpha,
-                                               const size_t& max_iterations,
-                                               const double& mu_step,
-                                               const double& rel_cost_tol,
-                                               const double& weight_tol,
-                                               const bool& fix_prev_inliers) {
+  void setGncInlierCostThresholdsAtProbability(
+      const double& alpha,
+      const size_t& max_iterations = 100,
+      const double& mu_step = 1.4,
+      const double& rel_cost_tol = 1e-5,
+      const double& weight_tol = 1e-4,
+      const bool& fix_prev_inliers = false,
+      const bool& bias_odom = false) {
     use_gnc_ = true;
     gnc_params.gnc_threshold_mode_ = GncParams::GncThresholdMode::PROBABILITY;
     gnc_params.gnc_inlier_threshold_ = alpha;
@@ -229,24 +225,18 @@ struct RobustSolverParams {
     gnc_params.relative_cost_tol_ = rel_cost_tol;
     gnc_params.weights_tol_ = weight_tol;
     gnc_params.fix_prev_inliers_ = fix_prev_inliers;
-  }
-
-  /*! \brief one way of setting GNC parameters (cost threshold)
-   */
-  void setGncInlierCostThresholds(const double& cost) {
-    use_gnc_ = true;
-    gnc_params.gnc_threshold_mode_ = GncParams::GncThresholdMode::COST;
-    gnc_params.gnc_inlier_threshold_ = cost;
+    gnc_params.bias_odom_ = bias_odom;
   }
 
   /*! \brief one way of setting GNC parameters (cost threshold + others)
    */
   void setGncInlierCostThresholds(const double& cost,
-                                  const size_t& max_iterations,
-                                  const double& mu_step,
-                                  const double& rel_cost_tol,
-                                  const double& weight_tol,
-                                  const bool& fix_prev_inliers) {
+                                  const size_t& max_iterations = 100,
+                                  const double& mu_step = 1.4,
+                                  const double& rel_cost_tol = 1e-5,
+                                  const double& weight_tol = 1e-4,
+                                  const bool& fix_prev_inliers = false,
+                                  const bool& bias_odom = false) {
     use_gnc_ = true;
     gnc_params.gnc_threshold_mode_ = GncParams::GncThresholdMode::COST;
     gnc_params.gnc_inlier_threshold_ = cost;
@@ -255,7 +245,18 @@ struct RobustSolverParams {
     gnc_params.relative_cost_tol_ = rel_cost_tol;
     gnc_params.weights_tol_ = weight_tol;
     gnc_params.fix_prev_inliers_ = fix_prev_inliers;
+    gnc_params.bias_odom_ = bias_odom;
   }
+
+  /*! \brief at each gnc iteration, previously detected inliers are not
+   * reconsidered as possible outliers
+   */
+  void gncFixInliers() { gnc_params.fix_prev_inliers_ = true; }
+
+  /*! \brief bias the initialization on the odometry. i.e. initialize loop
+   * closures as outliers
+   */
+  void gncBiasOdom() { gnc_params.bias_odom_ = true; }
 
   /*! \brief use multirobot frame alignment for initialization
    */

@@ -6,6 +6,7 @@
 #include <utility>
 
 #include <gtsam/base/Vector.h>
+#include <gtsam/inference/Symbol.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include "KimeraRPGO/Logger.h"
@@ -31,6 +32,14 @@ struct Measurements {
   }
 };
 
+struct Edge {
+  gtsam::Symbol from_key;
+  gtsam::Symbol to_key;
+
+  Edge(gtsam::Symbol from, gtsam::Symbol to) : from_key(from), to_key(to) {}
+};
+typedef std::unique_ptr<const Edge> EdgePtr;
+
 // struct storing the involved parties (ex robot a and robot b)
 struct ObservationId {
   char id1;
@@ -46,6 +55,34 @@ struct ObservationId {
     if (id2 == other.id1 && id1 == other.id2) return true;
     return false;
   }
+};
+
+struct Stats {
+  size_t lc;
+  size_t good_lc;
+  size_t odom_consistent_lc;
+  size_t multirobot_lc;
+  size_t good_multirobot_lc;
+  size_t landmark_measurements;
+  size_t good_landmark_measurements;
+  std::vector<double> consistency_error;
+
+  Stats(size_t num_lc,
+        size_t num_good_lc,
+        size_t num_odom_const_lc,
+        size_t num_multirobot_lc,
+        size_t num_good_multirobot_lc,
+        size_t num_landmark_measurements,
+        size_t num_good_landmark_measurements,
+        const std::vector<double>& error)
+      : lc(num_lc),
+        good_lc(num_good_lc),
+        odom_consistent_lc(num_odom_const_lc),
+        multirobot_lc(num_multirobot_lc),
+        good_multirobot_lc(num_good_multirobot_lc),
+        landmark_measurements(num_landmark_measurements),
+        good_landmark_measurements(num_good_landmark_measurements),
+        consistency_error(error) {}
 };
 
 // Add compatibility for c++11's lack of make_unique.

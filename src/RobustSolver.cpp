@@ -11,6 +11,7 @@ author: Yun Chang, Luca Carlone
 #include <utility>
 #include <vector>
 
+#include <gtsam/inference/inferenceExceptions.h>
 #include <gtsam/nonlinear/DoglegOptimizer.h>
 #include <gtsam/nonlinear/GaussNewtonOptimizer.h>
 #include <gtsam/nonlinear/GncOptimizer.h>
@@ -137,9 +138,17 @@ void RobustSolver::optimize() {
       gncParams.setMuStep(params_.gnc_params.mu_step_);
       gncParams.setRelativeCostTol(params_.gnc_params.relative_cost_tol_);
       gncParams.setWeightsTol(params_.gnc_params.weights_tol_);
+      // Set initial weights to bias odom
+      gtsam::Vector init_weights = Eigen::VectorXd::Zero(nfg_.size());
+      for (const auto& ind : known_inlier_factor_indices) {
+        init_weights(ind) = 1;
+      }
       // Create GNC optimizer
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::LevenbergMarquardtParams> >
           gnc_optimizer(full_nfg, full_values, gncParams);
+      if (params_.gnc_params.bias_odom_) {
+        gnc_optimizer.setWeights(init_weights);
+      }
       switch (params_.gnc_params.gnc_threshold_mode_) {
         case (GncParams::GncThresholdMode::COST):
           gnc_optimizer.setInlierCostThresholds(
@@ -217,9 +226,17 @@ void RobustSolver::optimize() {
       gncParams.setMuStep(params_.gnc_params.mu_step_);
       gncParams.setRelativeCostTol(params_.gnc_params.relative_cost_tol_);
       gncParams.setWeightsTol(params_.gnc_params.weights_tol_);
+      // Set initial weights to bias odom
+      gtsam::Vector init_weights = Eigen::VectorXd::Zero(nfg_.size());
+      for (const auto& ind : known_inlier_factor_indices) {
+        init_weights(ind) = 1;
+      }
       // Create GNC optimizer
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::GaussNewtonParams> >
           gnc_optimizer(full_nfg, full_values, gncParams);
+      if (params_.gnc_params.bias_odom_) {
+        gnc_optimizer.setWeights(init_weights);
+      }
       switch (params_.gnc_params.gnc_threshold_mode_) {
         case (GncParams::GncThresholdMode::COST):
           gnc_optimizer.setInlierCostThresholds(
@@ -339,17 +356,69 @@ void RobustSolver::removePriorFactorsWithPrefix(const char& prefix,
   return;
 }
 
-void RobustSolver::removeLastLoopClosure(char prefix_1, char prefix_2) {
+EdgePtr RobustSolver::removeLastLoopClosure(char prefix_1, char prefix_2) {
   ObservationId id(prefix_1, prefix_2);
+  EdgePtr removed_edge;
   if (outlier_removal_) {
     // removing loop closure so values should not change
-    outlier_removal_->removeLastLoopClosure(id, &nfg_);
+    removed_edge = outlier_removal_->removeLastLoopClosure(id, &nfg_);
   } else {
-    removeLastFactor();
+    removed_edge = removeLastFactor();
+  }
+
+  optimize();
+  return removed_edge;
+}
+
+EdgePtr RobustSolver::removeLastLoopClosure() {
+  EdgePtr removed_edge;
+  if (outlier_removal_) {
+    // removing loop closure so values should not change
+    removed_edge = outlier_removal_->removeLastLoopClosure(&nfg_);
+  } else {
+    removed_edge = removeLastFactor();
+  }
+
+  optimize();
+  return removed_edge;
+}
+
+void RobustSolver::ignorePrefix(char prefix) {
+  if (outlier_removal_) {
+    outlier_removal_->ignoreLoopClosureWithPrefix(prefix, &nfg_);
+  } else {
+    log<WARNING>(
+        "'ignorePrefix' currently not implemented for no outlier rejection "
+        "case");
   }
 
   optimize();
   return;
+}
+
+void RobustSolver::revivePrefix(char prefix) {
+  if (outlier_removal_) {
+    outlier_removal_->reviveLoopClosureWithPrefix(prefix, &nfg_);
+  } else {
+    log<WARNING>(
+        "'revivePrefix' and 'ignorePrefix' currently not implemented for no "
+        "outlier rejection case");
+  }
+
+  optimize();
+  return;
+}
+
+std::vector<char> RobustSolver::getIgnoredPrefixes() {
+  if (outlier_removal_) {
+    return outlier_removal_->getIgnoredPrefixes();
+  } else {
+    log<WARNING>(
+        "'revivePrefix' and 'ignorePrefix' currently not implemented for no "
+        "outlier rejection case");
+  }
+  std::vector<char> empty;
+  return empty;
 }
 
 void RobustSolver::saveData(std::string folder_path) const {
@@ -357,6 +426,17 @@ void RobustSolver::saveData(std::string folder_path) const {
   KimeraRPGO::writeG2o(nfg_, values_, g2o_file_path);
   if (outlier_removal_) {
     outlier_removal_->saveData(folder_path);
+  }
+
+  std::string gnc_weights_file = folder_path + "/gnc_weights.csv";
+  if (params_.use_gnc_) {
+    const static Eigen::IOFormat CSVFormat(
+        Eigen::FullPrecision, Eigen::DontAlignCols, ", ", "\n");
+    std::ofstream gnc_file(gnc_weights_file);
+    if (gnc_file.is_open()) {
+      gnc_file << gnc_weights_.format(CSVFormat);
+      gnc_file.close();
+    }
   }
 }
 

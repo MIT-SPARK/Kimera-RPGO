@@ -65,14 +65,13 @@ TEST(RobustSolver, TemporaryFactors) {
   pgo->forceUpdate();
 
   nfg_out = pgo->getFactorsUnsafe();
+  gtsam::NonlinearFactorGraph temp_nfg_out = pgo->getTempFactorsUnsafe();
   values_out = pgo->calculateEstimate();
   weights = pgo->getGncWeights();
   EXPECT(nfg_out.size() == size_t(52));
+  EXPECT(temp_nfg_out.size() == size_t(1));
   EXPECT(values_out.size() == size_t(50));
-  EXPECT(weights.size() == size_t(53));
-  // Expect all loop closures to be rejected
-  EXPECT(weights.segment(49, 3).sum() == 0);
-  EXPECT(weights.sum() == 50);
+  EXPECT(weights.size() == size_t(52));
   EXPECT(pgo->getNumLCInliers() == 0);
 
   // Remove temporary 
@@ -83,9 +82,11 @@ TEST(RobustSolver, TemporaryFactors) {
   pgo->forceUpdate();
 
   nfg_out = pgo->getFactorsUnsafe();
+  temp_nfg_out = pgo->getTempFactorsUnsafe();
   values_out = pgo->calculateEstimate();
   weights = pgo->getGncWeights();
   EXPECT(nfg_out.size() == size_t(52));
+  EXPECT(temp_nfg_out.size() == size_t(0));
   EXPECT(values_out.size() == size_t(50));
   EXPECT(weights.size() == size_t(52));
   // Expect all loop closures to be rejected

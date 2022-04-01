@@ -63,9 +63,31 @@ class OutlierRemoval {
 
   /*! \brief Remove last measured loop closure
    */
-  virtual void removeLastLoopClosure(
+  virtual EdgePtr removeLastLoopClosure(
       ObservationId id,
       gtsam::NonlinearFactorGraph* updated_factors) {}
+
+  /*! \brief Remove last measured loop closure regardless of obs id
+   */
+  virtual EdgePtr removeLastLoopClosure(
+      gtsam::NonlinearFactorGraph* updated_factors) {}
+
+  /*! \brief Ignore all loop closures that involves certain prefix
+   */
+  virtual void ignoreLoopClosureWithPrefix(
+      char prefix,
+      gtsam::NonlinearFactorGraph* updated_factors) {}
+
+  /*! \brief add back all loop closures that involves certain prefix
+   * Basically undos ignore
+   */
+  virtual void reviveLoopClosureWithPrefix(
+      char prefix,
+      gtsam::NonlinearFactorGraph* updated_factors) {}
+
+  /*! \brief Get the vector of currently ignored prefixes
+   */
+  virtual inline std::vector<char> getIgnoredPrefixes() {}
 
   /*! \brief Remove prior factors of nodes with prefix prefix
    */

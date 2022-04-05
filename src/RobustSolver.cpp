@@ -138,15 +138,15 @@ void RobustSolver::optimize() {
       gncParams.setMuStep(params_.gnc_params.mu_step_);
       gncParams.setRelativeCostTol(params_.gnc_params.relative_cost_tol_);
       gncParams.setWeightsTol(params_.gnc_params.weights_tol_);
-      // Set initial weights to bias odom
-      gtsam::Vector init_weights = Eigen::VectorXd::Zero(nfg_.size());
-      for (const auto& ind : known_inlier_factor_indices) {
-        init_weights(ind) = 1;
-      }
       // Create GNC optimizer
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::LevenbergMarquardtParams> >
           gnc_optimizer(full_nfg, full_values, gncParams);
       if (params_.gnc_params.bias_odom_) {
+        // Set initial weights to bias odom
+        gtsam::Vector init_weights = Eigen::VectorXd::Zero(full_nfg.size());
+        for (const auto& ind : known_inlier_factor_indices) {
+          init_weights(ind) = 1;
+        }
         gnc_optimizer.setWeights(init_weights);
       }
       switch (params_.gnc_params.gnc_threshold_mode_) {
@@ -187,9 +187,6 @@ void RobustSolver::optimize() {
         size_t k = outlier_removal_->getNumOdomFactors() +
                    outlier_removal_->getNumSpecialFactors();
         full_nfg = gtsam::NonlinearFactorGraph(nfg_.begin(), nfg_.begin() + k);
-        // for (size_t i = 0; i < k; i++) {
-        //   full_nfg.add(nfg_[i]);
-        // }
         for (size_t i = 0; i < latest_num_lc_; i++) {
           if (gnc_weights_(prev_k + i) > 0.5) {
             full_nfg.add(nfg_.at(k + i));
@@ -226,15 +223,15 @@ void RobustSolver::optimize() {
       gncParams.setMuStep(params_.gnc_params.mu_step_);
       gncParams.setRelativeCostTol(params_.gnc_params.relative_cost_tol_);
       gncParams.setWeightsTol(params_.gnc_params.weights_tol_);
-      // Set initial weights to bias odom
-      gtsam::Vector init_weights = Eigen::VectorXd::Zero(nfg_.size());
-      for (const auto& ind : known_inlier_factor_indices) {
-        init_weights(ind) = 1;
-      }
       // Create GNC optimizer
       gtsam::GncOptimizer<gtsam::GncParams<gtsam::GaussNewtonParams> >
           gnc_optimizer(full_nfg, full_values, gncParams);
       if (params_.gnc_params.bias_odom_) {
+        // Set initial weights to bias odom
+        gtsam::Vector init_weights = Eigen::VectorXd::Zero(full_nfg.size());
+        for (const auto& ind : known_inlier_factor_indices) {
+          init_weights(ind) = 1;
+        }
         gnc_optimizer.setWeights(init_weights);
       }
       switch (params_.gnc_params.gnc_threshold_mode_) {

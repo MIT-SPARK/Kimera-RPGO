@@ -57,34 +57,6 @@ struct ObservationId {
   }
 };
 
-struct Stats {
-  size_t lc;
-  size_t good_lc;
-  size_t odom_consistent_lc;
-  size_t multirobot_lc;
-  size_t good_multirobot_lc;
-  size_t landmark_measurements;
-  size_t good_landmark_measurements;
-  std::vector<double> consistency_error;
-
-  Stats(size_t num_lc,
-        size_t num_good_lc,
-        size_t num_odom_const_lc,
-        size_t num_multirobot_lc,
-        size_t num_good_multirobot_lc,
-        size_t num_landmark_measurements,
-        size_t num_good_landmark_measurements,
-        const std::vector<double>& error)
-      : lc(num_lc),
-        good_lc(num_good_lc),
-        odom_consistent_lc(num_odom_const_lc),
-        multirobot_lc(num_multirobot_lc),
-        good_multirobot_lc(num_good_multirobot_lc),
-        landmark_measurements(num_landmark_measurements),
-        good_landmark_measurements(num_good_landmark_measurements),
-        consistency_error(error) {}
-};
-
 // Add compatibility for c++11's lack of make_unique.
 template <typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args&&... args) {

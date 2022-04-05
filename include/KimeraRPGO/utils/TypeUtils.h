@@ -1,5 +1,5 @@
 // Authors: Yun Chang
-#pragma once 
+#pragma once
 
 #include <functional>
 #include <memory>

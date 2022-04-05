@@ -30,8 +30,8 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/slam/PriorFactor.h>
 
-#include "KimeraRPGO/SolverParams.h"
 #include "KimeraRPGO/Logger.h"
+#include "KimeraRPGO/SolverParams.h"
 #include "KimeraRPGO/outlier/OutlierRemoval.h"
 #include "KimeraRPGO/utils/GeometryUtils.h"
 #include "KimeraRPGO/utils/GraphUtils.h"

@@ -68,7 +68,7 @@ class GenericSolver {
 
   void setQuiet() { debug_ = false; }
 
-  EdgePtr removeLastFactor(); // remove last added factor
+  EdgePtr removeLastFactor();  // remove last added factor
 
   void removePriorsWithPrefix(const char& prefix);
 

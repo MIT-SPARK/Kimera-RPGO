@@ -31,28 +31,28 @@ enum class MultiRobotAlignMethod {
 };
 
 struct PcmParams {
-public:
- PcmParams()
-     : odom_threshold(10.0),
-       lc_threshold(5.0),
-       odom_trans_threshold(0.05),
-       odom_rot_threshold(0.005),
-       dist_trans_threshold(0.01),
-       dist_rot_threshold(0.001),
-       incremental(false) {}
- // if threshold is < 0, check disabled
- // for Pcm
- double odom_threshold;
- double lc_threshold;
+ public:
+  PcmParams()
+      : odom_threshold(10.0),
+        lc_threshold(5.0),
+        odom_trans_threshold(0.05),
+        odom_rot_threshold(0.005),
+        dist_trans_threshold(0.01),
+        dist_rot_threshold(0.001),
+        incremental(false) {}
+  // if threshold is < 0, check disabled
+  // for Pcm
+  double odom_threshold;
+  double lc_threshold;
 
- // for PcmSimple
- double odom_trans_threshold;
- double odom_rot_threshold;
- double dist_trans_threshold;
- double dist_rot_threshold;
+  // for PcmSimple
+  double odom_trans_threshold;
+  double odom_rot_threshold;
+  double dist_trans_threshold;
+  double dist_rot_threshold;
 
- // incremental max clique
- bool incremental;
+  // incremental max clique
+  bool incremental;
 };
 
 struct GncParams {

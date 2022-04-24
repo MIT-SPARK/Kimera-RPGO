@@ -9,7 +9,6 @@ author: Yun Chang
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <string>
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/Values.h>

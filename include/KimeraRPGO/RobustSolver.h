@@ -7,6 +7,7 @@ author: Yun Chang, Luca Carlone
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/Values.h>
@@ -65,7 +66,28 @@ class RobustSolver : public GenericSolver {
    * For example, to remove the last measure loop closure between robots a and c
    * removeLastLoopClosure('a', 'c');
    */
-  void removeLastLoopClosure(char prefix_1, char prefix_2);
+  EdgePtr removeLastLoopClosure(char prefix_1, char prefix_2);
+
+  /*! \brief Remove last added loop closure regardless the prefixes of the
+   * robots. Just remove the last added loop closure in chronological order;
+   */
+  EdgePtr removeLastLoopClosure();
+
+  /*! \brief Ignore all loop closure with certian prefix
+   */
+  void ignorePrefix(char prefix);
+
+  /*! \brief Revive all loop closure with certian prefix
+   */
+  void revivePrefix(char prefix);
+
+  /*! \brief Get the list of ignored prefix
+   */
+  std::vector<char> getIgnoredPrefixes();
+
+  /*! \brief logging data to directory indicated by path
+   */
+  void enableLogging(std::string path);
 
   /*! \brief remove the prior factors of nodes that given prefix
    */

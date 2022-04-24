@@ -10,9 +10,11 @@ author: Yun Chang, Luca Carlone
 #define SLOW_BUT_CORRECT_BETWEENFACTOR
 
 #include <math.h>
+#include <algorithm>
 #include <chrono>
 #include <fstream>
 #include <iomanip>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -28,8 +30,8 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/slam/PriorFactor.h>
 
-#include "KimeraRPGO/SolverParams.h"
 #include "KimeraRPGO/Logger.h"
+#include "KimeraRPGO/SolverParams.h"
 #include "KimeraRPGO/outlier/OutlierRemoval.h"
 #include "KimeraRPGO/utils/GeometryUtils.h"
 #include "KimeraRPGO/utils/GraphUtils.h"
@@ -104,7 +106,18 @@ class Pcm : public OutlierRemoval {
   // storing landmark measurements and its adjacency matrix
   std::unordered_map<gtsam::Key, Measurements> landmarks_;
 
+  // store the vector of observations (loop closures)
+  std::vector<ObservationId> loop_closures_in_order_;
+
   size_t total_lc_, total_good_lc_;
+
+  // store the vector of ignored prefixes (loop closures to ignore)
+  std::vector<char> ignored_prefixes_;
+
+  // values and factors graphs for logging
+  gtsam::NonlinearFactorGraph last_ouput_nfg_;
+  gtsam::NonlinearFactorGraph odom_inconsistent_factors_;
+  gtsam::NonlinearFactorGraph pairwise_inconsistent_factors_;
 
   // Multirobot initialization method
   MultiRobotAlignMethod multirobot_align_method_;
@@ -136,11 +149,7 @@ class Pcm : public OutlierRemoval {
     // Start timer
     auto start = std::chrono::high_resolution_clock::now();
     // store new values:
-    output_values->insert(
-        new_values);  // - store latest pose in values_ (note:
-                      // values_ is the optimized estimate,
-                      // while trajectory is the odom estimate)
-    // Check values to initialize a trajectory in odom_trajectories if needed
+    output_values->insert(new_values);
     if (new_factors.size() == 0) {
       // Done and nothing to optimize
       return false;
@@ -199,8 +208,11 @@ class Pcm : public OutlierRemoval {
           Measurements newMeasurement;
           newMeasurement.factors.add(new_factors[i]);
           newMeasurement.consistent_factors.add(new_factors[i]);
-          gtsam::Symbol symb(new_values.keys()[0]);
-          landmarks_[symb] = newMeasurement;
+          gtsam::Symbol symbfrnt(new_factors[i]->front());
+          gtsam::Key landmark_key =
+              (isSpecialSymbol(symbfrnt.chr()) ? new_factors[i]->front()
+                                               : new_factors[i]->back());
+          landmarks_[landmark_key] = newMeasurement;
           total_lc_++;
         } break;
         case FactorType::LOOP_CLOSURE: {
@@ -281,16 +293,19 @@ class Pcm : public OutlierRemoval {
    * For example if Observation id is Obsid('a','c'), method
    * removes the last loop closure between robots a and c
    */
-  void removeLastLoopClosure(ObservationId id,
-                             gtsam::NonlinearFactorGraph* updated_factors) {
+  EdgePtr removeLastLoopClosure(ObservationId id,
+                                gtsam::NonlinearFactorGraph* updated_factors) {
     if (loop_closures_.find(id) == loop_closures_.end()) {
-      return;  // No loop closures in this container
+      return NULL;  // No loop closures in this container
     }
     // Update the measurements (delete last measurement)
     size_t numLC = loop_closures_[id].adj_matrix.rows();
     if (numLC <= 0) {
-      return;  // No more loop closures
+      return NULL;  // No more loop closures
     }
+    size_t num_lc = loop_closures_[id].factors.size();
+    Edge removed_edge = Edge(loop_closures_[id].factors[num_lc - 1]->front(),
+                             loop_closures_[id].factors[num_lc - 1]->back());
 
     loop_closures_[id].factors.erase(
         std::prev(loop_closures_[id].factors.end()));
@@ -317,8 +332,48 @@ class Pcm : public OutlierRemoval {
     }
 
     *updated_factors = buildGraphToOptimize();
-    return;
+    return make_unique<Edge>(removed_edge);
   }
+
+  /*! \brief remove the last loop closure regardless of observation ID
+   * and update the factors.
+   * Removes the last loop closure based on chronological order
+   */
+  EdgePtr removeLastLoopClosure(gtsam::NonlinearFactorGraph* updated_factors) {
+    if (loop_closures_in_order_.size() == 0) return NULL;
+
+    ObservationId last_obs = loop_closures_in_order_.back();
+    loop_closures_in_order_.pop_back();
+    return removeLastLoopClosure(last_obs, updated_factors);
+  }
+
+  /*! \brief Ignore all loop closures that involves certain prefix
+   */
+  void ignoreLoopClosureWithPrefix(
+      char prefix,
+      gtsam::NonlinearFactorGraph* updated_factors) {
+    if (std::find(ignored_prefixes_.begin(), ignored_prefixes_.end(), prefix) ==
+        ignored_prefixes_.end())
+      ignored_prefixes_.push_back(prefix);
+
+    *updated_factors = buildGraphToOptimize();
+  }
+
+  /*! \brief Undo ignoreLoopClosureWithPrefix
+   */
+  void reviveLoopClosureWithPrefix(
+      char prefix,
+      gtsam::NonlinearFactorGraph* updated_factors) {
+    ignored_prefixes_.erase(
+        std::remove(ignored_prefixes_.begin(), ignored_prefixes_.end(), prefix),
+        ignored_prefixes_.end());
+
+    *updated_factors = buildGraphToOptimize();
+  }
+
+  /*! \brief Get the vector of currently ignored prefixes
+   */
+  inline std::vector<char> getIgnoredPrefixes() { return ignored_prefixes_; }
 
   /*! \brief remove the prior factors of nodes that given prefix
    */
@@ -417,6 +472,7 @@ class Pcm : public OutlierRemoval {
               num_new_loopclosures->at(obs_id)++;
             }
             loop_closures_[obs_id].factors.add(nfg_factor);
+            loop_closures_in_order_.push_back(obs_id);
             total_lc_++;
             incrementAdjMatrix(obs_id, nfg_factor);
           } else {
@@ -913,7 +969,13 @@ class Pcm : public OutlierRemoval {
     std::unordered_map<ObservationId, Measurements>::iterator it =
         loop_closures_.begin();
     while (it != loop_closures_.end()) {
-      output_nfg.add(it->second.consistent_factors);
+      if (std::find(ignored_prefixes_.begin(),
+                    ignored_prefixes_.end(),
+                    it->first.id1) == ignored_prefixes_.end() &&
+          std::find(ignored_prefixes_.begin(),
+                    ignored_prefixes_.end(),
+                    it->first.id2) == ignored_prefixes_.end())
+        output_nfg.add(it->second.consistent_factors);
       it++;
     }
     // add the good loop closures associated with landmarks

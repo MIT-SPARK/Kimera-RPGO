@@ -13,8 +13,9 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/Values.h>
 
-#include "KimeraRPGO/SolverParams.h"
 #include "KimeraRPGO/Logger.h"
+#include "KimeraRPGO/SolverParams.h"
+#include "KimeraRPGO/utils/TypeUtils.h"
 
 namespace KimeraRPGO {
 
@@ -67,7 +68,7 @@ class GenericSolver {
 
   void setQuiet() { debug_ = false; }
 
-  void removeLastFactor();  // remove last added factor
+  EdgePtr removeLastFactor();  // remove last added factor
 
   void removePriorsWithPrefix(const char& prefix);
 

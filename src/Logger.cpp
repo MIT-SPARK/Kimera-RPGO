@@ -33,25 +33,25 @@ using std::invalid_argument;
 
 namespace KimeraRPGO {
 
-void writeG2o(const NonlinearFactorGraph &graph,
-              const Values &estimate,
-              const std::string &filename) {
+void writeG2o(const NonlinearFactorGraph& graph,
+              const Values& estimate,
+              const std::string& filename) {
   fstream stream(filename.c_str(), fstream::out);
 
   // save 2D poses
   for (const auto key_value : estimate) {
-    auto p = dynamic_cast<const GenericValue<Pose2> *>(&key_value.value);
+    auto p = dynamic_cast<const GenericValue<Pose2>*>(&key_value.value);
     if (!p) continue;
-    const Pose2 &pose = p->value();
+    const Pose2& pose = p->value();
     stream << "VERTEX_SE2 " << key_value.key << " " << pose.x() << " "
            << pose.y() << " " << pose.theta() << endl;
   }
 
   // save 3D poses
   for (const auto key_value : estimate) {
-    auto p = dynamic_cast<const GenericValue<Pose3> *>(&key_value.value);
+    auto p = dynamic_cast<const GenericValue<Pose3>*>(&key_value.value);
     if (!p) continue;
-    const Pose3 &pose = p->value();
+    const Pose3& pose = p->value();
     const Point3 t = pose.translation();
     const auto q = pose.rotation().toQuaternion();
     stream << "VERTEX_SE3:QUAT " << key_value.key << " " << t.x() << " "
@@ -61,24 +61,24 @@ void writeG2o(const NonlinearFactorGraph &graph,
 
   // save 2D landmarks
   for (const auto key_value : estimate) {
-    auto p = dynamic_cast<const GenericValue<Point2> *>(&key_value.value);
+    auto p = dynamic_cast<const GenericValue<Point2>*>(&key_value.value);
     if (!p) continue;
-    const Point2 &point = p->value();
+    const Point2& point = p->value();
     stream << "VERTEX_XY " << key_value.key << " " << point.x() << " "
            << point.y() << endl;
   }
 
   // save 3D landmarks
   for (const auto key_value : estimate) {
-    auto p = dynamic_cast<const GenericValue<Point3> *>(&key_value.value);
+    auto p = dynamic_cast<const GenericValue<Point3>*>(&key_value.value);
     if (!p) continue;
-    const Point3 &point = p->value();
+    const Point3& point = p->value();
     stream << "VERTEX_TRACKXYZ " << key_value.key << " " << point.x() << " "
            << point.y() << " " << point.z() << endl;
   }
 
   // save edges (2D or 3D)
-  for (const auto &factor_ : graph) {
+  for (const auto& factor_ : graph) {
     auto factor = boost::dynamic_pointer_cast<BetweenFactor<Pose2>>(factor_);
     if (factor) {
       SharedNoiseModel model = factor->noiseModel();

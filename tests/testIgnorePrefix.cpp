@@ -7,6 +7,7 @@
 #include <CppUnitLite/TestHarness.h>
 #include <memory>
 #include <random>
+#include <vector>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/inference/Symbol.h>
@@ -16,10 +17,7 @@
 #include "KimeraRPGO/utils/TypeUtils.h"
 #include "test_config.h"
 
-using KimeraRPGO::EdgePtr;
-using KimeraRPGO::RobustSolver;
-using KimeraRPGO::RobustSolverParams;
-using KimeraRPGO::Verbosity;
+using namespace KimeraRPGO;
 
 void buildTestGraph(gtsam::NonlinearFactorGraph* factors,
                     gtsam::Values* values) {
@@ -107,98 +105,10 @@ void buildTestGraph(gtsam::NonlinearFactorGraph* factors,
 }
 
 /* ************************************************************************* */
-TEST(RobustSolver, RemoveLastLoopClosureNoOR) {
-  // set up KimeraRPGO solver
-  RobustSolverParams params;
-  params.setNoRejection(Verbosity::QUIET);
-
-  std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
-
-  static const gtsam::SharedNoiseModel& noise =
-      gtsam::noiseModel::Isotropic::Variance(6, 10e-8);
-
-  gtsam::NonlinearFactorGraph nfg;
-  gtsam::Values est;
-
-  buildTestGraph(&nfg, &est);
-
-  pgo->update(nfg, est);
-
-  // Basic check before removing loop closures
-  nfg = pgo->getFactorsUnsafe();
-  est = pgo->calculateEstimate();
-  EXPECT(nfg.size() == size_t(12));
-  EXPECT(est.size() == size_t(12));
-  EXPECT(
-      gtsam::assert_equal(gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0)),
-                          est.at<gtsam::Pose3>(gtsam::Symbol('b', 0)),
-                          0.01));
-  EXPECT(gtsam::assert_equal(
-      gtsam::Pose3(gtsam::Rot3(0, 0, 0, 1), gtsam::Point3(4, 1, 0)),
-      est.at<gtsam::Pose3>(gtsam::Symbol('a', 5)),
-      10e-6));
-
-  // Add two loop closures
-  gtsam::NonlinearFactorGraph factors;
-  factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      gtsam::Symbol('b', 0), gtsam::Symbol('a', 0), gtsam::Pose3(), noise));
-  factors.add(gtsam::BetweenFactor<gtsam::Pose3>(
-      gtsam::Symbol('a', 5),
-      gtsam::Symbol('a', 3),
-      gtsam::Pose3(gtsam::Rot3(0, 0, 0, 1), gtsam::Point3(1, 0, 0)),
-      noise));
-  pgo->update(factors);
-  nfg = pgo->getFactorsUnsafe();
-  est = pgo->calculateEstimate();
-  EXPECT(nfg.size() == size_t(14));
-  EXPECT(est.size() == size_t(12));
-  EXPECT(gtsam::assert_equal(
-      gtsam::Pose3(), est.at<gtsam::Pose3>(gtsam::Symbol('b', 0)), 10e-6));
-  EXPECT(gtsam::assert_equal(
-      gtsam::Pose3(gtsam::Rot3(0, 0, 0, 1), gtsam::Point3(4, 0, 0)),
-      est.at<gtsam::Pose3>(gtsam::Symbol('a', 5)),
-      10e-6));
-
-  // Remove loop closure 1
-  EdgePtr removed_edge_1 = pgo->removeLastLoopClosure('a', 'a');
-  nfg = pgo->getFactorsUnsafe();
-  est = pgo->calculateEstimate();
-  EXPECT(nfg.size() == size_t(13));
-  EXPECT(est.size() == size_t(12));
-  EXPECT(removed_edge_1->from_key == gtsam::Symbol('a', 5));
-  EXPECT(removed_edge_1->to_key == gtsam::Symbol('a', 3));
-  EXPECT(gtsam::assert_equal(
-      gtsam::Pose3(), est.at<gtsam::Pose3>(gtsam::Symbol('b', 0)), 10e-6));
-  EXPECT(gtsam::assert_equal(
-      gtsam::Pose3(gtsam::Rot3(0, 0, 0, 1), gtsam::Point3(4, 1, 0)),
-      est.at<gtsam::Pose3>(gtsam::Symbol('a', 5)),
-      10e-6));
-
-  // Remove loop closure 2
-  EdgePtr removed_edge_2 = pgo->removeLastLoopClosure('a', 'b');
-  nfg = pgo->getFactorsUnsafe();
-  est = pgo->calculateEstimate();
-  EXPECT(nfg.size() == size_t(12));
-  EXPECT(est.size() == size_t(12));
-  EXPECT(removed_edge_2->from_key == gtsam::Symbol('b', 0));
-  EXPECT(removed_edge_2->to_key == gtsam::Symbol('a', 0));
-  EXPECT(
-      gtsam::assert_equal(gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0)),
-                          est.at<gtsam::Pose3>(gtsam::Symbol('b', 0)),
-                          0.01));
-  EXPECT(gtsam::assert_equal(
-      gtsam::Pose3(gtsam::Rot3(0, 0, 0, 1), gtsam::Point3(4, 1, 0)),
-      est.at<gtsam::Pose3>(gtsam::Symbol('a', 5)),
-      10e-6));
-}
-
-/* ************************************************************************* */
-TEST(RobustSolver, RemoveLastLoopClosurePcm) {
+TEST(RobustSolver, IgnoreSinglePrefixA) {
   // set up KimeraRPGO solver
   RobustSolverParams params;
   params.setPcm3DParams(100, 100, Verbosity::QUIET);
-
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
 
@@ -247,29 +157,13 @@ TEST(RobustSolver, RemoveLastLoopClosurePcm) {
       est.at<gtsam::Pose3>(gtsam::Symbol('a', 5)),
       10e-6));
 
-  // Remove loop closure 1
-  EdgePtr removed_edge_1 = pgo->removeLastLoopClosure('a', 'a');
+  // Ignore all loop closures with prefix a
+  pgo->ignorePrefix('a');
   nfg = pgo->getFactorsUnsafe();
   est = pgo->calculateEstimate();
-  EXPECT(nfg.size() == size_t(13));
-  EXPECT(est.size() == size_t(12));
-  EXPECT(removed_edge_1->from_key == gtsam::Symbol('a', 5));
-  EXPECT(removed_edge_1->to_key == gtsam::Symbol('a', 3));
-  EXPECT(gtsam::assert_equal(
-      gtsam::Pose3(), est.at<gtsam::Pose3>(gtsam::Symbol('b', 0)), 10e-6));
-  EXPECT(gtsam::assert_equal(
-      gtsam::Pose3(gtsam::Rot3(0, 0, 0, 1), gtsam::Point3(4, 1, 0)),
-      est.at<gtsam::Pose3>(gtsam::Symbol('a', 5)),
-      10e-6));
-
-  // Remove loop closure 2
-  EdgePtr removed_edge_2 = pgo->removeLastLoopClosure('a', 'b');
-  nfg = pgo->getFactorsUnsafe();
-  est = pgo->calculateEstimate();
+  std::vector<char> ignored_prefixes = pgo->getIgnoredPrefixes();
   EXPECT(nfg.size() == size_t(12));
   EXPECT(est.size() == size_t(12));
-  EXPECT(removed_edge_2->from_key == gtsam::Symbol('b', 0));
-  EXPECT(removed_edge_2->to_key == gtsam::Symbol('a', 0));
   EXPECT(
       gtsam::assert_equal(gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0)),
                           est.at<gtsam::Pose3>(gtsam::Symbol('b', 0)),
@@ -278,14 +172,30 @@ TEST(RobustSolver, RemoveLastLoopClosurePcm) {
       gtsam::Pose3(gtsam::Rot3(0, 0, 0, 1), gtsam::Point3(4, 1, 0)),
       est.at<gtsam::Pose3>(gtsam::Symbol('a', 5)),
       10e-6));
+  EXPECT(ignored_prefixes.size() == size_t(1));
+  EXPECT(ignored_prefixes[0] == 'a');
+
+  // Revive all loop closures with prefix a
+  pgo->revivePrefix('a');
+  nfg = pgo->getFactorsUnsafe();
+  est = pgo->calculateEstimate();
+  ignored_prefixes = pgo->getIgnoredPrefixes();
+  EXPECT(nfg.size() == size_t(14));
+  EXPECT(est.size() == size_t(12));
+  EXPECT(gtsam::assert_equal(
+      gtsam::Pose3(), est.at<gtsam::Pose3>(gtsam::Symbol('b', 0)), 0.01));
+  EXPECT(gtsam::assert_equal(
+      gtsam::Pose3(gtsam::Rot3(0, 0, 0, 1), gtsam::Point3(4, 0, 0)),
+      est.at<gtsam::Pose3>(gtsam::Symbol('a', 5)),
+      10e-6));
+  EXPECT(ignored_prefixes.size() == size_t(0));
 }
 
 /* ************************************************************************* */
-TEST(RobustSolver, RemoveLastLoopClosurePcm_NoObsId) {
+TEST(RobustSolver, IgnoreSinglePrefixB) {
   // set up KimeraRPGO solver
   RobustSolverParams params;
   params.setPcm3DParams(100, 100, Verbosity::QUIET);
-
   std::unique_ptr<RobustSolver> pgo =
       KimeraRPGO::make_unique<RobustSolver>(params);
 
@@ -334,55 +244,38 @@ TEST(RobustSolver, RemoveLastLoopClosurePcm_NoObsId) {
       est.at<gtsam::Pose3>(gtsam::Symbol('a', 5)),
       10e-6));
 
-  // Remove loop closure 1
-  EdgePtr removed_edge_1 = pgo->removeLastLoopClosure();
+  // Ignore all loop closures with prefix b
+  pgo->ignorePrefix('b');
   nfg = pgo->getFactorsUnsafe();
   est = pgo->calculateEstimate();
+  std::vector<char> ignored_prefixes = pgo->getIgnoredPrefixes();
   EXPECT(nfg.size() == size_t(13));
   EXPECT(est.size() == size_t(12));
-  EXPECT(removed_edge_1->from_key == gtsam::Symbol('a', 5));
-  EXPECT(removed_edge_1->to_key == gtsam::Symbol('a', 3));
-  EXPECT(gtsam::assert_equal(
-      gtsam::Pose3(), est.at<gtsam::Pose3>(gtsam::Symbol('b', 0)), 10e-6));
-  EXPECT(gtsam::assert_equal(
-      gtsam::Pose3(gtsam::Rot3(0, 0, 0, 1), gtsam::Point3(4, 1, 0)),
-      est.at<gtsam::Pose3>(gtsam::Symbol('a', 5)),
-      10e-6));
-
-  // Remove loop closure 2
-  EdgePtr removed_edge_2 = pgo->removeLastLoopClosure();
-  nfg = pgo->getFactorsUnsafe();
-  est = pgo->calculateEstimate();
-  EXPECT(nfg.size() == size_t(12));
-  EXPECT(est.size() == size_t(12));
-  EXPECT(removed_edge_2->from_key == gtsam::Symbol('b', 0));
-  EXPECT(removed_edge_2->to_key == gtsam::Symbol('a', 0));
   EXPECT(
       gtsam::assert_equal(gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0)),
                           est.at<gtsam::Pose3>(gtsam::Symbol('b', 0)),
                           0.01));
   EXPECT(gtsam::assert_equal(
-      gtsam::Pose3(gtsam::Rot3(0, 0, 0, 1), gtsam::Point3(4, 1, 0)),
+      gtsam::Pose3(gtsam::Rot3(0, 0, 0, 1), gtsam::Point3(4, 0, 0)),
       est.at<gtsam::Pose3>(gtsam::Symbol('a', 5)),
       10e-6));
+  EXPECT(ignored_prefixes.size() == size_t(1));
+  EXPECT(ignored_prefixes[0] == 'b');
 
-  // Remove loop closure 3
-  // But no loop closures left so shouldn't doo anything
-  EdgePtr removed_edge_3 = pgo->removeLastLoopClosure();
+  // Revive all loop closures with prefix b
+  pgo->revivePrefix('b');
   nfg = pgo->getFactorsUnsafe();
   est = pgo->calculateEstimate();
-  EXPECT(nfg.size() == size_t(12));
+  ignored_prefixes = pgo->getIgnoredPrefixes();
+  EXPECT(nfg.size() == size_t(14));
   EXPECT(est.size() == size_t(12));
-  EXPECT(removed_edge_3 == NULL);
-  EXPECT(removed_edge_3 == NULL);
-  EXPECT(
-      gtsam::assert_equal(gtsam::Pose3(gtsam::Rot3(), gtsam::Point3(0, -1, 0)),
-                          est.at<gtsam::Pose3>(gtsam::Symbol('b', 0)),
-                          0.01));
   EXPECT(gtsam::assert_equal(
-      gtsam::Pose3(gtsam::Rot3(0, 0, 0, 1), gtsam::Point3(4, 1, 0)),
+      gtsam::Pose3(), est.at<gtsam::Pose3>(gtsam::Symbol('b', 0)), 0.01));
+  EXPECT(gtsam::assert_equal(
+      gtsam::Pose3(gtsam::Rot3(0, 0, 0, 1), gtsam::Point3(4, 0, 0)),
       est.at<gtsam::Pose3>(gtsam::Symbol('a', 5)),
       10e-6));
+  EXPECT(ignored_prefixes.size() == size_t(0));
 }
 
 /* ************************************************************************* */

@@ -102,14 +102,10 @@ void RobustSolver::getGncKnownInliers(InlierVectorType* known_inliers) {
   size_t num_odom_factors = outlier_removal_->getNumOdomFactors();
   size_t num_special_factors = outlier_removal_->getNumSpecialFactors();
   // Set odometry and special factors as known inliers
-  known_inliers->resize(num_odom_factors + num_special_factors +
-                        temp_nfg_.size());
+  known_inliers->resize(num_odom_factors + num_special_factors);
   std::iota(std::begin(*known_inliers),
             std::begin(*known_inliers) + num_odom_factors + num_special_factors,
             0);
-  std::iota(std::end(*known_inliers) - temp_nfg_.size(),
-            std::end(*known_inliers),
-            nfg_.size());
 }
 
 void RobustSolver::optimize() {
@@ -167,7 +163,7 @@ void RobustSolver::optimize() {
       gtsam::Vector gnc_all_weights = gnc_optimizer.getWeights();
       gnc_weights_ = gnc_all_weights.head(nfg_.size());
       gnc_num_inliers_ = static_cast<size_t>(gnc_all_weights.sum()) -
-                         known_inlier_factor_indices.size();
+                         known_inlier_factor_indices.size() - temp_nfg_.size();
       auto opt_stop_t = std::chrono::high_resolution_clock::now();
       auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
           opt_stop_t - opt_start_t);

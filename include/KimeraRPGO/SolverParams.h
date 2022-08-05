@@ -85,12 +85,12 @@ struct RobustSolverParams {
         outlierRemovalMethod(OutlierRemovalMethod::PCM3D),
         specialSymbols(),
         verbosity(Verbosity::UPDATE),
-        gnc_params(),
-        pcm_params(),
-        lm_diagonal_damping(true),
         log_output(false),
-        use_gnc_(false),
-        multirobot_align_method(MultiRobotAlignMethod::NONE) {}
+        pcm_params(),
+        gnc_params(),
+        lm_diagonal_damping(true),
+        multirobot_align_method(MultiRobotAlignMethod::NONE),
+        use_gnc_(false) {}
   /*! \brief For RobustSolver to not do outlier rejection at all
    */
   void setNoRejection(Verbosity verbos = Verbosity::UPDATE) {

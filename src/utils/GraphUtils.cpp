@@ -37,7 +37,7 @@ int findMaxCliqueHeuIncremental(const Eigen::MatrixXd adjMatrix,
   int max_clique_size_new_lc = 0;
   max_clique_size_new_lc = FMC::maxCliqueHeuIncremental(
       &gio, num_new_lc, prev_maxclique_size, max_clique);
-  if (max_clique_size_new_lc > prev_maxclique_size) {
+  if (static_cast<size_t>(max_clique_size_new_lc) > prev_maxclique_size) {
     return max_clique_size_new_lc;
   }
   return 0;

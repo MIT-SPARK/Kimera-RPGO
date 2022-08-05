@@ -50,7 +50,6 @@ bool GenericSolver::addAndCheckIfOptimize(
   // add new values and factors
   nfg_.add(nfg);
   values_.insert(values);
-  bool do_optimize = true;
 
   // Do not optimize for just odometry (between) additions
   if (nfg.size() == 1 && nfg[0]->keys().size() == 2 && values.size() == 1) {

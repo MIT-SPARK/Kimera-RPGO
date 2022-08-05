@@ -28,10 +28,10 @@ typedef std::pair<gtsam::NonlinearFactorGraph, gtsam::Values> GraphAndValues;
 
 RobustSolver::RobustSolver(const RobustSolverParams& params)
     : GenericSolver(params.solver, params.specialSymbols),
-      params_(params),
-      gnc_num_inliers_(0),
       gnc_weights_(),
-      latest_num_lc_(0) {
+      gnc_num_inliers_(0),
+      latest_num_lc_(0),
+      params_(params) {
   switch (params.outlierRemovalMethod) {
     case OutlierRemovalMethod::NONE: {
       outlier_removal_ =

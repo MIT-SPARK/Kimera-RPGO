@@ -28,10 +28,10 @@ typedef std::pair<gtsam::NonlinearFactorGraph, gtsam::Values> GraphAndValues;
 
 RobustSolver::RobustSolver(const RobustSolverParams& params)
     : GenericSolver(params.solver, params.specialSymbols),
-      params_(params),
-      gnc_num_inliers_(0),
       gnc_weights_(),
-      latest_num_lc_(0) {
+      gnc_num_inliers_(0),
+      latest_num_lc_(0),
+      params_(params) {
   switch (params.outlierRemovalMethod) {
     case OutlierRemovalMethod::NONE: {
       outlier_removal_ =
@@ -98,7 +98,7 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
   }
 }
 
-void RobustSolver::getGncKnownInliers(std::vector<size_t>* known_inliers) {
+void RobustSolver::getGncKnownInliers(InlierVectorType* known_inliers) {
   size_t num_odom_factors = outlier_removal_->getNumOdomFactors();
   size_t num_special_factors = outlier_removal_->getNumSpecialFactors();
   // Set odometry and special factors as known inliers
@@ -131,7 +131,7 @@ void RobustSolver::optimize() {
         !(params_.gnc_params.fix_prev_inliers_ &&
           outlier_removal_->getNumLC() == latest_num_lc_)) {
       gtsam::GncParams<gtsam::LevenbergMarquardtParams> gncParams(lmParams);
-      std::vector<size_t> known_inlier_factor_indices;
+      InlierVectorType known_inlier_factor_indices;
       getGncKnownInliers(&known_inlier_factor_indices);
       gncParams.setKnownInliers(known_inlier_factor_indices);
       gncParams.setMaxIterations(params_.gnc_params.max_iterations_);
@@ -216,7 +216,7 @@ void RobustSolver::optimize() {
     }
     if (params_.use_gnc_ && outlier_removal_) {
       gtsam::GncParams<gtsam::GaussNewtonParams> gncParams(gnParams);
-      std::vector<size_t> known_inlier_factor_indices;
+      InlierVectorType known_inlier_factor_indices;
       getGncKnownInliers(&known_inlier_factor_indices);
       gncParams.setKnownInliers(known_inlier_factor_indices);
       gncParams.setMaxIterations(params_.gnc_params.max_iterations_);

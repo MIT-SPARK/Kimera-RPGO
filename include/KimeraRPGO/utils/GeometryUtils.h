@@ -224,9 +224,9 @@ struct PoseWithNode {
             ->covariance();
 
     // prevent propagation of nan values in the edge case
-    const int dim = getDim<T>();
+    //const int dim = getDim<T>();
     const int r_dim = getRotationDim<T>();
-    const int t_dim = getTranslationDim<T>();
+    //const int t_dim = getTranslationDim<T>();
     rotation_info = true;
     if (std::isnan(covar.block(0, 0, r_dim, r_dim).trace())) {
       rotation_info = false;

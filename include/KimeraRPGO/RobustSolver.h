@@ -13,6 +13,8 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/slam/PriorFactor.h>
+#include <gtsam/nonlinear/GaussNewtonOptimizer.h>
+#include <gtsam/nonlinear/GncOptimizer.h>
 
 #include "KimeraRPGO/GenericSolver.h"
 #include "KimeraRPGO/SolverParams.h"
@@ -27,6 +29,8 @@ namespace KimeraRPGO {
  */
 class RobustSolver : public GenericSolver {
  public:
+  using InlierVectorType = decltype(gtsam::GncParams<gtsam::GaussNewtonParams>::knownInliers);
+
   explicit RobustSolver(const RobustSolverParams& params);
 
   virtual ~RobustSolver() = default;
@@ -104,7 +108,7 @@ class RobustSolver : public GenericSolver {
 
   /*! \brief Get the index of the known inliers for GNC
    */
-  void getGncKnownInliers(std::vector<size_t>* known_inliers);
+  void getGncKnownInliers(InlierVectorType* known_inliers);
 
   /*! \brief Calling the optimization
    *  Optimize the factor graph with the stroed values

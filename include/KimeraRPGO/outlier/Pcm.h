@@ -60,10 +60,10 @@ class Pcm : public OutlierRemoval {
       const std::vector<char>& special_symbols = std::vector<char>())
       : OutlierRemoval(),
         params_(params),
-        multirobot_align_method_(align_method),
         special_symbols_(special_symbols),
         total_lc_(0),
         total_good_lc_(0),
+        multirobot_align_method_(align_method),
         odom_check_(true),
         loop_consistency_check_(true) {
     // check if templated value valid
@@ -745,7 +745,7 @@ class Pcm : public OutlierRemoval {
             *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT>>(
                 loop_closures_[id].factors[i]);
         // check consistency
-        double mah_distance;
+        double mah_distance = 0.0;
         bool consistent = areLoopsConsistent(factor_i, factor, &mah_distance);
         new_dst_matrix(num_lc - 1, i) = mah_distance;
         new_dst_matrix(i, num_lc - 1) = mah_distance;

@@ -745,7 +745,7 @@ class Pcm : public OutlierRemoval {
             *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT>>(
                 loop_closures_[id].factors[i]);
         // check consistency
-        double mah_distance;
+        double mah_distance = 0.0;
         bool consistent = areLoopsConsistent(factor_i, factor, &mah_distance);
         new_dst_matrix(num_lc - 1, i) = mah_distance;
         new_dst_matrix(i, num_lc - 1) = mah_distance;

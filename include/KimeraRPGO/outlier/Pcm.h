@@ -1064,7 +1064,7 @@ class Pcm : public OutlierRemoval {
    * desired
    */
   gtsam::Values getRobotOdomValues(const char& robot_prefix,
-                                   const poseT& transform = poseT::identity()) {
+                                   const poseT& transform = poseT()) {
     gtsam::Values robot_values;
     for (auto key_pose : odom_trajectories_.at(robot_prefix).poses) {
       poseT new_pose = transform.compose(key_pose.second.pose);
@@ -1080,7 +1080,7 @@ class Pcm : public OutlierRemoval {
                                const double& rot_sigma = 0.1,
                                const double& trans_sigma = 0.5) {
     gtsam::Values initial;
-    initial.insert(0, poseT::identity());  // identity pose as initialization
+    initial.insert(0, poseT());  // identity pose as initialization
 
     gtsam::NonlinearFactorGraph graph;
     size_t dim = getDim<poseT>();

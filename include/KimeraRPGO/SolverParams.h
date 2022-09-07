@@ -73,7 +73,7 @@ struct GncParams {
   double mu_step_;         // Factor to reduce/increase the mu in gnc
   double relative_cost_tol_;
   double weights_tol_;
-  double fix_prev_inliers_;
+  bool fix_prev_inliers_;
   bool bias_odom_;  // Bias odometry in initialization
 };
 

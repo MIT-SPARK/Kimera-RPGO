@@ -72,12 +72,12 @@ class GenericSolver {
 
   void removePriorsWithPrefix(const char& prefix);
 
+  void updateValues(const gtsam::Values& values);
+
  protected:
   bool addAndCheckIfOptimize(
       const gtsam::NonlinearFactorGraph& nfg = gtsam::NonlinearFactorGraph(),
       const gtsam::Values& values = gtsam::Values());
-
-  void updateValues(const gtsam::Values& values);
 
  protected:
   bool isSpecialSymbol(char symb) const;

@@ -162,8 +162,9 @@ void RobustSolver::optimize() {
       result = gnc_optimizer.optimize();
       gtsam::Vector gnc_all_weights = gnc_optimizer.getWeights();
       gnc_weights_ = gnc_all_weights.head(nfg_.size());
-      gnc_num_inliers_ = static_cast<size_t>(gnc_all_weights.sum()) -
-                         known_inlier_factor_indices.size() - temp_nfg_.size();
+      gnc_temp_weights_ = gnc_all_weights.tail(temp_nfg_.size());
+      gnc_num_inliers_ = static_cast<size_t>(gnc_weights_.sum()) -
+                         known_inlier_factor_indices.size();
       auto opt_stop_t = std::chrono::high_resolution_clock::now();
       auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
           opt_stop_t - opt_start_t);
@@ -247,7 +248,8 @@ void RobustSolver::optimize() {
       result = gnc_optimizer.optimize();
       gtsam::Vector gnc_all_weights = gnc_optimizer.getWeights();
       gnc_weights_ = gnc_all_weights.head(nfg_.size());
-      gnc_num_inliers_ = static_cast<size_t>(gnc_all_weights.sum()) -
+      gnc_temp_weights_ = gnc_all_weights.tail(temp_nfg_.size());
+      gnc_num_inliers_ = static_cast<size_t>(gnc_weights_.sum()) -
                          known_inlier_factor_indices.size();
       auto opt_stop_t = std::chrono::high_resolution_clock::now();
       auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(

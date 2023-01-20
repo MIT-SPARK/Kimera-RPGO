@@ -57,6 +57,7 @@ class Pcm : public OutlierRemoval {
  public:
   Pcm(PcmParams params,
       MultiRobotAlignMethod align_method = MultiRobotAlignMethod::NONE,
+      double align_gnc_probability = 0.99,
       const std::vector<char>& special_symbols = std::vector<char>())
       : OutlierRemoval(),
         params_(params),
@@ -64,6 +65,7 @@ class Pcm : public OutlierRemoval {
         total_lc_(0),
         total_good_lc_(0),
         multirobot_align_method_(align_method),
+        multirobot_gnc_align_probability_(align_gnc_probability),
         odom_check_(true),
         loop_consistency_check_(true) {
     // check if templated value valid
@@ -121,6 +123,7 @@ class Pcm : public OutlierRemoval {
 
   // Multirobot initialization method
   MultiRobotAlignMethod multirobot_align_method_;
+  double multirobot_gnc_align_probability_;
   // Keep track of the order of robots when applying world transforms
   std::vector<char> robot_order_;
 
@@ -1102,7 +1105,7 @@ class Pcm : public OutlierRemoval {
     if (multirobot_align_method_ == MultiRobotAlignMethod::L2) {
       gnc.setInlierCostThresholds(std::numeric_limits<double>::max());
     } else if (multirobot_align_method_ == MultiRobotAlignMethod::GNC) {
-      gnc.setInlierCostThresholdsAtProbability(0.99);
+      gnc.setInlierCostThresholdsAtProbability(multirobot_gnc_align_probability_);
     } else {
       log<WARNING>(
           "Invalid multirobot alignment method in gncRobustPoseAveraging!");

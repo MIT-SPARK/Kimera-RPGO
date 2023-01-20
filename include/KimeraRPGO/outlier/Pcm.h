@@ -474,7 +474,9 @@ class Pcm : public OutlierRemoval {
             loop_closures_[obs_id].factors.add(nfg_factor);
             loop_closures_in_order_.push_back(obs_id);
             total_lc_++;
-            incrementAdjMatrix(obs_id, nfg_factor);
+            if (loop_consistency_check_) {
+              incrementAdjMatrix(obs_id, nfg_factor);
+            }
           } else {
             if (debug_)
               log<WARNING>(
@@ -720,11 +722,6 @@ class Pcm : public OutlierRemoval {
     // -- add loops in max clique to a local variable nfg_good_lc (done in the
     // updateOutputGraph function) Using correspondence rowId (size_t, in
     // adjacency matrix) to slot id (size_t, id of that lc in nfg_lc)
-    if (loop_closures_.find(id) == loop_closures_.end()) {
-      // does not exist yet, add
-      Measurements new_measurements;
-      loop_closures_[id] = new_measurements;
-    }
     size_t num_lc =
         loop_closures_[id].factors.size();  // number of loop closures so far,
                                             // including the one we just added

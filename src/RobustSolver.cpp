@@ -319,7 +319,7 @@ void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
     do_optimize = addAndCheckIfOptimize(factors, values);
   }
 
-  if (do_optimize & optimize_graph) optimize();  // optimize once after loading
+  if (do_optimize && optimize_graph) optimize();  // optimize once after loading
 
   // Stop timer and save
   auto stop = std::chrono::high_resolution_clock::now();

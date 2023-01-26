@@ -170,7 +170,7 @@ class Pcm : public OutlierRemoval {
       // closures, and landmark observations
 
       // check if factor is a between factor
-      if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT>>(
+      if (factor_is_underlying_type<gtsam::BetweenFactor<poseT>>(
               new_factors[i])) {
         // specifically what outlier rejection handles
         gtsam::Key from_key = new_factors[i]->front();
@@ -389,13 +389,12 @@ class Pcm : public OutlierRemoval {
     nfg_special_ = gtsam::NonlinearFactorGraph();
     // Iterate and pick out non prior factors and prior factors without key with
     // prefix
-    for (auto factor : nfg_special_copy) {
-      if (!boost::dynamic_pointer_cast<gtsam::PriorFactor<poseT>>(factor)) {
+    for (const auto& factor : nfg_special_copy) {
+      const auto prior_factor = factor_pointer_cast<const gtsam::PriorFactor<poseT>>(factor);
+      if (!prior_factor) {
         nfg_special_.add(factor);
       } else {
-        gtsam::PriorFactor<poseT> prior_factor =
-            *boost::dynamic_pointer_cast<gtsam::PriorFactor<poseT>>(factor);
-        gtsam::Symbol node(prior_factor.key());
+        gtsam::Symbol node(prior_factor->key());
         if (node.chr() != prefix) nfg_special_.add(factor);
       }
     }
@@ -414,18 +413,15 @@ class Pcm : public OutlierRemoval {
     for (size_t i = 0; i < new_factors.size(); i++) {
       // iterate through the factors
       // double check again that these are between factors
-      if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT>>(
-              new_factors[i])) {
+      auto factor_ptr = factor_pointer_cast<gtsam::BetweenFactor<poseT>>(new_factors[i]);
+      if (factor_ptr) {
+        const auto& nfg_factor = *factor_ptr;
         // regular loop closure.
         // in this case we should run consistency check to see if loop closure
         // is good
         // * odometric consistency check (will only compare against odometry
         // - if loop fails this, we can just drop it)
         // extract between factor
-        gtsam::BetweenFactor<poseT> nfg_factor =
-            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT>>(
-                new_factors[i]);
-
         if (!output_values.exists(nfg_factor.keys().front()) ||
             !output_values.exists(nfg_factor.keys().back())) {
           log<WARNING>("Cannot add loop closure with non-existing keys");
@@ -512,8 +508,9 @@ class Pcm : public OutlierRemoval {
   void updateOdom(const gtsam::NonlinearFactor::shared_ptr& new_factor,
                   const gtsam::Values& output_values) {
     // here we have values for reference checking and initialization if needed
-    gtsam::BetweenFactor<poseT> odom_factor =
-        *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT>>(new_factor);
+    const auto& odom_factor =
+        *factor_pointer_cast<const gtsam::BetweenFactor<poseT>>(new_factor);
+
     nfg_odom_.add(odom_factor);  // - store factor in nfg_odom_
     // update trajectory(compose last value with new odom value)
     gtsam::Key new_key = odom_factor.keys().back();
@@ -741,8 +738,8 @@ class Pcm : public OutlierRemoval {
       // col of adjacency
       for (size_t i = 0; i < num_lc - 1;
            i++) {  // compare it against all others
-        gtsam::BetweenFactor<poseT> factor_i =
-            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT>>(
+        const auto& factor_i =
+            *factor_pointer_cast<gtsam::BetweenFactor<poseT>>(
                 loop_closures_[id].factors[i]);
         // check consistency
         double mah_distance = 0.0;
@@ -778,15 +775,15 @@ class Pcm : public OutlierRemoval {
 
       // now iterate through the previous loop closures and fill in last row +
       // col of adjacency
-      gtsam::BetweenFactor<poseT>
-          factor_jl =  // latest landmark loop closure: to be checked
-          *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT>>(
+      // latest landmark loop closure: to be checked
+      const auto& factor_jl =
+          *factor_pointer_cast<gtsam::BetweenFactor<poseT>>(
               landmarks_[ldmk_key].factors[num_lc - 1]);
 
       // check it against all others
       for (size_t i = 0; i < num_lc - 1; i++) {
-        gtsam::BetweenFactor<poseT> factor_il =
-            *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT>>(
+        const auto& factor_il =
+            *factor_pointer_cast<gtsam::BetweenFactor<poseT>>(
                 landmarks_[ldmk_key].factors[i]);
 
         // check consistency
@@ -1019,10 +1016,9 @@ class Pcm : public OutlierRemoval {
         std::vector<poseT> T_w0_wi_measured;
         for (auto factor : lc_factors) {
           assert(factor != nullptr);
-          assert(
-              boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT>>(factor));
-          gtsam::BetweenFactor<poseT> lc =
-              *boost::dynamic_pointer_cast<gtsam::BetweenFactor<poseT>>(factor);
+          const auto lc_ptr = factor_pointer_cast<gtsam::BetweenFactor<poseT>>(factor);
+          assert(lc_ptr != nullptr);
+          const auto& lc =*lc_ptr;
 
           gtsam::Symbol front = gtsam::Symbol(lc.key1());
           gtsam::Symbol back = gtsam::Symbol(lc.key2());

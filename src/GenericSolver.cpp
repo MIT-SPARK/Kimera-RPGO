@@ -35,11 +35,12 @@ bool GenericSolver::isSpecialSymbol(char symb) const {
 }
 
 void GenericSolver::updateValues(const gtsam::Values& values) {
-  for (const auto& v : values) {
-    if (values_.exists(v.key)) {
-      values_.update(v.key, v.value);
-    } else if (temp_values_.exists(v.key)) {
-      temp_values_.update(v.key, v.value);
+  // TODO(nathan) revisit once gtsam figures out value iterators again
+  for (const auto& key : values.keys()) {
+    if (values_.exists(key)) {
+      values_.update(key, values.at(key));
+    } else if (temp_values_.exists(key)) {
+      temp_values_.update(key, values.at(key));
     }
   }
 }
@@ -135,22 +136,25 @@ void GenericSolver::removePriorsWithPrefix(const char& prefix) {
   // Iterate and pick out non prior factors and prior factors without key with
   // prefix
   for (auto factor : nfg_copy) {
-    if (boost::dynamic_pointer_cast<gtsam::PriorFactor<gtsam::Pose3>>(factor)) {
-      gtsam::PriorFactor<gtsam::Pose3> prior_factor =
-          *boost::dynamic_pointer_cast<gtsam::PriorFactor<gtsam::Pose3>>(
-              factor);
-      gtsam::Symbol node(prior_factor.key());
-      if (node.chr() != prefix) nfg_.add(factor);
-    } else if (boost::dynamic_pointer_cast<gtsam::PriorFactor<gtsam::Pose2>>(
-                   factor)) {
-      gtsam::PriorFactor<gtsam::Pose2> prior_factor =
-          *boost::dynamic_pointer_cast<gtsam::PriorFactor<gtsam::Pose2>>(
-              factor);
-      gtsam::Symbol node(prior_factor.key());
-      if (node.chr() != prefix) nfg_.add(factor);
-    } else {
-      nfg_.add(factor);
+    auto prior_factor_3d = factor_pointer_cast<gtsam::PriorFactor<gtsam::Pose3>>(factor);
+    if (prior_factor_3d) {
+      gtsam::Symbol node(prior_factor_3d->key());
+      if (node.chr() != prefix) {
+        nfg_.add(factor);
+      }
+      continue;
     }
+
+    auto prior_factor_2d = factor_pointer_cast<gtsam::PriorFactor<gtsam::Pose2>>(factor);
+    if (prior_factor_2d) {
+      gtsam::Symbol node(prior_factor_2d->key());
+      if (node.chr() != prefix) {
+        nfg_.add(factor);
+      }
+      continue;
+    }
+
+    nfg_.add(factor);
   }
 }
 

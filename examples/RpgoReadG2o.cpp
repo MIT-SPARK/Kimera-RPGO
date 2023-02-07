@@ -86,6 +86,7 @@ int main(int argc, char* argv[]) {
 
     params.setPcmSimple2DParams(pcm_t, pcm_R, verbosity);
     params.setGncInlierCostThresholds(gnc_barcsq);
+    params.setLmDiagonalDamping(false);
 
     Simulate<gtsam::Pose2>(graphNValues, params, output_folder);
 

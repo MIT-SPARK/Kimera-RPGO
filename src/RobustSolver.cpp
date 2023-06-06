@@ -41,24 +41,28 @@ RobustSolver::RobustSolver(const RobustSolverParams& params)
       outlier_removal_ =
           KimeraRPGO::make_unique<Pcm2D>(params.pcm_params,
                                          params.multirobot_align_method,
+                                         params.multirobot_align_gnc_prob,
                                          params.specialSymbols);
     } break;
     case OutlierRemovalMethod::PCM3D: {
       outlier_removal_ =
           KimeraRPGO::make_unique<Pcm3D>(params.pcm_params,
                                          params.multirobot_align_method,
+                                         params.multirobot_align_gnc_prob,
                                          params.specialSymbols);
     } break;
     case OutlierRemovalMethod::PCM_Simple2D: {
       outlier_removal_ =
           KimeraRPGO::make_unique<PcmSimple2D>(params.pcm_params,
                                                params.multirobot_align_method,
+                                               params.multirobot_align_gnc_prob,
                                                params.specialSymbols);
     } break;
     case OutlierRemovalMethod::PCM_Simple3D: {
       outlier_removal_ =
           KimeraRPGO::make_unique<PcmSimple3D>(params.pcm_params,
                                                params.multirobot_align_method,
+                                               params.multirobot_align_gnc_prob,
                                                params.specialSymbols);
     } break;
     default: {
@@ -162,8 +166,9 @@ void RobustSolver::optimize() {
       result = gnc_optimizer.optimize();
       gtsam::Vector gnc_all_weights = gnc_optimizer.getWeights();
       gnc_weights_ = gnc_all_weights.head(nfg_.size());
-      gnc_num_inliers_ = static_cast<size_t>(gnc_all_weights.sum()) -
-                         known_inlier_factor_indices.size() - temp_nfg_.size();
+      gnc_temp_weights_ = gnc_all_weights.tail(temp_nfg_.size());
+      gnc_num_inliers_ = static_cast<size_t>(gnc_weights_.sum()) -
+                         known_inlier_factor_indices.size();
       auto opt_stop_t = std::chrono::high_resolution_clock::now();
       auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
           opt_stop_t - opt_start_t);
@@ -247,7 +252,8 @@ void RobustSolver::optimize() {
       result = gnc_optimizer.optimize();
       gtsam::Vector gnc_all_weights = gnc_optimizer.getWeights();
       gnc_weights_ = gnc_all_weights.head(nfg_.size());
-      gnc_num_inliers_ = static_cast<size_t>(gnc_all_weights.sum()) -
+      gnc_temp_weights_ = gnc_all_weights.tail(temp_nfg_.size());
+      gnc_num_inliers_ = static_cast<size_t>(gnc_weights_.sum()) -
                          known_inlier_factor_indices.size();
       auto opt_stop_t = std::chrono::high_resolution_clock::now();
       auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -317,7 +323,7 @@ void RobustSolver::update(const gtsam::NonlinearFactorGraph& factors,
     do_optimize = addAndCheckIfOptimize(factors, values);
   }
 
-  if (do_optimize & optimize_graph) optimize();  // optimize once after loading
+  if (do_optimize && optimize_graph) optimize();  // optimize once after loading
 
   // Stop timer and save
   auto stop = std::chrono::high_resolution_clock::now();

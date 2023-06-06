@@ -90,6 +90,7 @@ struct RobustSolverParams {
         gnc_params(),
         lm_diagonal_damping(true),
         multirobot_align_method(MultiRobotAlignMethod::NONE),
+        multirobot_align_gnc_prob(0.99),
         use_gnc_(false) {}
   /*! \brief For RobustSolver to not do outlier rejection at all
    */
@@ -264,6 +265,12 @@ struct RobustSolverParams {
     multirobot_align_method = method;
   }
 
+  /*! \brief set probability for GNC-based multi-robot alignment
+   */
+  void setMultiRobotGncAlignProbability(double probability) {
+    multirobot_align_gnc_prob = probability;
+  }
+
   /*! \brief set folder to log data
    */
   void logOutput(const std::string& output_folder) {
@@ -287,6 +294,7 @@ struct RobustSolverParams {
 
   // multirobot frame alignment
   MultiRobotAlignMethod multirobot_align_method;
+  double multirobot_align_gnc_prob;
   bool use_gnc_;
 };
 

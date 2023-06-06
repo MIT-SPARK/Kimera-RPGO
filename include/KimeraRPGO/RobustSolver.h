@@ -102,6 +102,11 @@ class RobustSolver : public GenericSolver {
    */
   inline gtsam::Vector getGncWeights() const { return gnc_weights_; }
 
+  /*! \brief get weights from GNC to check the inliers / outliers in the temp
+   * factors
+   */
+  inline gtsam::Vector getGncTempWeights() const { return gnc_temp_weights_; }
+
  private:
   std::unique_ptr<OutlierRemoval> outlier_removal_;  // outlier removal
                                                      // method;
@@ -118,6 +123,7 @@ class RobustSolver : public GenericSolver {
 
   // GNC variables
   gtsam::Vector gnc_weights_;
+  gtsam::Vector gnc_temp_weights_;
   size_t gnc_num_inliers_;
   size_t latest_num_lc_;
 

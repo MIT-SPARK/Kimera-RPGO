@@ -151,7 +151,7 @@ TEST(PcmDoOptimize, landmarks) {
 
   std::vector<char> special_symbs{'l', 'u'};  // for landmarks
   OutlierRemoval* pcm =
-      new Pcm3D(params, MultiRobotAlignMethod::NONE, special_symbs);
+      new Pcm3D(params, MultiRobotAlignMethod::NONE, 0.0, special_symbs);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =
@@ -216,7 +216,7 @@ TEST(PcmDoOptimize, Beacon) {
 
   std::vector<char> special_symbs{'l', 'u'};  // for landmarks
   OutlierRemoval* pcm =
-      new Pcm3D(params, MultiRobotAlignMethod::NONE, special_symbs);
+      new Pcm3D(params, MultiRobotAlignMethod::NONE, 0.0, special_symbs);
   pcm->setQuiet();
 
   static const gtsam::SharedNoiseModel& noise =

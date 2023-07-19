@@ -1,5 +1,4 @@
 #include "KimeraRPGO/Logger.h"
-#include "KimeraRPGO/utils/TypeUtils.h"
 
 #include <gtsam/base/GenericValue.h>
 #include <gtsam/base/Lie.h>
@@ -14,6 +13,8 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 #include <gtsam/nonlinear/Values-inl.h>
 #include <gtsam/slam/BetweenFactor.h>
+
+#include "KimeraRPGO/utils/TypeUtils.h"
 
 using gtsam::BetweenFactor;
 using gtsam::GenericValue;
@@ -33,6 +34,30 @@ using std::fstream;
 using std::invalid_argument;
 
 namespace KimeraRPGO {
+
+namespace log_impl {
+
+FormattedLog::FormattedLog(log_level_t level, const std::string& msg)
+    : level_(level) {
+  ss_.reset(new std::stringstream());
+  *ss_ << msg;
+}
+
+FormattedLog::~FormattedLog() {
+  switch (level_) {
+    case WARNING:
+      std::cout << "\033[1;33m" << ss_->str() << "\033[0m" << std::endl;
+      break;
+    case INFO:
+      std::cout << "\033[32m" << ss_->str() << "\033[0m" << std::endl;
+      break;
+    default:
+      std::cout << ss_->str() << std::endl;
+      break;
+  }
+}
+
+}  // namespace log_impl
 
 void writeG2o(const NonlinearFactorGraph& graph,
               const Values& estimate,

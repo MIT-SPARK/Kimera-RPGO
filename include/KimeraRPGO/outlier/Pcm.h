@@ -9,17 +9,6 @@ author: Yun Chang, Luca Carlone
 // enables correct operations of GTSAM (correct Jacobians)
 #define SLOW_BUT_CORRECT_BETWEENFACTOR
 
-#include <math.h>
-#include <algorithm>
-#include <chrono>
-#include <fstream>
-#include <iomanip>
-#include <memory>
-#include <sstream>
-#include <string>
-#include <unordered_map>
-#include <vector>
-
 #include <gtsam/geometry/Pose2.h>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/inference/Symbol.h>
@@ -29,6 +18,17 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/slam/PriorFactor.h>
+#include <math.h>
+
+#include <algorithm>
+#include <chrono>
+#include <fstream>
+#include <iomanip>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 #include "KimeraRPGO/Logger.h"
 #include "KimeraRPGO/SolverParams.h"
@@ -268,10 +268,10 @@ class Pcm : public OutlierRemoval {
     auto spin_duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
     if (debug_ && do_optimize)
-      log<INFO>(
-          "PCM spin took %1% milliseconds. Detected %2% total loop closures "
-          "with %3% inliers. ") %
-          spin_duration.count() % total_lc_ % total_good_lc_;
+      log<INFO>() << "PCM spin took " << spin_duration.count()
+                  << " milliseconds. Detected " << total_lc_
+                  << " total loop closures with " << total_good_lc_
+                  << " inliers.";
     if (log_output_) {
       saveAdjacencyMatrix(log_folder_);
       logSpinStatus(
@@ -390,7 +390,8 @@ class Pcm : public OutlierRemoval {
     // Iterate and pick out non prior factors and prior factors without key with
     // prefix
     for (const auto& factor : nfg_special_copy) {
-      const auto prior_factor = factor_pointer_cast<const gtsam::PriorFactor<poseT>>(factor);
+      const auto prior_factor =
+          factor_pointer_cast<const gtsam::PriorFactor<poseT>>(factor);
       if (!prior_factor) {
         nfg_special_.add(factor);
       } else {
@@ -413,7 +414,8 @@ class Pcm : public OutlierRemoval {
     for (size_t i = 0; i < new_factors.size(); i++) {
       // iterate through the factors
       // double check again that these are between factors
-      auto factor_ptr = factor_pointer_cast<gtsam::BetweenFactor<poseT>>(new_factors[i]);
+      auto factor_ptr =
+          factor_pointer_cast<gtsam::BetweenFactor<poseT>>(new_factors[i]);
       if (factor_ptr) {
         const auto& nfg_factor = *factor_ptr;
         // regular loop closure.
@@ -438,9 +440,10 @@ class Pcm : public OutlierRemoval {
               (isSpecialSymbol(symbfrnt.chr()) ? nfg_factor.front()
                                                : nfg_factor.back());
 
-          if (debug_)
-            log<INFO>("loop closing with landmark %1%") %
-                gtsam::DefaultKeyFormatter(landmark_key);
+          if (debug_) {
+            log<INFO>() << "loop closing with landmark "
+                        << gtsam::DefaultKeyFormatter(landmark_key);
+          }
 
           landmarks_[landmark_key].factors.add(nfg_factor);
           total_lc_++;
@@ -458,9 +461,10 @@ class Pcm : public OutlierRemoval {
           }
           if (odom_consistent) {
             if (debug_)
-              log<INFO>("loop closure between keys %1% and %2%") %
-                  gtsam::DefaultKeyFormatter(nfg_factor.front()) %
-                  gtsam::DefaultKeyFormatter(nfg_factor.back());
+              log<INFO>() << "loop closure between keys "
+                          << gtsam::DefaultKeyFormatter(nfg_factor.front())
+                          << " and "
+                          << gtsam::DefaultKeyFormatter(nfg_factor.back());
             ObservationId obs_id(symbfrnt.chr(), symbback.chr());
             // detect which inter or intra robot loop closure this belongs to
             if (num_new_loopclosures->find(obs_id) ==
@@ -556,7 +560,10 @@ class Pcm : public OutlierRemoval {
   bool checkOdomConsistent(const PoseWithCovariance<poseT>& result,
                            double* dist) const {
     *dist = result.mahalanobis_norm();  // for PCM
-    if (debug_) log<INFO>("odometry consistency distance: %1%") % *dist;
+    if (debug_) {
+      log<INFO>() << "odometry consistency distance: " << *dist;
+    }
+
     if (*dist < params_.odom_threshold) {
       return true;
     }
@@ -573,10 +580,10 @@ class Pcm : public OutlierRemoval {
     *dist = result.avg_trans_norm();
     double rot_dist = result.avg_rot_norm();
 
-    if (debug_)
-      log<INFO>("odometry consistency translation distance: %1%") % *dist;
-    if (debug_)
-      log<INFO>("odometry consistency rotation distance: %1%") % rot_dist;
+    if (debug_) {
+      log<INFO>() << "odometry consistency translation distance: " << *dist;
+      log<INFO>() << "odometry consistency rotation distance: " << rot_dist;
+    }
     if (*dist < params_.odom_trans_threshold &&
         rot_dist < params_.odom_rot_threshold) {
       return true;
@@ -776,9 +783,8 @@ class Pcm : public OutlierRemoval {
       // now iterate through the previous loop closures and fill in last row +
       // col of adjacency
       // latest landmark loop closure: to be checked
-      const auto& factor_jl =
-          *factor_pointer_cast<gtsam::BetweenFactor<poseT>>(
-              landmarks_[ldmk_key].factors[num_lc - 1]);
+      const auto& factor_jl = *factor_pointer_cast<gtsam::BetweenFactor<poseT>>(
+          landmarks_[ldmk_key].factors[num_lc - 1]);
 
       // check it against all others
       for (size_t i = 0; i < num_lc - 1; i++) {
@@ -839,7 +845,9 @@ class Pcm : public OutlierRemoval {
    * Based on adjacency matrices, call maxclique to extract inliers
    */
   void findInliers() {
-    if (debug_) log<INFO>("total loop closures registered: %1%") % total_lc_;
+    if (debug_) {
+      log<INFO>() << "total loop closures registered: " << total_lc_;
+    }
     total_good_lc_ = 0;
     // iterate through loop closures and find inliers
     std::unordered_map<ObservationId, Measurements>::iterator it =
@@ -881,7 +889,9 @@ class Pcm : public OutlierRemoval {
       it_ldmrk++;
       total_good_lc_ = total_good_lc_ + num_inliers;
     }
-    if (debug_) log<INFO>("number of inliers: %1%") % total_good_lc_;
+    if (debug_) {
+      log<INFO>() << "number of inliers: " << total_good_lc_;
+    }
   }
 
   /* *******************************************************************************
@@ -891,7 +901,9 @@ class Pcm : public OutlierRemoval {
    */
   void findInliersIncremental(
       const std::unordered_map<ObservationId, size_t>& num_new_loopclosures) {
-    if (debug_) log<INFO>("total loop closures registered: %1%") % total_lc_;
+    if (debug_) {
+      log<INFO>() << "total loop closures registered: " << total_lc_;
+    }
     total_good_lc_ = 0;
     // iterate through loop closures and find inliers
     std::unordered_map<ObservationId, size_t>::const_iterator new_lc_it =
@@ -948,7 +960,9 @@ class Pcm : public OutlierRemoval {
       it_ldmrk++;
       total_good_lc_ = total_good_lc_ + num_inliers;
     }
-    if (debug_) log<INFO>("number of inliers: %1%") % total_good_lc_;
+    if (debug_) {
+      log<INFO>() << "number of inliers: " << total_good_lc_;
+    }
   }
 
   /* *******************************************************************************
@@ -1016,9 +1030,10 @@ class Pcm : public OutlierRemoval {
         std::vector<poseT> T_w0_wi_measured;
         for (auto factor : lc_factors) {
           assert(factor != nullptr);
-          const auto lc_ptr = factor_pointer_cast<gtsam::BetweenFactor<poseT>>(factor);
+          const auto lc_ptr =
+              factor_pointer_cast<gtsam::BetweenFactor<poseT>>(factor);
           assert(lc_ptr != nullptr);
-          const auto& lc =*lc_ptr;
+          const auto& lc = *lc_ptr;
 
           gtsam::Symbol front = gtsam::Symbol(lc.key1());
           gtsam::Symbol back = gtsam::Symbol(lc.key2());
@@ -1046,10 +1061,9 @@ class Pcm : public OutlierRemoval {
         initialized_values.update(
             getRobotOdomValues(robot_order_[i], T_w0_wi_est));
       } catch (const std::out_of_range& e) {
-        log<WARNING>(
-            "No inter-robot loop closures between robots with prefix %1% and "
-            "%2% for multirobot frame alignment. ") %
-            r0 % ri;
+        log<WARNING>()
+            << "No inter-robot loop closures between robots with prefix " << r0
+            << " and " << ri << " for multirobot frame alignment.";
       }
     }
     return initialized_values;
@@ -1101,7 +1115,8 @@ class Pcm : public OutlierRemoval {
     if (multirobot_align_method_ == MultiRobotAlignMethod::L2) {
       gnc.setInlierCostThresholds(std::numeric_limits<double>::max());
     } else if (multirobot_align_method_ == MultiRobotAlignMethod::GNC) {
-      gnc.setInlierCostThresholdsAtProbability(multirobot_gnc_align_probability_);
+      gnc.setInlierCostThresholdsAtProbability(
+          multirobot_gnc_align_probability_);
     } else {
       log<WARNING>(
           "Invalid multirobot alignment method in gncRobustPoseAveraging!");

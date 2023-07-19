@@ -64,45 +64,42 @@ void writeG2o(const NonlinearFactorGraph& graph,
               const std::string& filename) {
   fstream stream(filename.c_str(), fstream::out);
 
-  // TODO(nathan) revisit once Values has iterators again
-  const auto keys = estimate.keys();
-
   // save 2D poses
-  for (const auto& key : keys) {
-    auto p = dynamic_cast<const GenericValue<Pose2>*>(&estimate.at(key));
+  for (const auto& key_value : estimate) {
+    auto p = dynamic_cast<const GenericValue<Pose2>*>(&key_value.value);
     if (!p) continue;
     const Pose2& pose = p->value();
-    stream << "VERTEX_SE2 " << key << " " << pose.x() << " " << pose.y() << " "
+    stream << "VERTEX_SE2 " << key_value.key << " " << pose.x() << " " << pose.y() << " "
            << pose.theta() << endl;
   }
 
   // save 3D poses
-  for (const auto& key : keys) {
-    auto p = dynamic_cast<const GenericValue<Pose3>*>(&estimate.at(key));
+  for (const auto& key_value : estimate) {
+    auto p = dynamic_cast<const GenericValue<Pose3>*>(&key_value.value);
     if (!p) continue;
     const Pose3& pose = p->value();
     const Point3 t = pose.translation();
     const auto q = pose.rotation().toQuaternion();
-    stream << "VERTEX_SE3:QUAT " << key << " " << t.x() << " " << t.y() << " "
+    stream << "VERTEX_SE3:QUAT " << key_value.key << " " << t.x() << " " << t.y() << " "
            << t.z() << " " << q.x() << " " << q.y() << " " << q.z() << " "
            << q.w() << endl;
   }
 
   // save 2D landmarks
-  for (const auto& key : keys) {
-    auto p = dynamic_cast<const GenericValue<Point2>*>(&estimate.at(key));
+  for (const auto& key_value : estimate) {
+    auto p = dynamic_cast<const GenericValue<Point2>*>(&key_value.value);
     if (!p) continue;
     const Point2& point = p->value();
-    stream << "VERTEX_XY " << key << " " << point.x() << " " << point.y()
+    stream << "VERTEX_XY " << key_value.key << " " << point.x() << " " << point.y()
            << endl;
   }
 
   // save 3D landmarks
-  for (const auto& key : keys) {
-    auto p = dynamic_cast<const GenericValue<Point3>*>(&estimate.at(key));
+  for (const auto& key_value : estimate) {
+    auto p = dynamic_cast<const GenericValue<Point3>*>(&key_value.value);
     if (!p) continue;
     const Point3& point = p->value();
-    stream << "VERTEX_TRACKXYZ " << key << " " << point.x() << " " << point.y()
+    stream << "VERTEX_TRACKXYZ " << key_value.key << " " << point.x() << " " << point.y()
            << " " << point.z() << endl;
   }
 

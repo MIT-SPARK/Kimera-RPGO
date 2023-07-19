@@ -4,8 +4,6 @@ No outlier removal in this class
 author: Yun Chang, Luca Carlone
 */
 
-#include <vector>
-
 #include "KimeraRPGO/GenericSolver.h"
 
 #include <gtsam/geometry/Pose2.h>
@@ -15,6 +13,8 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/nonlinear/GaussNewtonOptimizer.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 #include <gtsam/slam/PriorFactor.h>
+
+#include <vector>
 
 namespace KimeraRPGO {
 
@@ -35,12 +35,11 @@ bool GenericSolver::isSpecialSymbol(char symb) const {
 }
 
 void GenericSolver::updateValues(const gtsam::Values& values) {
-  // TODO(nathan) revisit once gtsam figures out value iterators again
-  for (const auto& key : values.keys()) {
-    if (values_.exists(key)) {
-      values_.update(key, values.at(key));
-    } else if (temp_values_.exists(key)) {
-      temp_values_.update(key, values.at(key));
+  for (const auto& key_value : values) {
+    if (values_.exists(key_value.key)) {
+      values_.update(key_value.key, key_value.value);
+    } else if (temp_values_.exists(key_value.key)) {
+      temp_values_.update(key_value.key, key_value.value);
     }
   }
 }
@@ -136,7 +135,8 @@ void GenericSolver::removePriorsWithPrefix(const char& prefix) {
   // Iterate and pick out non prior factors and prior factors without key with
   // prefix
   for (auto factor : nfg_copy) {
-    auto prior_factor_3d = factor_pointer_cast<gtsam::PriorFactor<gtsam::Pose3>>(factor);
+    auto prior_factor_3d =
+        factor_pointer_cast<gtsam::PriorFactor<gtsam::Pose3>>(factor);
     if (prior_factor_3d) {
       gtsam::Symbol node(prior_factor_3d->key());
       if (node.chr() != prefix) {
@@ -145,7 +145,8 @@ void GenericSolver::removePriorsWithPrefix(const char& prefix) {
       continue;
     }
 
-    auto prior_factor_2d = factor_pointer_cast<gtsam::PriorFactor<gtsam::Pose2>>(factor);
+    auto prior_factor_2d =
+        factor_pointer_cast<gtsam::PriorFactor<gtsam::Pose2>>(factor);
     if (prior_factor_2d) {
       gtsam::Symbol node(prior_factor_2d->key());
       if (node.chr() != prefix) {

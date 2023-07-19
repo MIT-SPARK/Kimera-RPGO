@@ -1,20 +1,17 @@
 /*
-Symple logger class for prints and warnings
+Simple logger class for prints and warnings
 author: Yun Chang
 */
 
 #pragma once
 
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
+#include <gtsam/nonlinear/Values.h>
+
 #include <boost/format.hpp>
 #include <fstream>
 #include <iostream>
 #include <sstream>
-
-#include <gtsam/nonlinear/NonlinearFactorGraph.h>
-#include <gtsam/nonlinear/Values.h>
-
-using std::cout;
-using std::endl;
 
 namespace KimeraRPGO {
 
@@ -24,14 +21,17 @@ enum log_level_t {
 };
 
 namespace log_impl {
+
 class formatted_log_t {
  public:
   formatted_log_t(log_level_t level, const char* msg)
       : fmt(msg), level(level) {}
+
   ~formatted_log_t() {
-    if (level == 0) cout << "\033[1;33m" << fmt << "\033[0m" << endl;
-    if (level == 1) cout << "\033[32m" << fmt << "\033[0m" << endl;
+    if (level == 0) std::cout << "\033[1;33m" << fmt << "\033[0m" << std::endl;
+    if (level == 1) std::cout << "\033[32m" << fmt << "\033[0m" << std::endl;
   }
+
   template <typename T>
   formatted_log_t& operator%(T value) {
     fmt % value;
@@ -42,6 +42,7 @@ class formatted_log_t {
   boost::format fmt;
   log_level_t level;
 };
+
 }  // namespace log_impl
 
 // Helper function. Class formatted_log_t will not be used directly.

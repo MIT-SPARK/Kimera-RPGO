@@ -1045,7 +1045,7 @@ class Pcm : public OutlierRemoval {
         poseT T_w0_wi_est = gncRobustPoseAveraging(T_w0_wi_measured);
         initialized_values.update(
             getRobotOdomValues(robot_order_[i], T_w0_wi_est));
-      } catch (std::out_of_range e) {
+      } catch (const std::out_of_range& e) {
         log<WARNING>(
             "No inter-robot loop closures between robots with prefix %1% and "
             "%2% for multirobot frame alignment. ") %

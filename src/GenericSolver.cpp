@@ -35,11 +35,11 @@ bool GenericSolver::isSpecialSymbol(char symb) const {
 }
 
 void GenericSolver::updateValues(const gtsam::Values& values) {
-  for (const auto& key_value : values) {
-    if (values_.exists(key_value.key)) {
-      values_.update(key_value.key, key_value.value);
-    } else if (temp_values_.exists(key_value.key)) {
-      temp_values_.update(key_value.key, key_value.value);
+  for (const auto& v : values) {
+    if (values_.exists(v.key)) {
+      values_.update(v.key, v.value);
+    } else if (temp_values_.exists(v.key)) {
+      temp_values_.update(v.key, v.value);
     }
   }
 }

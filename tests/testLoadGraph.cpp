@@ -27,7 +27,7 @@ TEST(RobustSolver, Load1) {
   // read g2o file for robot a
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
   gtsam::Values::shared_ptr values;
-  boost::tie(nfg, values) =
+  std::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
   // set up KimeraRPGO solver
@@ -62,7 +62,7 @@ TEST(RobustSolver, Add1) {
   // load graph for robot a (same as above)
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
   gtsam::Values::shared_ptr values;
-  boost::tie(nfg, values) =
+  std::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
   // set up KimeraRPGO solver
@@ -85,7 +85,7 @@ TEST(RobustSolver, Add1) {
   // read g2o file for robot b
   gtsam::NonlinearFactorGraph::shared_ptr nfg_b;
   gtsam::Values::shared_ptr values_b;
-  boost::tie(nfg_b, values_b) =
+  std::tie(nfg_b, values_b) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_b.g2o");
 
   // add robot b
@@ -129,7 +129,7 @@ TEST(RobustSolver, Load2) {
   // read g2o file for robot a
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
   gtsam::Values::shared_ptr values;
-  boost::tie(nfg, values) =
+  std::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
   // set up KimeraRPGO solver
@@ -165,7 +165,7 @@ TEST(RobustSolver, Add2) {
   // load graph for robot a (same as above)
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
   gtsam::Values::shared_ptr values;
-  boost::tie(nfg, values) =
+  std::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
   // set up KimeraRPGO solver
@@ -188,7 +188,7 @@ TEST(RobustSolver, Add2) {
   // read g2o file for robot b
   gtsam::NonlinearFactorGraph::shared_ptr nfg_b;
   gtsam::Values::shared_ptr values_b;
-  boost::tie(nfg_b, values_b) =
+  std::tie(nfg_b, values_b) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_b.g2o");
 
   // add robot b
@@ -253,7 +253,7 @@ TEST(RobustSolver, NoRejectLoad) {
   // read g2o file for robot a
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
   gtsam::Values::shared_ptr values;
-  boost::tie(nfg, values) =
+  std::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
   // set up KimeraRPGO solver
@@ -287,7 +287,7 @@ TEST(RobustSolver, NoRejectAdd) {
   // load graph for robot a (same as above)
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
   gtsam::Values::shared_ptr values;
-  boost::tie(nfg, values) =
+  std::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
   // set up KimeraRPGO solver
@@ -310,7 +310,7 @@ TEST(RobustSolver, NoRejectAdd) {
   // read g2o file for robot b
   gtsam::NonlinearFactorGraph::shared_ptr nfg_b;
   gtsam::Values::shared_ptr values_b;
-  boost::tie(nfg_b, values_b) =
+  std::tie(nfg_b, values_b) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_b.g2o");
 
   // add robot b
@@ -348,7 +348,7 @@ TEST(RobustSolver, Load1PcmSimple) {
   // read g2o file for robot a
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
   gtsam::Values::shared_ptr values;
-  boost::tie(nfg, values) =
+  std::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
   // set up KimeraRPGO solver
@@ -385,7 +385,7 @@ TEST(RobustSolver, Add1PcmSimple) {
   // load graph for robot a (same as above)
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
   gtsam::Values::shared_ptr values;
-  boost::tie(nfg, values) =
+  std::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
   // set up KimeraRPGO solver
@@ -408,7 +408,7 @@ TEST(RobustSolver, Add1PcmSimple) {
   // read g2o file for robot b
   gtsam::NonlinearFactorGraph::shared_ptr nfg_b;
   gtsam::Values::shared_ptr values_b;
-  boost::tie(nfg_b, values_b) =
+  std::tie(nfg_b, values_b) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_b.g2o");
 
   // add robot b
@@ -453,7 +453,7 @@ TEST(RobustSolver, Load2PcmSimple) {
   // read g2o file for robot a
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
   gtsam::Values::shared_ptr values;
-  boost::tie(nfg, values) =
+  std::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
   // set up KimeraRPGO solver
@@ -489,7 +489,7 @@ TEST(RobustSolver, Add2PcmSimple) {
   // load graph for robot a (same as above)
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
   gtsam::Values::shared_ptr values;
-  boost::tie(nfg, values) =
+  std::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
   // set up KimeraRPGO solver
@@ -512,7 +512,7 @@ TEST(RobustSolver, Add2PcmSimple) {
   // read g2o file for robot b
   gtsam::NonlinearFactorGraph::shared_ptr nfg_b;
   gtsam::Values::shared_ptr values_b;
-  boost::tie(nfg_b, values_b) =
+  std::tie(nfg_b, values_b) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_b.g2o");
 
   // add robot b

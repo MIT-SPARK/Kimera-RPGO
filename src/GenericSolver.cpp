@@ -4,8 +4,6 @@ No outlier removal in this class
 author: Yun Chang, Luca Carlone
 */
 
-#include <vector>
-
 #include "KimeraRPGO/GenericSolver.h"
 
 #include <gtsam/geometry/Pose2.h>
@@ -15,6 +13,8 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/nonlinear/GaussNewtonOptimizer.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 #include <gtsam/slam/PriorFactor.h>
+
+#include <vector>
 
 namespace KimeraRPGO {
 
@@ -135,22 +135,27 @@ void GenericSolver::removePriorsWithPrefix(const char& prefix) {
   // Iterate and pick out non prior factors and prior factors without key with
   // prefix
   for (auto factor : nfg_copy) {
-    if (boost::dynamic_pointer_cast<gtsam::PriorFactor<gtsam::Pose3>>(factor)) {
-      gtsam::PriorFactor<gtsam::Pose3> prior_factor =
-          *boost::dynamic_pointer_cast<gtsam::PriorFactor<gtsam::Pose3>>(
-              factor);
-      gtsam::Symbol node(prior_factor.key());
-      if (node.chr() != prefix) nfg_.add(factor);
-    } else if (boost::dynamic_pointer_cast<gtsam::PriorFactor<gtsam::Pose2>>(
-                   factor)) {
-      gtsam::PriorFactor<gtsam::Pose2> prior_factor =
-          *boost::dynamic_pointer_cast<gtsam::PriorFactor<gtsam::Pose2>>(
-              factor);
-      gtsam::Symbol node(prior_factor.key());
-      if (node.chr() != prefix) nfg_.add(factor);
-    } else {
-      nfg_.add(factor);
+    auto prior_factor_3d =
+        factor_pointer_cast<gtsam::PriorFactor<gtsam::Pose3>>(factor);
+    if (prior_factor_3d) {
+      gtsam::Symbol node(prior_factor_3d->key());
+      if (node.chr() != prefix) {
+        nfg_.add(factor);
+      }
+      continue;
     }
+
+    auto prior_factor_2d =
+        factor_pointer_cast<gtsam::PriorFactor<gtsam::Pose2>>(factor);
+    if (prior_factor_2d) {
+      gtsam::Symbol node(prior_factor_2d->key());
+      if (node.chr() != prefix) {
+        nfg_.add(factor);
+      }
+      continue;
+    }
+
+    nfg_.add(factor);
   }
 }
 

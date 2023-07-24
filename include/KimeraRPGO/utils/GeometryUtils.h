@@ -89,7 +89,7 @@ struct PoseWithCovariance {
   explicit PoseWithCovariance(const gtsam::BetweenFactor<T>& between_factor) {
     pose = between_factor.measured();
     gtsam::Matrix covar =
-        boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>(
+        factor_pointer_cast<gtsam::noiseModel::Gaussian>(
             between_factor.noiseModel())
             ->covariance();
 
@@ -219,7 +219,7 @@ struct PoseWithNode {
   explicit PoseWithNode(const gtsam::BetweenFactor<T>& between_factor) {
     pose = between_factor.measured();
     gtsam::Matrix covar =
-        boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>(
+        factor_pointer_cast<gtsam::noiseModel::Gaussian>(
             between_factor.noiseModel())
             ->covariance();
 

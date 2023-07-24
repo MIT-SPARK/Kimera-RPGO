@@ -14,6 +14,8 @@
 #include <gtsam/nonlinear/Values-inl.h>
 #include <gtsam/slam/BetweenFactor.h>
 
+#include "KimeraRPGO/utils/TypeUtils.h"
+
 using gtsam::BetweenFactor;
 using gtsam::GenericValue;
 using gtsam::Matrix3;
@@ -33,57 +35,81 @@ using std::invalid_argument;
 
 namespace KimeraRPGO {
 
+namespace log_impl {
+
+FormattedLog::FormattedLog(log_level_t level, const std::string& msg)
+    : level_(level) {
+  ss_.reset(new std::stringstream());
+  *ss_ << msg;
+}
+
+FormattedLog::~FormattedLog() {
+  switch (level_) {
+    case WARNING:
+      std::cout << "\033[1;33m" << ss_->str() << "\033[0m" << std::endl;
+      break;
+    case INFO:
+      std::cout << "\033[32m" << ss_->str() << "\033[0m" << std::endl;
+      break;
+    default:
+      std::cout << ss_->str() << std::endl;
+      break;
+  }
+}
+
+}  // namespace log_impl
+
 void writeG2o(const NonlinearFactorGraph& graph,
               const Values& estimate,
               const std::string& filename) {
   fstream stream(filename.c_str(), fstream::out);
 
   // save 2D poses
-  for (const auto key_value : estimate) {
+  for (const auto& key_value : estimate) {
     auto p = dynamic_cast<const GenericValue<Pose2>*>(&key_value.value);
     if (!p) continue;
     const Pose2& pose = p->value();
-    stream << "VERTEX_SE2 " << key_value.key << " " << pose.x() << " "
-           << pose.y() << " " << pose.theta() << endl;
+    stream << "VERTEX_SE2 " << key_value.key << " " << pose.x() << " " << pose.y() << " "
+           << pose.theta() << endl;
   }
 
   // save 3D poses
-  for (const auto key_value : estimate) {
+  for (const auto& key_value : estimate) {
     auto p = dynamic_cast<const GenericValue<Pose3>*>(&key_value.value);
     if (!p) continue;
     const Pose3& pose = p->value();
     const Point3 t = pose.translation();
     const auto q = pose.rotation().toQuaternion();
-    stream << "VERTEX_SE3:QUAT " << key_value.key << " " << t.x() << " "
-           << t.y() << " " << t.z() << " " << q.x() << " " << q.y() << " "
-           << q.z() << " " << q.w() << endl;
+    stream << "VERTEX_SE3:QUAT " << key_value.key << " " << t.x() << " " << t.y() << " "
+           << t.z() << " " << q.x() << " " << q.y() << " " << q.z() << " "
+           << q.w() << endl;
   }
 
   // save 2D landmarks
-  for (const auto key_value : estimate) {
+  for (const auto& key_value : estimate) {
     auto p = dynamic_cast<const GenericValue<Point2>*>(&key_value.value);
     if (!p) continue;
     const Point2& point = p->value();
-    stream << "VERTEX_XY " << key_value.key << " " << point.x() << " "
-           << point.y() << endl;
+    stream << "VERTEX_XY " << key_value.key << " " << point.x() << " " << point.y()
+           << endl;
   }
 
   // save 3D landmarks
-  for (const auto key_value : estimate) {
+  for (const auto& key_value : estimate) {
     auto p = dynamic_cast<const GenericValue<Point3>*>(&key_value.value);
     if (!p) continue;
     const Point3& point = p->value();
-    stream << "VERTEX_TRACKXYZ " << key_value.key << " " << point.x() << " "
-           << point.y() << " " << point.z() << endl;
+    stream << "VERTEX_TRACKXYZ " << key_value.key << " " << point.x() << " " << point.y()
+           << " " << point.z() << endl;
   }
 
   // save edges (2D or 3D)
   for (const auto& factor_ : graph) {
-    auto factor = boost::dynamic_pointer_cast<BetweenFactor<Pose2>>(factor_);
+    auto factor = factor_pointer_cast<BetweenFactor<Pose2>>(factor_);
     if (factor) {
       SharedNoiseModel model = factor->noiseModel();
       auto gaussianModel =
-          boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>(model);
+          factor_pointer_cast<gtsam::noiseModel::Gaussian>(model);
       if (!gaussianModel) {
         model->print("model\n");
         throw invalid_argument("writeG2o: invalid noise model!");
@@ -100,13 +126,11 @@ void writeG2o(const NonlinearFactorGraph& graph,
       stream << endl;
     }
 
-    auto factor3D = boost::dynamic_pointer_cast<BetweenFactor<Pose3>>(factor_);
-
+    auto factor3D = factor_pointer_cast<BetweenFactor<Pose3>>(factor_);
     if (factor3D) {
       SharedNoiseModel model = factor3D->noiseModel();
-
-      boost::shared_ptr<gtsam::noiseModel::Gaussian> gaussianModel =
-          boost::dynamic_pointer_cast<gtsam::noiseModel::Gaussian>(model);
+      auto gaussianModel =
+          factor_pointer_cast<gtsam::noiseModel::Gaussian>(model);
       if (!gaussianModel) {
         model->print("model\n");
         throw invalid_argument("writeG2o: invalid noise model!");

@@ -63,6 +63,17 @@ std::unique_ptr<T> make_unique(Args&&... args) {
   return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
+template <typename T, typename Ptr>
+T* factor_pointer_cast(Ptr& ptr) {
+  return dynamic_cast<T*>(ptr.get());
+}
+
+// TODO(nathan) there is probably a better way to do this
+template <typename T, typename Ptr>
+bool factor_is_underlying_type(Ptr& ptr) {
+  return dynamic_cast<T*>(ptr.get()) != nullptr;
+}
+
 }  // namespace KimeraRPGO
 
 namespace std {

@@ -5,18 +5,18 @@ author: Yun Chang, Luca Carlone
 
 #include "KimeraRPGO/RobustSolver.h"
 
-#include <chrono>
-#include <string>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
 #include <gtsam/inference/inferenceExceptions.h>
 #include <gtsam/nonlinear/DoglegOptimizer.h>
 #include <gtsam/nonlinear/GaussNewtonOptimizer.h>
 #include <gtsam/nonlinear/GncOptimizer.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 #include <gtsam/slam/dataset.h>
+
+#include <chrono>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "KimeraRPGO/Logger.h"
 #include "KimeraRPGO/outlier/Pcm.h"
@@ -173,11 +173,10 @@ void RobustSolver::optimize() {
       auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
           opt_stop_t - opt_start_t);
       if (debug_) {
-        log<INFO>(
-            "GNC optimize took %1% milliseconds. %2% loop closures with "
-            "%3% inliers. ") %
-            opt_duration.count() % outlier_removal_->getNumLCInliers() %
-            gnc_num_inliers_;
+        log<INFO>() << "GNC optimize took " << opt_duration.count()
+                    << " milliseconds. " << outlier_removal_->getNumLCInliers()
+                    << " loop closures with " << gnc_num_inliers_
+                    << " inliers.";
       }
     } else {
       auto opt_start_t = std::chrono::high_resolution_clock::now();
@@ -202,11 +201,10 @@ void RobustSolver::optimize() {
       auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
           opt_stop_t - opt_start_t);
       if (debug_) {
-        log<INFO>(
-            "Optimize took %1% milliseconds. %2% loop closures with "
-            "%3% inliers. ") %
-            opt_duration.count() % outlier_removal_->getNumLC() %
-            getNumLCInliers();
+        log<INFO>() << "Optimize took " << opt_duration.count()
+                    << " milliseconds. " << outlier_removal_->getNumLC()
+                    << " loop closures with " << getNumLCInliers()
+                    << " inliers.";
       }
     }
   } else if (solver_type_ == Solver::GN) {
@@ -259,11 +257,10 @@ void RobustSolver::optimize() {
       auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
           opt_stop_t - opt_start_t);
       if (debug_) {
-        log<INFO>(
-            "GNC optimize took %1% milliseconds. %2% loop closures with "
-            "%3% inliers. ") %
-            opt_duration.count() % outlier_removal_->getNumLCInliers() %
-            gnc_num_inliers_;
+        log<INFO>() << "GNC optimize took " << opt_duration.count()
+                    << " milliseconds. " << outlier_removal_->getNumLCInliers()
+                    << " loop closures with " << gnc_num_inliers_
+                    << " inliers.";
       }
     } else {
       result = gtsam::GaussNewtonOptimizer(full_nfg, full_values, gnParams)

@@ -1,20 +1,14 @@
 /*
-Symple logger class for prints and warnings
+Simple logger class for prints and warnings
 author: Yun Chang
 */
 
 #pragma once
 
-#include <boost/format.hpp>
-#include <fstream>
-#include <iostream>
-#include <sstream>
-
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/Values.h>
 
-using std::cout;
-using std::endl;
+#include <sstream>
 
 namespace KimeraRPGO {
 
@@ -24,30 +18,30 @@ enum log_level_t {
 };
 
 namespace log_impl {
-class formatted_log_t {
+
+class FormattedLog {
  public:
-  formatted_log_t(log_level_t level, const char* msg)
-      : fmt(msg), level(level) {}
-  ~formatted_log_t() {
-    if (level == 0) cout << "\033[1;33m" << fmt << "\033[0m" << endl;
-    if (level == 1) cout << "\033[32m" << fmt << "\033[0m" << endl;
-  }
+  FormattedLog(log_level_t level, const std::string& msg);
+
+  ~FormattedLog();
+
   template <typename T>
-  formatted_log_t& operator%(T value) {
-    fmt % value;
+  FormattedLog& operator<<(T value) {
+    *ss_ << value;
     return *this;
   }
 
  protected:
-  boost::format fmt;
-  log_level_t level;
+  log_level_t level_;
+  std::shared_ptr<std::stringstream> ss_;
 };
+
 }  // namespace log_impl
 
-// Helper function. Class formatted_log_t will not be used directly.
+// Helper function. Class FormattedLog will not be used directly.
 template <log_level_t level>
-log_impl::formatted_log_t log(const char* msg) {
-  return log_impl::formatted_log_t(level, msg);
+log_impl::FormattedLog log(const std::string& msg = "") {
+  return log_impl::FormattedLog(level, msg);
 }
 
 void writeG2o(const gtsam::NonlinearFactorGraph& graph,

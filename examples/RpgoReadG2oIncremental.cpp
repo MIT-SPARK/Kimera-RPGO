@@ -48,8 +48,8 @@ void SimulateIncremental(gtsam::GraphAndValues gv,
 
   // separate to non loop closures and loop closure factors
   gtsam::NonlinearFactorGraph non_lc_factors, lc_factors;
-  for (auto factor : nfg) {
-    if (boost::dynamic_pointer_cast<gtsam::BetweenFactor<T>>(factor)) {
+  for (const auto& factor : nfg) {
+    if (factor_is_underlying_type<gtsam::BetweenFactor<T>>(factor)) {
       // specifically what outlier rejection handles
       gtsam::Key from_key = factor->front();
       gtsam::Key to_key = factor->back();

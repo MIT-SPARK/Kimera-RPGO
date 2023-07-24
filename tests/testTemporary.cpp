@@ -27,7 +27,7 @@ TEST(RobustSolver, TemporaryFactors) {
   // read g2o file for robot a
   gtsam::NonlinearFactorGraph::shared_ptr nfg;
   gtsam::Values::shared_ptr values;
-  boost::tie(nfg, values) =
+  std::tie(nfg, values) =
       gtsam::load3D(std::string(DATASET_PATH) + "/robot_a.g2o");
 
   // set up KimeraRPGO solver

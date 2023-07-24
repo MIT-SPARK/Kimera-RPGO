@@ -10,23 +10,8 @@ IF(APPLE)
     LINK_DIRECTORIES(/usr/local/lib)
 ENDIF()
 
-###########################################################################
-# Find GTSAM
 find_package(GTSAM REQUIRED)
-if (NOT GTSAM_FOUND)
-  message(FATAL_ERROR "This program requires the GTSAM library.")
-endif(NOT GTSAM_FOUND)
 find_package(GTSAM_UNSTABLE QUIET)
-
-###########################################################################
-# Find Boost
-find_package(Boost REQUIRED COMPONENTS filesystem regex timer date_time program_options)
-if(NOT TARGET Boost::boost)
-  add_library(Boost::boost INTERFACE IMPORTED)
-  set_target_properties(Boost::boost PROPERTIES
-  INTERFACE_LINK_LIBRARIES "${Boost_LIBRARIES}"
-  INTERFACE_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIRS}")
-endif()
 
 ###########################################################################
 # Compile
@@ -53,9 +38,10 @@ target_include_directories(KimeraRPGO PUBLIC
 
 target_link_libraries(KimeraRPGO
   PUBLIC
-    Boost::boost
     gtsam
     gtsam_unstable
+  PRIVATE
+    rpgo_max_clique
 )
 
 target_compile_options(KimeraRPGO

@@ -70,27 +70,13 @@ configure_file(tests/test_config.h.in tests/test_config.h)
 
 ###########################################################################
 # Installation
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfigVersion.cmake
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY AnyNewerVersion
-)
-
-# Create KimeraRPGOConfig.cmake with extra info from KimeraRPGOConfig.cmake.in
-# This file is necessary to find_package the library KimeraRPGO.
-set(INSTALL_CONFIGDIR lib/cmake/KimeraRPGO)
-configure_package_config_file(
-  ${CMAKE_CURRENT_LIST_DIR}/cmake/KimeraRPGOConfig.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfig.cmake
-  INSTALL_DESTINATION ${INSTALL_CONFIGDIR})
-
 include(GNUInstallDirs)
+set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/KimeraRPGO)
+
 install(TARGETS KimeraRPGO
   EXPORT kimera-rpgo-export
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib
-  INCLUDES DESTINATION include # We need this right?
-  RUNTIME DESTINATION bin
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 install(EXPORT kimera-rpgo-export
   FILE
@@ -103,15 +89,23 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/
   DESTINATION include
   FILES_MATCHING PATTERN "*.h")
 
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+# Create KimeraRPGOConfig.cmake with extra info from KimeraRPGOConfig.cmake.in
+# This file is necessary to find_package the library KimeraRPGO.
+configure_package_config_file(
+  ${CMAKE_CURRENT_LIST_DIR}/cmake/KimeraRPGOConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfig.cmake
+  INSTALL_DESTINATION ${INSTALL_CONFIGDIR})
 ## Install the config and configversion
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfig.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/KimeraRPGOConfigVersion.cmake
   DESTINATION ${INSTALL_CONFIGDIR}
 )
-
-export(TARGETS KimeraRPGO FILE KimeraRPGOTargets.cmake)
-export(PACKAGE KimeraRPGO)
 
 ################################################################################
 # Print configuration variables

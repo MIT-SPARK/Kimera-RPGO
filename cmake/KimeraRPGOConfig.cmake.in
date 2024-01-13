@@ -9,13 +9,5 @@ if(NOT TARGET KimeraRPGO)
   include("${KimeraRPGO_CMAKE_DIR}/KimeraRPGOTargets.cmake")
 endif()
 
-if(EXISTS "${KimeraRPGO_CMAKE_DIR}/CMakeCache.txt")
-  # In build tree
-  set(KimeraRPGO_INCLUDE_DIR @CMAKE_SOURCE_DIR@ CACHE PATH "KimeraRPGO include directory")
-else()
-  # Find installed library
-  set(KimeraRPGO_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include/KimeraRPGO" CACHE PATH "KimeraRPGO include directory")
-endif()
-
 set(KimeraRPGO_LIBRARIES KimeraRPGO)
 check_required_components(KimeraRPGO)

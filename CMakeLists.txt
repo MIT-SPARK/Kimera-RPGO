@@ -15,7 +15,6 @@ IF(APPLE)
 ENDIF()
 
 find_package(GTSAM REQUIRED)
-find_package(GTSAM_UNSTABLE QUIET)
 
 ###########################################################################
 # Compile
@@ -43,7 +42,6 @@ target_include_directories(KimeraRPGO PUBLIC
 target_link_libraries(KimeraRPGO
   PUBLIC
     gtsam
-    gtsam_unstable
   PRIVATE
     rpgo_max_clique
 )

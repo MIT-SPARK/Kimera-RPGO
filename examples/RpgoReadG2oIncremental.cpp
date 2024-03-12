@@ -3,25 +3,27 @@ Example file to perform robust optimization on g2o files but incrementally
 author: Yun Chang
 */
 
-#include <stdlib.h>
-#include <memory>
-#include <string>
-
 #include <gtsam/geometry/Pose2.h>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/slam/dataset.h>
+#include <stdlib.h>
 
+#include <memory>
+#include <string>
+
+#include "KimeraRPGO/Logger.h"
 #include "KimeraRPGO/RobustSolver.h"
 #include "KimeraRPGO/SolverParams.h"
-#include "KimeraRPGO/Logger.h"
 #include "KimeraRPGO/utils/GeometryUtils.h"
 #include "KimeraRPGO/utils/TypeUtils.h"
 
 using namespace KimeraRPGO;
 
-/* Usage: ./RpgoReadG2oIncremental <2d or 3d> <g2o file> <0 or 1 (incremental)> 
-    <0 or 1 (gnc)> <0 or 1 (multirobot frame alignment)> <translation threshold> 
-    <rotation threshold> <opt: output_folder> <opt: v for messages") */
+/* Usage: ./RpgoReadG2oIncremental <2d or 3d> <g2o file> <0 or 1 (incremental)>
+    <0 - 1 (gnc probability)> <0 or 1 (multirobot frame alignment)> <translation
+   threshold>
+    <rotation threshold> (-1 to disable) <opt: output_folder> <opt: v for
+   messages") */
 template <class T>
 void SimulateIncremental(gtsam::GraphAndValues gv,
                          RobustSolverParams params,
@@ -78,10 +80,11 @@ void SimulateIncremental(gtsam::GraphAndValues gv,
 void PrintInputWarning(std::string err_str) {
   log<WARNING>(err_str);
   log<WARNING>(
-      "Input format should be ./RpgoReadG2oIncremental <2d or 3d> <g2o file> <0 or 1 "
-        "(incremental)> <0 or 1 (gnc)> <0 or 1 (multirobot frame alignment)> "
-        "<trans thresh> <rot thresh> <opt: output_folder> <opt: v for "
-        "messages");
+      "Input format should be ./RpgoReadG2oIncremental <2d or 3d> <g2o file> "
+      "<0 or 1 (incremental)> <0 to 1 (gnc probability, 0 or 1 to disable)> <0 "
+      "or 1 (multirobot frame alignment)> <PCM trans thresh (-1 to disable)> "
+      "<PCM rot thresh (-1 to disable)> <opt: output_folder> <opt: v for "
+      "messages");
   log<WARNING>("Exiting application!");
 }
 
@@ -90,7 +93,7 @@ int main(int argc, char* argv[]) {
 
   // A minimum of 7 arguments are required for this script to execute properly.
   // Exit early if this is the case and throw appropriate message to user.
-  if (argc < 7) {
+  if (argc < 8) {
     PrintInputWarning("Missing mandatory input arguments!");
     return 0;
   }
@@ -101,40 +104,67 @@ int main(int argc, char* argv[]) {
   int incremental = 0;
   try {
     incremental = std::stoi(argv[3]);
+    if (incremental != 0 && incremental != 1) {
+      throw std::invalid_argument("invalid value");
+    }
   } catch (const std::invalid_argument& e) {
-    std::cerr << "\"incremental\" value should be 0 or 1. You entered: " << argv[3] << std::endl;
+    std::cerr << "\"incremental\" value should be 0 or 1. You entered: "
+              << argv[3] << std::endl;
     valid_input = false;
   }
-  
-  int gnc = 0;
+
+  double gnc = 0;
   try {
-    gnc = std::stoi(argv[4]);
+    gnc = std::stod(argv[4]);
+    if (gnc < 0 || gnc > 1) {
+      throw std::invalid_argument("invalid value");
+    }
   } catch (const std::invalid_argument& e) {
-    std::cerr << "\"gnc\" value should be 0 or 1. You entered: " << argv[4] << std::endl;
+    std::cerr << "\"gnc\" value should be double 0 or 1. You entered: "
+              << argv[4] << std::endl;
     valid_input = false;
   }
-  
+
   int frame_align = 0;
   try {
     frame_align = std::stoi(argv[5]);
+    if (frame_align != 0 && frame_align != 1) {
+      throw std::invalid_argument("invalid value");
+    }
   } catch (const std::invalid_argument& e) {
-    std::cerr << "\"frame_align\" value should be 0 or 1. You entered: " << argv[5] << std::endl;
+    std::cerr << "\"frame_align\" value should be 0 or 1. You entered: "
+              << argv[5] << std::endl;
     valid_input = false;
   }
 
   double translation_t = 0.0;
   try {
     translation_t = std::stof(argv[6]);
+    if (translation_t == -1 && incremental == 1) {
+      log<WARNING>()
+          << "incremntal mode cuurently does not support disabling pcm "
+             "threshold. for now, please set to large value instead of -1";
+      valid_input = false;
+    }
   } catch (const std::invalid_argument& e) {
-    std::cerr << "\"translation threshold\" value should be a float. You entered: " << argv[6] << std::endl;
+    std::cerr
+        << "\"translation threshold\" value should be a float. You entered: "
+        << argv[6] << std::endl;
     valid_input = false;
   }
 
   double rotation_t = 0.0;
   try {
     rotation_t = std::stof(argv[7]);
+    if (rotation_t == -1 && incremental == 1) {
+      log<WARNING>()
+          << "incremntal mode cuurently does not support disabling pcm "
+             "threshold. for now, please set to large value instead of -1";
+      valid_input = false;
+    }
   } catch (const std::invalid_argument& e) {
-    std::cerr << "\"rotation threshold\" value should be a float. You entered: " << argv[7] << std::endl;
+    std::cerr << "\"rotation threshold\" value should be a float. You entered: "
+              << argv[7] << std::endl;
     valid_input = false;
   }
 
@@ -148,7 +178,7 @@ int main(int argc, char* argv[]) {
   if (argc > 8) {
     output_folder = argv[8];
   } else {
-     //saves output to current folder if not specified by user
+    // saves output to current folder if not specified by user
     std::cout << "Setting output directory to current directory" << std::endl;
     output_folder = ".";
   }
@@ -166,8 +196,8 @@ int main(int argc, char* argv[]) {
     params.setIncremental();
   }
 
-  if (gnc == 1) {
-    params.setGncInlierCostThresholds(1.0);
+  if (gnc > 0 && gnc < 1) {
+    params.setGncInlierCostThresholdsAtProbability(gnc);
   }
 
   if (frame_align == 1) {

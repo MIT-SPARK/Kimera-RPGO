@@ -3,26 +3,27 @@ Example file to perform robust optimization on g2o files
 author: Yun Chang
 */
 
-#include <stdlib.h>
-#include <memory>
-#include <string>
-
 #include <gtsam/geometry/Pose2.h>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/slam/dataset.h>
+#include <stdlib.h>
 
+#include <memory>
+#include <string>
+
+#include "KimeraRPGO/Logger.h"
 #include "KimeraRPGO/RobustSolver.h"
 #include "KimeraRPGO/SolverParams.h"
-#include "KimeraRPGO/Logger.h"
 #include "KimeraRPGO/utils/GeometryUtils.h"
 #include "KimeraRPGO/utils/TypeUtils.h"
 
 using namespace KimeraRPGO;
 
-/* Usage: 
-  ./RpgoReadG2o 2d <some-2d-g2o-file> <pcm_t_simple_thresh> <pcm_R_simple_thresh> <gnc_barc_sq> <output-g2o-file> <verbosity> 
-  [or]   
-  ./RpgoReadG2o 3d <some-3d-g2o-file> <pcm_t_simple_thresh> <pcm_R_simple_thresh> <gnc_barc_sq> <output-g2o-file> <verbosity>
+/* Usage:
+  ./RpgoReadG2o 2d <some-2d-g2o-file> <pcm_t_simple_thresh>
+  <pcm_R_simple_thresh> <gnc_barc_sq> <output-g2o-file> <verbosity> [or]
+  ./RpgoReadG2o 3d <some-3d-g2o-file> <pcm_t_simple_thresh>
+  <pcm_R_simple_thresh> <gnc_barc_sq> <output-g2o-file> <verbosity>
 */
 template <class T>
 void Simulate(gtsam::GraphAndValues gv,
@@ -56,16 +57,18 @@ void Simulate(gtsam::GraphAndValues gv,
 void PrintInputWarning(std::string err_str) {
   log<WARNING>(err_str);
   log<WARNING>(
-      "Input format should be ./RpgoReadG2o <2d or 3d> <g2o file> <odom thresh> "
-      "<pcm thresh> [opt: output_folder] [opt: v for messages]");
+      "Input format should be ./RpgoReadG2o <2d or 3d> <g2o file> <pcm thresh "
+      "translation> "
+      "<pcm thresh rotation> <gnc barcsq> <output_folder> [opt: v for "
+      "messages]");
   log<WARNING>("Exiting application!");
 }
 
 int main(int argc, char* argv[]) {
   gtsam::GraphAndValues graphNValues;
 
-  // At least 6 arguments are needed, otherwise the application cannot run. 
-  if (argc < 5) {
+  // At least 6 arguments are needed, otherwise the application cannot run.
+  if (argc < 7) {
     PrintInputWarning("Insufficient number of arguments!");
     return 0;
   }
@@ -80,22 +83,24 @@ int main(int argc, char* argv[]) {
   try {
     pcm_t = std::stof(argv[3]);
   } catch (const std::invalid_argument& e) {
-    std::cerr << "Invalid float value entered for pcm_t: " << argv[3] << std::endl;
+    std::cerr << "Invalid float value entered for pcm_t: " << argv[3]
+              << std::endl;
     valid_input = false;
   }
 
   try {
     pcm_R = std::stof(argv[4]);
   } catch (const std::invalid_argument& e) {
-    std::cerr << "Invalid float value entered for pcm_R: " << argv[4] << std::endl;
+    std::cerr << "Invalid float value entered for pcm_R: " << argv[4]
+              << std::endl;
     valid_input = false;
   }
 
   try {
     gnc_barcsq = std::stof(argv[5]);
   } catch (const std::invalid_argument& e) {
-    std::cerr << "Invalid float value entered for gnc_barcsq: " << argv[5] 
-      << std::endl;
+    std::cerr << "Invalid float value entered for gnc_barcsq: " << argv[5]
+              << std::endl;
     valid_input = false;
   }
 
@@ -105,8 +110,7 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
-  std::string output_folder;
-  if (argc > 6) output_folder = argv[6];
+  std::string output_folder = argv[6];
 
   bool verbose = false;
   if (argc > 7) {

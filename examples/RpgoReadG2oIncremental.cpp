@@ -19,8 +19,9 @@ author: Yun Chang
 
 using namespace KimeraRPGO;
 
-/* Usage: ./RpgoReadG2o 2d <some-2d-g2o-file> <incremental> <odom-threshold>
-   <pcm-threshold> <output-g2o-file> <verbosity> [or]*/
+/* Usage: ./RpgoReadG2oIncremental <2d or 3d> <g2o file> <0 or 1 (incremental)> 
+    <0 or 1 (gnc)> <0 or 1 (multirobot frame alignment)> <translation threshold> 
+    <rotation threshold> <opt: output_folder> <opt: v for messages") */
 template <class T>
 void SimulateIncremental(gtsam::GraphAndValues gv,
                          RobustSolverParams params,
@@ -74,14 +75,83 @@ void SimulateIncremental(gtsam::GraphAndValues gv,
   pgo->saveData(output_folder);  // tell pgo to save g2o result
 }
 
+void PrintInputWarning(std::string err_str) {
+  log<WARNING>(err_str);
+  log<WARNING>(
+      "Input format should be ./RpgoReadG2oIncremental <2d or 3d> <g2o file> <0 or 1 "
+        "(incremental)> <0 or 1 (gnc)> <0 or 1 (multirobot frame alignment)> "
+        "<trans thresh> <rot thresh> <opt: output_folder> <opt: v for "
+        "messages");
+  log<WARNING>("Exiting application!");
+}
+
 int main(int argc, char* argv[]) {
   gtsam::GraphAndValues graphNValues;
+
+  // A minimum of 7 arguments are required for this script to execute properly.
+  // Exit early if this is the case and throw appropriate message to user.
+  if (argc < 7) {
+    PrintInputWarning("Missing mandatory input arguments!");
+    return 0;
+  }
+
+  // Reading args and checking for validity
+  bool valid_input = true;
   std::string dim = argv[1];
-  int incremental = std::atoi(argv[3]);
-  int gnc = std::atoi(argv[4]);
-  int frame_align = std::atoi(argv[5]);
+  int incremental = 0;
+  try {
+    incremental = std::stoi(argv[3]);
+  } catch (const std::invalid_argument& e) {
+    std::cerr << "\"incremental\" value should be 0 or 1. You entered: " << argv[3] << std::endl;
+    valid_input = false;
+  }
+  
+  int gnc = 0;
+  try {
+    gnc = std::stoi(argv[4]);
+  } catch (const std::invalid_argument& e) {
+    std::cerr << "\"gnc\" value should be 0 or 1. You entered: " << argv[4] << std::endl;
+    valid_input = false;
+  }
+  
+  int frame_align = 0;
+  try {
+    frame_align = std::stoi(argv[5]);
+  } catch (const std::invalid_argument& e) {
+    std::cerr << "\"frame_align\" value should be 0 or 1. You entered: " << argv[5] << std::endl;
+    valid_input = false;
+  }
+
+  double translation_t = 0.0;
+  try {
+    translation_t = std::stof(argv[6]);
+  } catch (const std::invalid_argument& e) {
+    std::cerr << "\"translation threshold\" value should be a float. You entered: " << argv[6] << std::endl;
+    valid_input = false;
+  }
+
+  double rotation_t = 0.0;
+  try {
+    rotation_t = std::stof(argv[7]);
+  } catch (const std::invalid_argument& e) {
+    std::cerr << "\"rotation threshold\" value should be a float. You entered: " << argv[7] << std::endl;
+    valid_input = false;
+  }
+
+  // Exit application if input is invalid
+  if (!valid_input) {
+    PrintInputWarning("");
+    return 0;
+  }
+
   std::string output_folder;
-  if (argc > 8) output_folder = argv[8];
+  if (argc > 8) {
+    output_folder = argv[8];
+  } else {
+     //saves output to current folder if not specified by user
+    std::cout << "Setting output directory to current directory" << std::endl;
+    output_folder = ".";
+  }
 
   bool verbose = false;
   if (argc > 9) {
@@ -115,23 +185,18 @@ int main(int argc, char* argv[]) {
                                  true,
                                  gtsam::NoiseFormatG2O);
 
-    params.setPcmSimple2DParams(atof(argv[6]), atof(argv[7]), verbosity);
+    params.setPcmSimple2DParams(translation_t, rotation_t, verbosity);
 
     SimulateIncremental<gtsam::Pose2>(graphNValues, params, output_folder);
 
   } else if (dim == "3d") {
     graphNValues = gtsam::load3D(argv[2]);
 
-    params.setPcmSimple3DParams(atof(argv[6]), atof(argv[7]), verbosity);
+    params.setPcmSimple3DParams(translation_t, rotation_t, verbosity);
 
     SimulateIncremental<gtsam::Pose3>(graphNValues, params, output_folder);
 
   } else {
-    log<WARNING>("Unsupported input format: ");
-    log<WARNING>(
-        "Should be ./RpgoReadG2oIncremental <2d or 3d> <g2o file> <0 or 1 "
-        "(incremental)> <0 or 1 (gnc)> <0 or 1 (multirobot frame alignment)> "
-        "<trans thresh> rot thresh> <opt: "
-        "output_folder> <opt: v for messages");
+    PrintInputWarning("Unsupported dimension entered!");
   }
 }

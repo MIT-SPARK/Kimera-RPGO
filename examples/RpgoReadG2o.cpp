@@ -53,13 +53,57 @@ void Simulate(gtsam::GraphAndValues gv,
   pgo->saveData(output_folder);  // tell pgo to save g2o result
 }
 
+void PrintInputWarning(std::string err_str) {
+  log<WARNING>(err_str);
+  log<WARNING>(
+      "Input format should be ./RpgoReadG2o <2d or 3d> <g2o file> <odom thresh> "
+      "<pcm thresh> [opt: output_folder] [opt: v for messages]");
+  log<WARNING>("Exiting application!");
+}
+
 int main(int argc, char* argv[]) {
   gtsam::GraphAndValues graphNValues;
+
+  // At least 6 arguments are needed, otherwise the application cannot run. 
+  if (argc < 5) {
+    PrintInputWarning("Insufficient number of arguments!");
+    return 0;
+  }
   std::string dim = argv[1];
   std::string g2ofile = argv[2];
-  double pcm_t = atof(argv[3]);
-  double pcm_R = atof(argv[4]);
-  double gnc_barcsq = atof(argv[5]);
+  double pcm_t = 0.0;
+  double pcm_R = 0.0;
+  double gnc_barcsq = 0.0;
+
+  // Carrying out error  checking before assigning arguments.
+  bool valid_input = true;
+  try {
+    pcm_t = std::stof(argv[3]);
+  } catch (const std::invalid_argument& e) {
+    std::cerr << "Invalid float value entered for pcm_t: " << argv[3] << std::endl;
+    valid_input = false;
+  }
+
+  try {
+    pcm_R = std::stof(argv[4]);
+  } catch (const std::invalid_argument& e) {
+    std::cerr << "Invalid float value entered for pcm_R: " << argv[4] << std::endl;
+    valid_input = false;
+  }
+
+  try {
+    gnc_barcsq = std::stof(argv[5]);
+  } catch (const std::invalid_argument& e) {
+    std::cerr << "Invalid float value entered for gnc_barcsq: " << argv[5] 
+      << std::endl;
+    valid_input = false;
+  }
+
+  // Exit application if input is invalid
+  if (!valid_input) {
+    PrintInputWarning("");
+    return 0;
+  }
 
   std::string output_folder;
   if (argc > 6) output_folder = argv[6];
@@ -69,6 +113,7 @@ int main(int argc, char* argv[]) {
     std::string flag = argv[7];
     if (flag == "v") verbose = true;
   }
+
   RobustSolverParams params;
 
   params.logOutput(output_folder);
@@ -99,9 +144,6 @@ int main(int argc, char* argv[]) {
     Simulate<gtsam::Pose3>(graphNValues, params, output_folder);
 
   } else {
-    log<WARNING>("Unsupported input format: ");
-    log<WARNING>(
-        "Should be ./RpgoReadG2o <2d or 3d> <g2o file> <odom thresh> "
-        "<pcm thresh> <opt: output_folder> <opt: v for messages");
+    PrintInputWarning("Unrecognized dimensions specified!");
   }
 }

@@ -4,4 +4,5 @@ target_sources(KimeraRPGO
 	"${CMAKE_CURRENT_LIST_DIR}/GeometryUtils.h"
 	"${CMAKE_CURRENT_LIST_DIR}/GraphUtils.h"
 	"${CMAKE_CURRENT_LIST_DIR}/TypeUtils.h"
+	"${CMAKE_CURRENT_LIST_DIR}/LoadG2o.h"
 )

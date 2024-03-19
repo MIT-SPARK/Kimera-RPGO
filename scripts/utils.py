@@ -4,6 +4,7 @@ import os
 import ctypes
 from enum import Enum
 from scipy.spatial.transform import Rotation as Rot
+import random
 
 keyBits = ctypes.sizeof(ctypes.c_uint64) * 8
 chrBits = ctypes.sizeof(ctypes.c_ubyte) * 8
@@ -59,6 +60,13 @@ class Pose2D:
             else:
                 raise("Unknwon pose type from g2o string")
 
+    @classmethod
+    def random(cls, x_min=-100, x_max=100, y_min=-100, y_max=100, theta_min=-3.14, theta_max=3.14):
+        x = random.uniform(x_min, x_max)
+        y = random.uniform(y_min, y_max)
+        theta = random.uniform(theta_min, theta_max)
+        return cls(x, y, theta)
+
 
 class Pose3D:
     def __init__(self, *args):
@@ -83,12 +91,24 @@ class Pose3D:
                 else:
                     self.R = Rot.from_quat([0, 0, 0, 1])
 
+    @classmethod
+    def random(cls, t_min=np.array([-100, -100, -100]), t_max=np.array([100, 100, 100]), identity_rot=False):
+        t = np.random.uniform(lt_min, t_max)
+        if identity_rot:
+            R = Rot.identity()
+        else:
+            R = Rot.random()
+        return cls(t, R)
+
 
 class Node:
     def __init__(self, key, node_type, pose):
         self.key = key
         self.type = node_type
         self.pose = pose
+
+    def copy(self):
+        return Node(self.key, self.type, self.pose)
 
     def g2o_str_2d(self):
         entries = []
@@ -128,6 +148,9 @@ class Edge:
         self.type = edge_type
         self.pose = pose
         self.covar = covar
+
+    def copy(self):
+        return Edge(self.key_from, self.key_to, self.type, self.pose, self.covar)
 
     def g2o_str_2d(self):
         entries = []
@@ -192,6 +215,15 @@ class Graph:
             output.write(edge_str + "\n")
 
         output.close()
+
+    def copy(self):
+        copy_graph = Graph()
+        for edge in self.edges:
+            copy_graph.add_edge(edge.copy())
+        for node_key in self.nodes.keys():
+            copy_graph.add_node(self.nodes[node_key].copy())
+        return copy_graph
+
 
 def node_from_g2o_vertex(g2o_line, is_3d):
     if not is_3d:

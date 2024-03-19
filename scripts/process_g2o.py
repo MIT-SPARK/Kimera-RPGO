@@ -41,7 +41,7 @@ def reindex(pose_graph, landmark_prefix='l'):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Visualize G2O")
+        description="Reindex G2O to RPGO expected format.")
     parser.add_argument("input", help="input g2o file")
     parser.add_argument("output", help="output g2o file")
     parser.add_argument('--is_3d', action='store_true')

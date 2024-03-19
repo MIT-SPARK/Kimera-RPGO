@@ -159,4 +159,9 @@ void GenericSolver::removePriorsWithPrefix(const char& prefix) {
   }
 }
 
+void GenericSolver::saveData(std::string folder_path) const {
+  std::string g2o_file_path = folder_path + "/result.g2o";
+  KimeraRPGO::writeG2o(nfg_, values_, g2o_file_path);
+}
+
 }  // namespace KimeraRPGO

@@ -141,7 +141,7 @@ class Edge:
         entries.append(str(self.key_to))
         entries.append(str(self.pose.x))
         entries.append(str(self.pose.y))
-        if self.type != NodeType.LANDMARK:
+        if self.type != EdgeType.LANDMARK:
             entries.append(str(self.pose.theta))
         entries.extend([str(c) for c in self.covar])
         return " ".join(entries)

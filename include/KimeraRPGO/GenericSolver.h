@@ -74,6 +74,8 @@ class GenericSolver {
 
   void updateValues(const gtsam::Values& values);
 
+  void saveData(std::string folder_path) const;
+
  protected:
   bool addAndCheckIfOptimize(
       const gtsam::NonlinearFactorGraph& nfg = gtsam::NonlinearFactorGraph(),

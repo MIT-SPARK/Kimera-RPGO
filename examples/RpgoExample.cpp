@@ -25,11 +25,12 @@ int main(int argc, char* argv[]) {
   RobustSolverParams params;
   params.logOutput(output_folder);
   Verbosity verbosity = Verbosity::VERBOSE;
-  params.setPcmSimple2DParams(0.1, 0.01, verbosity);
-  params.setLmDiagonalDamping(false);
+  params.setNoRejection(verbosity);
+  // params.setPcmSimple2DParams(0.1, 0.01, verbosity);
+  // params.setLmDiagonalDamping(false);
 
-  std::unique_ptr<RobustSolver> pgo =
-      KimeraRPGO::make_unique<RobustSolver>(params);
+  std::unique_ptr<GenericSolver> pgo =
+      KimeraRPGO::make_unique<GenericSolver>(Solver::LM);
 
   pgo->update(*graph_and_values.first, *graph_and_values.second);
   pgo->saveData(output_folder);

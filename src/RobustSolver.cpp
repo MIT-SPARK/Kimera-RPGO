@@ -418,8 +418,7 @@ std::vector<char> RobustSolver::getIgnoredPrefixes() {
 }
 
 void RobustSolver::saveData(std::string folder_path) const {
-  std::string g2o_file_path = folder_path + "/result.g2o";
-  KimeraRPGO::writeG2o(nfg_, values_, g2o_file_path);
+  GenericSolver::saveData(folder_path);
   if (outlier_removal_) {
     outlier_removal_->saveData(folder_path);
   }

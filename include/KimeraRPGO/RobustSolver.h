@@ -53,7 +53,7 @@ class RobustSolver : public GenericSolver {
    */
   void forceUpdate(
       const gtsam::NonlinearFactorGraph& nfg = gtsam::NonlinearFactorGraph(),
-      const gtsam::Values& values = gtsam::Values());
+      const gtsam::Values& values = gtsam::Values()) override;
 
   /*! \brief Update function. Sorts through the factors, separate out the
    * odometry, the landmark measurements, and loop closures, then
@@ -64,7 +64,7 @@ class RobustSolver : public GenericSolver {
    */
   void update(const gtsam::NonlinearFactorGraph& factors,
               const gtsam::Values& values = gtsam::Values(),
-              bool optimize_graph = true);
+              bool optimize_graph = true) override;
 
   /*! \brief Remove last added loop closure based on the prefixes of the robots
    * For example, to remove the last measure loop closure between robots a and c

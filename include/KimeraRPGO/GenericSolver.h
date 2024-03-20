@@ -28,13 +28,14 @@ class GenericSolver {
 
   virtual ~GenericSolver() = default;
 
-  void update(
+  virtual void forceUpdate(
+      const gtsam::NonlinearFactorGraph& nfg = gtsam::NonlinearFactorGraph(),
+      const gtsam::Values& values = gtsam::Values());
+
+  virtual void update(
       const gtsam::NonlinearFactorGraph& nfg = gtsam::NonlinearFactorGraph(),
       const gtsam::Values& values = gtsam::Values(),
-      const gtsam::FactorIndices& factorsToRemove = gtsam::FactorIndices());
-
-  void removeFactorsNoUpdate(
-      gtsam::FactorIndices factorsToRemove = gtsam::FactorIndices());
+      bool optimize_graph = true);
 
   size_t size() { return nfg_.size(); }
 

@@ -11,6 +11,17 @@ ref_color_mapping = {utils.NodeType.LANDMARK: "grey",
                      utils.EdgeType.ODOM: "grey"}
 
 
+def align_pose_graph_origin(pose_graph, ref_pose_graph):
+    first_key = min(ref_pose_graph.nodes.keys())
+    T_w_est = pose_graph.nodes[first_key].pose.to_matrix()
+    T_w_ref = ref_pose_graph.nodes[first_key].pose.to_matrix()
+    T_est_ref = T_w_ref @ np.linalg.inv(T_w_est)
+    T_est_ref[:2, 0:2] = np.eye(2)
+    for key in pose_graph.nodes:
+        pose_graph.nodes[key].pose = pose_graph.nodes[key].pose.transform(
+            T_est_ref)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Plot and compare results.")
@@ -28,6 +39,7 @@ def main():
     for i in range(len(args.eval_list)):
         input_g2o = "{}/{}/result.g2o".format(args.input, args.eval_list[i])
         pose_graph = utils.read_pose_graph_from_g2o(input_g2o, args.is_3d)
+        align_pose_graph_origin(pose_graph, ref_pose_graph)
         if args.is_3d:
             ax = fig.add_subplot(1, len(args.eval_list), i+1, projection="3d")
             viz_utils.visualize_graph_3d(ax, pose_graph, est_color_mapping)

@@ -25,6 +25,7 @@ int main(int argc, char* argv[]) {
 
   RobustSolverParams params;
   params.logOutput(output_folder);
+  params.specialSymbols.push_back('l');
   Verbosity verbosity = Verbosity::VERBOSE;
   std::unique_ptr<GenericSolver> pgo;
 

@@ -18,6 +18,7 @@ author: Yun Chang, Luca Carlone
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/slam/PriorFactor.h>
+#include <gtsam_unstable/slam/PoseToPointFactor.h>
 #include <math.h>
 
 #include <algorithm>
@@ -52,7 +53,7 @@ enum class FactorType {
 // poseT can be gtsam::Pose2 or Pose3 for 3D vs 3D
 // T can be PoseWithCovariance or PoseWithDistance based on
 // If using Pcm or PcmDistance
-template <class poseT, template <class> class T>
+template <class poseT, class pointT, template <class> class T>
 class Pcm : public OutlierRemoval {
  public:
   Pcm(PcmParams params,
@@ -191,6 +192,23 @@ class Pcm : public OutlierRemoval {
           type = FactorType::ODOMETRY;  // just regular odometry
         } else {
           type = FactorType::LOOP_CLOSURE;
+        }
+      } else if (factor_is_underlying_type<
+                     gtsam::PoseToPointFactor<poseT, pointT>>(new_factors[i])) {
+        // is it a landmark observation
+        gtsam::Key from_key = new_factors[i]->front();
+        gtsam::Key to_key = new_factors[i]->back();
+        gtsam::Symbol from_symb(from_key);
+        gtsam::Symbol to_symb(to_key);
+        if (isSpecialSymbol(from_symb.chr()) ||
+            isSpecialSymbol(to_symb.chr())) {
+          // if includes values, it is the first observation
+          if (!landmarks_.count(to_key)) {
+            type = FactorType::FIRST_LANDMARK_OBSERVATION;
+          } else {
+            // re-observation: counts as loop closure
+            type = FactorType::LOOP_CLOSURE;
+          }
         }
       } else {
         type = FactorType::NONBETWEEN_FACTORS;  // unrecognized factor, not
@@ -416,6 +434,9 @@ class Pcm : public OutlierRemoval {
       // double check again that these are between factors
       auto factor_ptr =
           factor_pointer_cast<gtsam::BetweenFactor<poseT>>(new_factors[i]);
+      auto landmark_factor_ptr =
+          factor_pointer_cast<gtsam::PoseToPointFactor<poseT, pointT>>(
+              new_factors[i]);
       if (factor_ptr) {
         const auto& nfg_factor = *factor_ptr;
         // regular loop closure.
@@ -489,6 +510,26 @@ class Pcm : public OutlierRemoval {
           }
         }
 
+      } else if (landmark_factor_ptr) {
+        const auto& nfg_factor = *landmark_factor_ptr;
+        if (!output_values.exists(nfg_factor.keys().front()) ||
+            !output_values.exists(nfg_factor.keys().back())) {
+          log<WARNING>("Cannot add loop closure with non-existing keys");
+          continue;
+        }
+
+        gtsam::Key landmark_key =
+            nfg_factor.back();  // Point corresponds to landmark
+
+        if (debug_) {
+          log<INFO>() << "loop closing with landmark "
+                      << gtsam::DefaultKeyFormatter(landmark_key);
+        }
+        landmarks_[landmark_key].factors.add(nfg_factor);
+        total_lc_++;
+        // grow adj matrix
+        // TODO(Yun) Try clean up and compress
+        incrementLandmarkAdjMatrixPosePoint(landmark_key);
       } else {
         // add as special loop closure
         // the remainders are speical loop closure cases
@@ -825,7 +866,123 @@ class Pcm : public OutlierRemoval {
         loop = i_path_l.inverse().compose(i_pose_l);
 
         double dist;
-        bool consistent = checkLoopConsistent(loop, &dist);
+        bool consistent =
+            checkLoopConsistent(loop, &dist) || !loop_consistency_check_;
+
+        new_dst_matrix(num_lc - 1, i) = dist;
+        new_dst_matrix(i, num_lc - 1) = dist;
+        if (consistent) {
+          new_adj_matrix(num_lc - 1, i) = 1;
+          new_adj_matrix(i, num_lc - 1) = 1;
+        }
+      }
+    }
+    landmarks_[ldmk_key].adj_matrix = new_adj_matrix;
+    landmarks_[ldmk_key].dist_matrix = new_dst_matrix;
+  }
+
+  /* *******************************************************************************
+   */
+  /*
+   * augment adjacency matrix for a landmark loop closure (non-between)
+   */
+  void incrementLandmarkAdjMatrixPosePoint(const gtsam::Key& ldmk_key) {
+    // pairwise consistency check for landmarks
+    size_t num_lc = landmarks_[ldmk_key].factors.size();  // number measurements
+    Eigen::MatrixXd new_adj_matrix = Eigen::MatrixXd::Zero(num_lc, num_lc);
+    Eigen::MatrixXd new_dst_matrix = Eigen::MatrixXd::Zero(num_lc, num_lc);
+    if (num_lc > 1) {
+      // if = 1 then just initialized
+      new_adj_matrix.topLeftCorner(num_lc - 1, num_lc - 1) =
+          landmarks_[ldmk_key].adj_matrix;
+      new_dst_matrix.topLeftCorner(num_lc - 1, num_lc - 1) =
+          landmarks_[ldmk_key].dist_matrix;
+
+      // now iterate through the previous loop closures and fill in last row +
+      // col of adjacency
+      // latest landmark loop closure: to be checked
+      const auto& factor_jl =
+          *factor_pointer_cast<gtsam::PoseToPointFactor<poseT, pointT>>(
+              landmarks_[ldmk_key].factors[num_lc - 1]);
+
+      // check it against all others
+      for (size_t i = 0; i < num_lc - 1; i++) {
+        const auto& factor_il =
+            *factor_pointer_cast<gtsam::PoseToPointFactor<poseT, pointT>>(
+                landmarks_[ldmk_key].factors[i]);
+
+        // check consistency
+        gtsam::Key keyi = factor_il.keys().front();
+        gtsam::Key keyj = factor_jl.keys().front();
+
+        if (keyi == ldmk_key || keyj == ldmk_key) {
+          log<WARNING>(
+              "Landmark observations should be connected pose -> "
+              "landmark, discarding");
+          return;
+        }
+
+        // factors are (i,l) and (j,l) and connect poses i,j to a landmark l
+        T<poseT> i_pose_l, j_pose_l;
+        // Pose type does not support PoseToPointFactor // TODO(Yun) clean up
+        const int dim = getDim<poseT>();
+        const int r_dim = getRotationDim<poseT>();
+        const int t_dim = getTranslationDim<poseT>();
+        poseT temp;
+        gtsam::Matrix i_T_l = temp.matrix();
+        gtsam::Matrix j_T_l = temp.matrix();
+        i_T_l.block(0, t_dim, t_dim, 1) = factor_il.measured();
+        j_T_l.block(0, t_dim, t_dim, 1) = factor_jl.measured();
+
+        gtsam::Matrix covar_il_trans =
+            factor_pointer_cast<gtsam::noiseModel::Gaussian>(
+                factor_il.noiseModel())
+                ->covariance();
+        gtsam::Matrix covar_jl_trans =
+            factor_pointer_cast<gtsam::noiseModel::Gaussian>(
+                factor_jl.noiseModel())
+                ->covariance();
+
+        // Large rotation covariance and given translation covar
+        gtsam::Matrix covar_il = Eigen::MatrixXd::Identity(dim, dim) * 1.0e+08;
+        gtsam::Matrix covar_jl = Eigen::MatrixXd::Identity(dim, dim) * 1.0e+08;
+        covar_il.block(r_dim, r_dim, t_dim, t_dim) = covar_il_trans;
+        covar_jl.block(r_dim, r_dim, t_dim, t_dim) = covar_jl_trans;
+
+        // TODO(Yun) This conversion is ugly
+        gtsam::BetweenFactor<poseT> btwn_factor_il(
+            keyi,
+            ldmk_key,
+            i_T_l,
+            gtsam::noiseModel::Gaussian::Covariance(covar_il));
+        gtsam::BetweenFactor<poseT> btwn_factor_jl(
+            keyj,
+            ldmk_key,
+            j_T_l,
+            gtsam::noiseModel::Gaussian::Covariance(covar_jl));
+
+        i_pose_l = T<poseT>(btwn_factor_il);
+        j_pose_l = T<poseT>(btwn_factor_jl);
+
+        gtsam::Symbol symb_i = gtsam::Symbol(keyi);
+        gtsam::Symbol symb_j = gtsam::Symbol(keyj);
+
+        // find odometry from 1a to 2a
+        if (symb_i.chr() != symb_j.chr()) {
+          log<WARNING>(
+              "Attempting to get odometry between different trajectories");
+        }
+        T<poseT> i_odom_j =
+            odom_trajectories_[symb_i.chr()].getBetween(keyi, keyj);
+
+        // check that lc_1 pose is consistent with pose from 1a to 1b
+        T<poseT> i_path_l, loop;
+        i_path_l = i_odom_j.compose(j_pose_l);
+        loop = i_path_l.inverse().compose(i_pose_l);
+
+        double dist;
+        bool consistent =
+            checkLoopConsistent(loop, &dist) || !loop_consistency_check_;
 
         new_dst_matrix(num_lc - 1, i) = dist;
         new_dst_matrix(i, num_lc - 1) = dist;
@@ -1160,9 +1317,9 @@ class Pcm : public OutlierRemoval {
   }
 };
 
-typedef Pcm<gtsam::Pose2, PoseWithCovariance> Pcm2D;
-typedef Pcm<gtsam::Pose3, PoseWithCovariance> Pcm3D;
-typedef Pcm<gtsam::Pose2, PoseWithNode> PcmSimple2D;
-typedef Pcm<gtsam::Pose3, PoseWithNode> PcmSimple3D;
+typedef Pcm<gtsam::Pose2, gtsam::Point2, PoseWithCovariance> Pcm2D;
+typedef Pcm<gtsam::Pose3, gtsam::Point3, PoseWithCovariance> Pcm3D;
+typedef Pcm<gtsam::Pose2, gtsam::Point2, PoseWithNode> PcmSimple2D;
+typedef Pcm<gtsam::Pose3, gtsam::Point3, PoseWithNode> PcmSimple3D;
 
 }  // namespace KimeraRPGO

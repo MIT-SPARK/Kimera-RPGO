@@ -1,5 +1,6 @@
 import csv
 import numpy as np
+import math
 import os
 import ctypes
 from enum import Enum
@@ -67,6 +68,25 @@ class Pose2D:
         theta = random.uniform(theta_min, theta_max)
         return cls(x, y, theta)
 
+    @classmethod
+    def from_matrix(cls, matrix):
+        x = matrix[0, 2]
+        y = matrix[1, 2]
+        theta = math.atan2(matrix[1, 0], matrix[0, 0])
+        return cls(x, y, theta)
+
+    def to_matrix(self):
+        T = np.eye(3)
+        T[0:2, 2] = np.array([self.x, self.y])
+        T[0:2, 0:2] = np.array(
+            [[np.cos(self.theta), -np.sin(self.theta)], [np.sin(self.theta), np.cos(self.theta)]])
+        return T
+
+    def transform(self, T):
+        T_original = self.to_matrix()
+        T_new = T @ T_original
+        return self.from_matrix(T_new)
+
 
 class Pose3D:
     def __init__(self, *args):
@@ -99,6 +119,23 @@ class Pose3D:
         else:
             R = Rot.random()
         return cls(t, R)
+
+    @classmethod
+    def from_matrix(cls, matrix):
+        t = matrix[0:3, 3]
+        R = matrix[0:3, 0:3]
+        return cls(t, R)
+
+    def to_matrix(self):
+        T = np.eye(4)
+        T[0:3, 3] = self.t
+        T[0:3, 0:3] = self.R
+        return T
+
+    def transform(self, T):
+        T_original = self.to_matrix()
+        T_new = T @ T_original
+        return self.from_matrix(T_new)
 
 
 class Node:

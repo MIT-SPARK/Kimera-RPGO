@@ -40,14 +40,21 @@ def main():
         input_g2o = "{}/{}/result.g2o".format(args.input, args.eval_list[i])
         pose_graph = utils.read_pose_graph_from_g2o(input_g2o, args.is_3d)
         align_pose_graph_origin(pose_graph, ref_pose_graph)
+        if i >= len(args.label):
+            label = args.eval_list[i]
+        else:
+            label = args.label[i]
+
         if args.is_3d:
             ax = fig.add_subplot(1, len(args.eval_list), i+1, projection="3d")
             viz_utils.visualize_graph_3d(ax, pose_graph, est_color_mapping)
             viz_utils.visualize_graph_3d(ax, ref_pose_graph, ref_color_mapping)
+            ax.set_title(label)
         else:
             ax = fig.add_subplot(1, len(args.eval_list), i+1)
             viz_utils.visualize_graph_2d(ax, pose_graph, est_color_mapping)
             viz_utils.visualize_graph_2d(ax, ref_pose_graph, ref_color_mapping)
+            ax.set_title(label)
     plt.show()
 
 

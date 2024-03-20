@@ -64,22 +64,46 @@ bool GenericSolver::addAndCheckIfOptimize(
   return true;
 }
 
+void GenericSolver::forceUpdate(const gtsam::NonlinearFactorGraph& nfg,
+                               const gtsam::Values& values) {
+  addAndCheckIfOptimize(nfg, values);
+
+  // optimize
+  gtsam::Values result;
+  gtsam::Values full_values = values_;
+  gtsam::NonlinearFactorGraph full_nfg = nfg_;
+  full_values.insert(temp_values_);
+  full_nfg.add(temp_nfg_);
+  if (solver_type_ == Solver::LM) {
+    gtsam::LevenbergMarquardtParams params;
+    if (debug_) {
+      params.setVerbosityLM("SUMMARY");
+      log<INFO>("Running LM");
+    }
+    params.diagonalDamping = true;
+    result = gtsam::LevenbergMarquardtOptimizer(full_nfg, full_values, params)
+                 .optimize();
+  } else if (solver_type_ == Solver::GN) {
+    gtsam::GaussNewtonParams params;
+    if (debug_) {
+      params.setVerbosity("ERROR");
+      log<INFO>("Running GN");
+    }
+    result =
+        gtsam::GaussNewtonOptimizer(full_nfg, full_values, params).optimize();
+  } else {
+    log<WARNING>("Unsupported Solver");
+    exit(EXIT_FAILURE);
+  }
+  updateValues(result);
+}
+
 void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
                            const gtsam::Values& values,
-                           const gtsam::FactorIndices& factorsToRemove) {
-  // TODO(Yun) Do we have unittests for generic (no outlier-rejection) update?
-  // remove factors
-  bool remove_factors = false;
-  if (factorsToRemove.size() > 0) {
-    remove_factors = true;
-  }
-  for (size_t index : factorsToRemove) {
-    nfg_[index].reset();
-  }
-
+                           bool optimize_graph) {
   bool process_lc = addAndCheckIfOptimize(nfg, values);
 
-  if (process_lc || remove_factors) {
+  if (process_lc && optimize_graph) {
     // optimize
     gtsam::Values result;
     gtsam::Values full_values = values_;
@@ -108,14 +132,6 @@ void GenericSolver::update(const gtsam::NonlinearFactorGraph& nfg,
       exit(EXIT_FAILURE);
     }
     updateValues(result);
-  }
-}
-
-void GenericSolver::removeFactorsNoUpdate(
-    gtsam::FactorIndices factorsToRemove) {
-  // remove factors
-  for (size_t index : factorsToRemove) {
-    nfg_[index].reset();
   }
 }
 

@@ -46,6 +46,25 @@ def reindex(pose_graph, landmark_prefix='l', index_to_remove=[]):
     return new_pose_graph
 
 
+def fix_odom(pose_graph, ref_pose_graph):
+    for edge in pose_graph.edges:
+        # if edge.type != utils.EdgeType.ODOM:
+        #     continue
+        ref_T_from = ref_pose_graph.nodes[edge.key_from].pose.to_matrix()
+        ref_T_to = ref_pose_graph.nodes[edge.key_to].pose.to_matrix()
+
+        from_T_to = np.linalg.inv(ref_T_from) @ ref_T_to
+        posetype = type(edge.pose)
+        if posetype == utils.Pose2D:
+            noise = posetype.random(x_min=-1e-6, x_max=1e-6, y_min=-1e-6,
+                                    y_max=1e-6, theta_min=-1e-8, theta_max=1e8).to_matrix()
+        else:
+            noise_max = np.ones((3,))*1e-6
+            noise = posetype.random(t_min=-noise_max, t_max=noise_max, identity_rot=True).to_matrix()
+        # from_T_to = from_T_to @ noise
+        edge.pose = posetype.from_matrix(from_T_to)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Reindex G2O to RPGO expected format.")
@@ -54,12 +73,20 @@ def main():
     parser.add_argument('--is_3d', action='store_true')
     parser.add_argument('--is_2d', dest='is_2d', action='store_false')
     parser.add_argument('-r', '--remove_indices', nargs='+', default=[])
+    parser.add_argument('--reference', type=str, default="")
     parser.set_defaults(is_3d=False)
     args = parser.parse_args()
 
     pose_graph = utils.read_pose_graph_from_g2o(args.input, args.is_3d)
     processed_pose_graph = reindex(
         pose_graph, index_to_remove=args.remove_indices)
+
+    if len(args.reference) > 0:
+        ref_pose_graph = utils.read_pose_graph_from_g2o(
+            args.reference, args.is_3d)
+        ref_pose_graph = reindex(
+            ref_pose_graph, index_to_remove=args.remove_indices)
+        fix_odom(processed_pose_graph, ref_pose_graph)
 
     processed_pose_graph.write_to_g2o(args.output, args.is_3d)
 

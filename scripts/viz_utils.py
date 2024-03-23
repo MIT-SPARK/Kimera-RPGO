@@ -29,12 +29,13 @@ def visualize_graph_2d(ax, graph, color_mapping):
     nodes_xy = np.asarray(nodes_xy)
     edges_xy = np.asarray(edges_xy)
 
-    ax.scatter(nodes_xy[:, 0], nodes_xy[:, 1], c=nodes_colors)
+    if nodes_xy.shape[0] > 0:
+        ax.scatter(nodes_xy[:, 0], nodes_xy[:, 1], c=nodes_colors)
     for i in range(edges_xy.shape[0]):
         ax.plot(edges_xy[i, :, 0], edges_xy[i, :, 1], color=edges_colors[i])
 
 
-def visualize_graph_3d(graph):
+def visualize_graph_3d(ax, graph, color_mapping, topdown=False):
     nodes_t = []
     edges_t = []
     nodes_colors = []
@@ -58,10 +59,18 @@ def visualize_graph_3d(graph):
     nodes_t = np.asarray(nodes_t)
     edges_t = np.asarray(edges_t)
 
-    ax.scatter(nodes_t[:, 0], nodes_t[:, 1], nodes_t[:, 2], c=nodes_colors)
-    for i in range(edges_t.shape[0]):
-        ax.plot3D(edges_t[i, :, 0], edges_t[i, :, 1],
-                  edges_t[i, :, 2], color=edges_colors[i])
+    if topdown:
+        if nodes_t.shape[0] > 0:
+            ax.scatter(nodes_t[:, 0], nodes_t[:, 1], c=nodes_colors)
+        for i in range(edges_t.shape[0]):
+            ax.plot(edges_t[i, :, 0], edges_t[i, :, 1], color=edges_colors[i])
+    else:
+        if nodes_t.shape[0] > 0:
+            ax.scatter(nodes_t[:, 0], nodes_t[:, 1],
+                       nodes_t[:, 2], c=nodes_colors)
+        for i in range(edges_t.shape[0]):
+            ax.plot3D(edges_t[i, :, 0], edges_t[i, :, 1],
+                      edges_t[i, :, 2], color=edges_colors[i])
 
 
 if __name__ == "__main__":

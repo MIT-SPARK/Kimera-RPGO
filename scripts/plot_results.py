@@ -46,14 +46,15 @@ def main():
             label = args.label[i]
 
         if args.is_3d:
-            ax = fig.add_subplot(1, len(args.eval_list), i+1, projection="3d")
-            viz_utils.visualize_graph_3d(ax, pose_graph, est_color_mapping)
-            viz_utils.visualize_graph_3d(ax, ref_pose_graph, ref_color_mapping)
+            # ax = fig.add_subplot(1, len(args.eval_list), i+1, projection="3d")
+            ax = fig.add_subplot(1, len(args.eval_list), i+1)
+            viz_utils.visualize_graph_3d(ax, ref_pose_graph, ref_color_mapping, topdown=True)
+            viz_utils.visualize_graph_3d(ax, pose_graph, est_color_mapping, topdown=True)
             ax.set_title(label)
         else:
             ax = fig.add_subplot(1, len(args.eval_list), i+1)
-            viz_utils.visualize_graph_2d(ax, pose_graph, est_color_mapping)
             viz_utils.visualize_graph_2d(ax, ref_pose_graph, ref_color_mapping)
+            viz_utils.visualize_graph_2d(ax, pose_graph, est_color_mapping)
             ax.set_title(label)
     plt.show()
 

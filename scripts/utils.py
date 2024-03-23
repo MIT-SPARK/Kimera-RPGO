@@ -113,7 +113,7 @@ class Pose3D:
 
     @classmethod
     def random(cls, t_min=np.array([-100, -100, -100]), t_max=np.array([100, 100, 100]), identity_rot=False):
-        t = np.random.uniform(lt_min, t_max)
+        t = np.random.uniform(t_min, t_max)
         if identity_rot:
             R = Rot.identity()
         else:
@@ -129,7 +129,7 @@ class Pose3D:
     def to_matrix(self):
         T = np.eye(4)
         T[0:3, 3] = self.t
-        T[0:3, 0:3] = self.R
+        T[0:3, 0:3] = self.R.as_matrix()
         return T
 
     def transform(self, T):

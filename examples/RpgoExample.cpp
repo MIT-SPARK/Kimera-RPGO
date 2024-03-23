@@ -36,11 +36,19 @@ int main(int argc, char* argv[]) {
     params.setNoRejection(verbosity);
     pgo = KimeraRPGO::make_unique<GenericSolver>(Solver::LM);
   } else {
-    params.setPcmSimple2DParams(-1, -1, pcm_t, pcm_R, verbosity);
-    if (gnc_alpha > 0 && gnc_alpha < 1) {
-      params.setGncInlierCostThresholdsAtProbability(gnc_alpha);
+    if (!is_3d) {
+      params.setPcmSimple2DParams(-1, -1, pcm_t, pcm_R, verbosity);
+      if (gnc_alpha > 0 && gnc_alpha < 1) {
+        params.setGncInlierCostThresholdsAtProbability(gnc_alpha);
+      }
+      pgo = KimeraRPGO::make_unique<RobustSolver>(params);
+    } else {
+      params.setPcmSimple3DParams(-1, -1, pcm_t, pcm_R, verbosity);
+      if (gnc_alpha > 0 && gnc_alpha < 1) {
+        params.setGncInlierCostThresholdsAtProbability(gnc_alpha);
+      }
+      pgo = KimeraRPGO::make_unique<RobustSolver>(params);
     }
-    pgo = KimeraRPGO::make_unique<RobustSolver>(params);
   }
 
   pgo->update(*graph_and_values.first, *graph_and_values.second);

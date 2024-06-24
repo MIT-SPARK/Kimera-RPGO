@@ -132,10 +132,10 @@ class Pcm : public OutlierRemoval {
   bool loop_consistency_check_;
 
  public:
-  size_t getNumLC() { return total_lc_; }
-  size_t getNumLCInliers() { return total_good_lc_; }
-  size_t getNumOdomFactors() { return nfg_odom_.size(); }
-  size_t getNumSpecialFactors() { return nfg_special_.size(); }
+  size_t getNumLC() override { return total_lc_; }
+  size_t getNumLCInliers() override { return total_good_lc_; }
+  size_t getNumOdomFactors() override { return nfg_odom_.size(); }
+  size_t getNumSpecialFactors() override { return nfg_special_.size(); }
 
   /*! \brief Process new measurements and reject outliers
    *  process the new measurements and update the "good set" of measurements
@@ -296,8 +296,9 @@ class Pcm : public OutlierRemoval {
    * For example if Observation id is Obsid('a','c'), method
    * removes the last loop closure between robots a and c
    */
-  EdgePtr removeLastLoopClosure(ObservationId id,
-                                gtsam::NonlinearFactorGraph* updated_factors) {
+  EdgePtr removeLastLoopClosure(
+      ObservationId id,
+      gtsam::NonlinearFactorGraph* updated_factors) override {
     if (loop_closures_.find(id) == loop_closures_.end()) {
       return NULL;  // No loop closures in this container
     }
@@ -342,7 +343,8 @@ class Pcm : public OutlierRemoval {
    * and update the factors.
    * Removes the last loop closure based on chronological order
    */
-  EdgePtr removeLastLoopClosure(gtsam::NonlinearFactorGraph* updated_factors) {
+  EdgePtr removeLastLoopClosure(
+      gtsam::NonlinearFactorGraph* updated_factors) override {
     if (loop_closures_in_order_.size() == 0) return NULL;
 
     ObservationId last_obs = loop_closures_in_order_.back();
@@ -354,7 +356,7 @@ class Pcm : public OutlierRemoval {
    */
   void ignoreLoopClosureWithPrefix(
       char prefix,
-      gtsam::NonlinearFactorGraph* updated_factors) {
+      gtsam::NonlinearFactorGraph* updated_factors) override {
     if (std::find(ignored_prefixes_.begin(), ignored_prefixes_.end(), prefix) ==
         ignored_prefixes_.end())
       ignored_prefixes_.push_back(prefix);
@@ -366,7 +368,7 @@ class Pcm : public OutlierRemoval {
    */
   void reviveLoopClosureWithPrefix(
       char prefix,
-      gtsam::NonlinearFactorGraph* updated_factors) {
+      gtsam::NonlinearFactorGraph* updated_factors) override {
     ignored_prefixes_.erase(
         std::remove(ignored_prefixes_.begin(), ignored_prefixes_.end(), prefix),
         ignored_prefixes_.end());
@@ -376,13 +378,15 @@ class Pcm : public OutlierRemoval {
 
   /*! \brief Get the vector of currently ignored prefixes
    */
-  inline std::vector<char> getIgnoredPrefixes() { return ignored_prefixes_; }
+  inline std::vector<char> getIgnoredPrefixes() override {
+    return ignored_prefixes_;
+  }
 
   /*! \brief remove the prior factors of nodes that given prefix
    */
   void removePriorFactorsWithPrefix(
       const char& prefix,
-      gtsam::NonlinearFactorGraph* updated_factors) {
+      gtsam::NonlinearFactorGraph* updated_factors) override {
     // First make copy of nfg_special_ where prior factors stored
     const gtsam::NonlinearFactorGraph nfg_special_copy = nfg_special_;
     // Clear nfg_special_

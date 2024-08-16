@@ -69,7 +69,7 @@ class Pcm : public OutlierRemoval {
         odom_check_(true),
         loop_consistency_check_(true) {
     // check if templated value valid
-    BOOST_CONCEPT_ASSERT((gtsam::IsLieGroup<poseT>));
+    GTSAM_CONCEPT_ASSERT(gtsam::IsLieGroup<poseT>);
 
     if (params_.odom_threshold < 0 || params_.odom_rot_threshold < 0 ||
         params_.odom_trans_threshold < 0) {

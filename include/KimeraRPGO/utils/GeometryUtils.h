@@ -15,6 +15,8 @@
 
 #include <map>
 #include <vector>
+#include <boost/concept/assert.hpp>
+#include <boost/concept_check.hpp>
 
 /** \namespace graph_utils
  *  \brief This namespace encapsulates utility functions to manipulate graphs

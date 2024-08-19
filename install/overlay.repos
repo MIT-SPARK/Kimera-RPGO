@@ -1,0 +1,5 @@
+repositories:
+  MIT-SPARK/Kimera-RPGO:
+    type: git
+    url: https://github.com/MIT-SPARK/Kimera-RPGO.git
+    version: master

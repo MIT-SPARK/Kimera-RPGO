@@ -197,6 +197,15 @@ void RobustSolver::optimize() {
       result =
           gtsam::LevenbergMarquardtOptimizer(full_nfg, full_values, lmParams)
               .optimize();
+      // TODO(Yun) fix: Note here there's an implicit assumption that temp_factors are inliers
+      // Update GNC weights
+      gtsam::Vector gnc_weights_lc = gnc_weights_.tail(latest_num_lc_);
+      // All except loop closures implicitly assumed to be inliers
+      gnc_weights_ = gtsam::Vector::Ones(nfg_.size());
+      // Directly copy over weights for loop closures from last iteration
+      gnc_weights_.tail(latest_num_lc_) = gnc_weights_lc;
+      // Implicitly assume all temp factors are inliers
+      gnc_temp_weights_ = gtsam::Vector::Ones(temp_nfg_.size());
       auto opt_stop_t = std::chrono::high_resolution_clock::now();
       auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(
           opt_stop_t - opt_start_t);
@@ -213,7 +222,9 @@ void RobustSolver::optimize() {
       gnParams.setVerbosity("ERROR");
       log<INFO>("Running GN");
     }
-    if (params_.use_gnc_ && outlier_removal_) {
+    if (params_.use_gnc_ && outlier_removal_ &&
+        !(params_.gnc_params.fix_prev_inliers_ &&
+          outlier_removal_->getNumLC() == latest_num_lc_)) {
       gtsam::GncParams<gtsam::GaussNewtonParams> gncParams(gnParams);
       InlierVectorType known_inlier_factor_indices;
       getGncKnownInliers(&known_inlier_factor_indices);
@@ -263,8 +274,25 @@ void RobustSolver::optimize() {
                     << " inliers.";
       }
     } else {
+      // TODO(Yun) remove this duplicate (from LM)
+      if (params_.gnc_params.fix_prev_inliers_) {
+        size_t prev_k = gnc_weights_.size() - latest_num_lc_;
+        size_t k = outlier_removal_->getNumOdomFactors() +
+                   outlier_removal_->getNumSpecialFactors();
+        full_nfg = gtsam::NonlinearFactorGraph(nfg_.begin(), nfg_.begin() + k);
+        for (size_t i = 0; i < latest_num_lc_; i++) {
+          if (gnc_weights_(prev_k + i) > 0.5) {
+            full_nfg.add(nfg_.at(k + i));
+          }
+        }
+        full_nfg.add(temp_nfg_);
+      }
       result = gtsam::GaussNewtonOptimizer(full_nfg, full_values, gnParams)
                    .optimize();
+      gtsam::Vector gnc_weights_lc = gnc_weights_.tail(latest_num_lc_);
+      gnc_weights_ = gtsam::Vector::Ones(nfg_.size());
+      gnc_weights_.tail(latest_num_lc_) = gnc_weights_lc;
+      gnc_temp_weights_ = gtsam::Vector::Ones(temp_nfg_.size());
     }
 
   } else {

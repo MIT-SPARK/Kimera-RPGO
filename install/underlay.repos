@@ -1,0 +1,5 @@
+repositories:
+  borglab/gtsam:
+    type: git
+    url: https://github.com/borglab/gtsam.git
+    version: develop

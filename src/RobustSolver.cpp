@@ -200,8 +200,11 @@ void RobustSolver::optimize() {
       // TODO(Yun) fix: Note here there's an implicit assumption that temp_factors are inliers
       // Update GNC weights
       gtsam::Vector gnc_weights_lc = gnc_weights_.tail(latest_num_lc_);
+      // All except loop closures implicitly assumed to be inliers
       gnc_weights_ = gtsam::Vector::Ones(nfg_.size());
+      // Directly copy over weights for loop closures from last iteration
       gnc_weights_.tail(latest_num_lc_) = gnc_weights_lc;
+      // Implicitly assume all temp factors are inliers
       gnc_temp_weights_ = gtsam::Vector::Ones(temp_nfg_.size());
       auto opt_stop_t = std::chrono::high_resolution_clock::now();
       auto opt_duration = std::chrono::duration_cast<std::chrono::milliseconds>(

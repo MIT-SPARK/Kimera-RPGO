@@ -7,7 +7,6 @@
 
 namespace kimera_rpgo {
 using gtsam::GaussNewtonParams;
-using gtsam::GncParams;
 using gtsam::LevenbergMarquardtParams;
 using gtsam::NonlinearFactorGraph;
 using gtsam::Values;
@@ -50,8 +49,8 @@ gtsam::Values GncSolver::optimize(const NonlinearFactorGraph& factors,
           break;
       }
       gnc_params.verbosity =
-          static_cast<GncParams<GaussNewtonParams>::Verbosity>(config_.verbosity);
-      gtsam::GncOptimizer<GncParams<GaussNewtonParams> > gnc_optimizer(
+          static_cast<gtsam::GncParams<GaussNewtonParams>::Verbosity>(config_.verbosity);
+      gtsam::GncOptimizer<gtsam::GncParams<GaussNewtonParams> > gnc_optimizer(
           factors, initial, gnc_params);
       if (config_.gnc_params->barc_sq > 0) {
         gnc_optimizer.setInlierCostThresholds(config_.gnc_params->barc_sq);
@@ -92,9 +91,9 @@ gtsam::Values GncSolver::optimize(const NonlinearFactorGraph& factors,
           break;
       }
       gnc_params.verbosity =
-          static_cast<GncParams<LevenbergMarquardtParams>::Verbosity>(
+          static_cast<gtsam::GncParams<LevenbergMarquardtParams>::Verbosity>(
               config_.verbosity);
-      gtsam::GncOptimizer<GncParams<LevenbergMarquardtParams> > gnc_optimizer(
+      gtsam::GncOptimizer<gtsam::GncParams<LevenbergMarquardtParams> > gnc_optimizer(
           factors, initial, gnc_params);
       if (config_.gnc_params->barc_sq > 0) {
         gnc_optimizer.setInlierCostThresholds(config_.gnc_params->barc_sq);
@@ -115,17 +114,17 @@ gtsam::Values GncSolver::optimize(const NonlinearFactorGraph& factors,
   }
 }
 
-GncParams<GaussNewtonParams> GncSolver::setupGncParams(
+gtsam::GncParams<GaussNewtonParams> GncSolver::setupGncParams(
     const GaussNewtonParams& gn_param) const {
-  GncParams<GaussNewtonParams> gnc_param(gn_param);
+  gtsam::GncParams<GaussNewtonParams> gnc_param(gn_param);
   gnc_param.setMaxIterations(config_.gnc_params->max_iterations);
   gnc_param.setMuStep(config_.gnc_params->mu_step);
   return gnc_param;
 }
 
-GncParams<LevenbergMarquardtParams> GncSolver::setupGncParams(
+gtsam::GncParams<LevenbergMarquardtParams> GncSolver::setupGncParams(
     const LevenbergMarquardtParams& lm_param) const {
-  GncParams<LevenbergMarquardtParams> gnc_param(lm_param);
+  gtsam::GncParams<LevenbergMarquardtParams> gnc_param(lm_param);
   gnc_param.setMaxIterations(config_.gnc_params->max_iterations);
   gnc_param.setMuStep(config_.gnc_params->mu_step);
   return gnc_param;

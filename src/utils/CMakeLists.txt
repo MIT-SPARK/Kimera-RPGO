@@ -4,4 +4,5 @@ target_sources(
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/g2o.cpp
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/types.cpp
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/loss_functions.cpp
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/pose_4dof.cpp
 )

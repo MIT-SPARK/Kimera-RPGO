@@ -53,8 +53,11 @@ std::ostream& operator<<(std::ostream& os, const RpgoConfig& config) {
 
 void RpgoConfig::print() const { std::cout << *this; }
 
-Rpgo::Rpgo(const RpgoConfig& config) : config_(config) {
-  config_.print();
+Rpgo::Rpgo(const RpgoConfig& config, bool print_config) : config_(config) {
+  if (print_config) {
+    config_.print();
+  }
+
   switch (config_.solver_type) {
     case RpgoConfig::SolverType::LEAST_SQUARES:
       if (config_.solver_config.gnc_params) {

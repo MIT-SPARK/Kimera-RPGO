@@ -41,7 +41,7 @@ std::ostream& operator<<(std::ostream& os, const RpgoConfig& config);
 
 class Rpgo {
  public:
-  Rpgo(const RpgoConfig& config);
+  Rpgo(const RpgoConfig& config, bool print_config = true);
   ~Rpgo();
 
   void clear();

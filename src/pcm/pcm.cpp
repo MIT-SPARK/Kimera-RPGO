@@ -106,7 +106,7 @@ void Pcm::processBatch(const NonlinearFactorGraph& factors,
   buildInlierGraph();
 }
 
-void Pcm::processIncremental(const NonlinearFactorGraph& new_factors) {
+void Pcm::processIncremental(const NonlinearFactorGraph& /*new_factors*/) {
   std::invalid_argument("Pcm::processIncremental not implemented");
 }
 

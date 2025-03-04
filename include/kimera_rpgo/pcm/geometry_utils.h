@@ -43,6 +43,7 @@ static size_t getDim() {
 
 struct Pose {
   using Ptr = std::unique_ptr<Pose>;
+  virtual ~Pose() = default;
   virtual Pose::Ptr compose(const Pose::Ptr& other) const = 0;
 
   virtual Pose::Ptr inverse() const = 0;

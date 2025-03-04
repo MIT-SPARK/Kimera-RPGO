@@ -19,7 +19,7 @@ struct SolverLog {
 class Solver {
  public:
   Solver(const SolverConfig& config);
-  ~Solver();
+  virtual ~Solver();
 
   gtsam::Values solve(const gtsam::NonlinearFactorGraph& factors,
                       const gtsam::Values& initial,

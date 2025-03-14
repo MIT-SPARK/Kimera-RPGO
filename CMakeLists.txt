@@ -55,7 +55,7 @@ endif()
 ##########################################################################
 # Python Bindings
 if (KIMERA_RPGO_BUILD_PYTHON_BINDINGS)
-    message(STATUS "RPGO-tools Python binding will be built.")
+  message(STATUS "RPGO-tools Python binding will be built.")
   add_subdirectory(python)
 endif()
 

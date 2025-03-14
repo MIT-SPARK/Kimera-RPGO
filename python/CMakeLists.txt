@@ -1,19 +1,10 @@
 cmake_minimum_required(VERSION 3.14)
 project(kimera_rpgo_python)
 
-configure_file(pybind11.CMakeLists.txt.in pybind11-download/CMakeLists.txt)
-execute_process(
-  COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pybind11-download" OUTPUT_QUIET
-)
-execute_process(
-  COMMAND "${CMAKE_COMMAND}" --build .
-  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/pybind11-download" OUTPUT_QUIET
-)
-
-add_subdirectory(
-  ${CMAKE_CURRENT_BINARY_DIR}/pybind11-src ${CMAKE_CURRENT_BINARY_DIR}/pybind11-build
-)
+include(FetchContent)
+FetchContent_Declare(pybind11 GIT_REPOSITORY https://github.com/pybind/pybind11.git GIT_TAG v2.11.1)
+FetchContent_Populate(pybind11)
+add_subdirectory(${pybind11_SOURCE_DIR} ${pybind11_BINARY_DIR} EXCLUDE_FROM_ALL)
 
 pybind11_add_module(
   _kimera_rpgo_bindings bindings/kimera_rpgo_bindings.cpp

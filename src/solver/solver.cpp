@@ -18,6 +18,11 @@ Solver::Solver(const SolverConfig& config) : config_(config) {}
 
 Solver::~Solver() {}
 
+void Solver::clear() {
+ corrupted_odom_indices_.clear();
+ known_inliers_.clear();
+}
+
 gtsam::Values Solver::solve(const NonlinearFactorGraph& factors,
                             const Values& initial,
                             std::vector<double>& weights) {

@@ -24,7 +24,8 @@ class GncSolver : public Solver {
   gtsam::GncParams<gtsam::LevenbergMarquardtParams> setupGncParams(
       const gtsam::LevenbergMarquardtParams& lm_param) const;
 
-  IndexVector findInlierOdomIndices(const gtsam::NonlinearFactorGraph& factors) const;
+  IndexVector findInlierIndices(
+      const gtsam::NonlinearFactorGraph& factors) const;
 
  private:
   SolverConfig config_;

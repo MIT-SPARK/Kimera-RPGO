@@ -25,7 +25,13 @@ class Solver {
                       const gtsam::Values& initial,
                       std::vector<double>& weights);
 
+  void clear();
+
   inline const SolverLog& getLog() { return log_; }
+
+  inline void setKnownInliers(const std::set<size_t>& indices) {
+    known_inliers_ = indices;
+  }
 
   inline void setCorruptedOdom(const std::set<size_t>& indices) {
     corrupted_odom_indices_ = indices;
@@ -39,6 +45,7 @@ class Solver {
  protected:
   SolverLog log_;
   SolverConfig config_;
+  std::set<size_t> known_inliers_;
   std::set<size_t> corrupted_odom_indices_;
 };
 

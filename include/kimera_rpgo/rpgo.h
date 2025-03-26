@@ -30,7 +30,7 @@ struct RpgoConfig {
   PcmConfig pcm_config;
 
   LossType loss_type = LossType::LS;
-  double loss_threshold_c = 0.0; // For loss_type
+  double loss_threshold_c = 0.0;  // For loss_type
 
   void print() const;
 };
@@ -53,6 +53,8 @@ class Rpgo {
   void addValues(const gtsam::Values& values);
 
   void fixFirstPose(bool is_3d);
+
+  void setKnownInliers(std::set<size_t> indices);
 
   void setCorruptedOdom(size_t index);
 
@@ -79,6 +81,8 @@ class Rpgo {
  private:
   std::unique_ptr<Solver> solver_;
   std::unique_ptr<Pcm> pcm_;
+
+  std::set<size_t> inlier_factors_;
 
   std::set<size_t> corrupted_odom_factors_;
 

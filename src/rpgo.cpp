@@ -28,8 +28,8 @@ std::ostream& operator<<(std::ostream& os, const RpgoConfig& config) {
   switch (config.solver_type) {
     case RpgoConfig::SolverType::LEAST_SQUARES:
       os << "solver_type: LEAST-SQUARES\n";
-      os << "least_squares_option: " << config.solver_config.least_squares_option
-         << "\n";
+      os << "least_squares_option: "
+         << config.solver_config.least_squares_option << "\n";
       break;
     case RpgoConfig::SolverType::GRADIENT:
       os << "solver_type: GRADIENT\n";
@@ -90,13 +90,14 @@ void Rpgo::clear() {
   result_ = gtsam::Values();
   inlier_weights_.clear();
 
+  solver_->clear();
   log_ = RpgoLog();
 }
 
 void Rpgo::loadG2o(const std::string& g2o, bool is_3d) {
   // Load g2o
-  const auto& graph_values =
-      gtsam::readG2owithLmks(g2o, is_3d, config_.loss_type, config_.loss_threshold_c);
+  const auto& graph_values = gtsam::readG2owithLmks(
+      g2o, is_3d, config_.loss_type, config_.loss_threshold_c);
   factors_ = *graph_values.first;
   initial_ = *graph_values.second;
 }
@@ -132,7 +133,13 @@ void Rpgo::fixFirstPose(bool is_3d) {
   }
 }
 
-void Rpgo::setCorruptedOdom(size_t index) { corrupted_odom_factors_.insert(index); }
+void Rpgo::setKnownInliers(std::set<size_t> inliers) {
+  inlier_factors_ = inliers;
+}
+
+void Rpgo::setCorruptedOdom(size_t index) {
+  corrupted_odom_factors_.insert(index);
+}
 
 void Rpgo::run() {
   // Call solver to optimize and update result
@@ -153,6 +160,7 @@ void Rpgo::run() {
 
   std::vector<double> solver_inlier_weights;
   solver_->setCorruptedOdom(corrupted_odom_factors_);
+  solver_->setKnownInliers(inlier_factors_);
   result_ = solver_->solve(consistent_factors, initial_, solver_inlier_weights);
 
   // Construct proper weights (accounting for PCM)
@@ -167,7 +175,8 @@ void Rpgo::run() {
     inlier_weights_ = solver_inlier_weights;
   }
   auto end = std::chrono::system_clock::now();
-  log_.elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  log_.elapsed =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 }
 
 void Rpgo::writeResult(const std::string& output_g2o) const {

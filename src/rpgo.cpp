@@ -1,7 +1,5 @@
 #include "kimera_rpgo/rpgo.h"
 
-#include <glog/logging.h>
-
 #include <nlohmann/json.hpp>
 
 #include "kimera_rpgo/solver/gnc_solver.h"

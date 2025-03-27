@@ -177,6 +177,17 @@ void Rpgo::run() {
   auto end = std::chrono::system_clock::now();
   log_.elapsed =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  if (config_.print_summary) {
+    size_t num_inliers = 0;
+    for (const auto& inlier : inlier_weights_) {
+      if (inlier > 0.5) {
+        num_inliers++;
+      }
+    }
+    std::cout << "Optimized in " << log_.elapsed.count() << "(ms). "
+              << factors_.size() << " total factors with " << num_inliers
+              << " inliers\n";
+  }
 }
 
 void Rpgo::writeResult(const std::string& output_g2o) const {

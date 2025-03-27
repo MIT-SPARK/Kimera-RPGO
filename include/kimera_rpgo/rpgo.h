@@ -32,6 +32,7 @@ struct RpgoConfig {
   LossType loss_type = LossType::LS;
   double loss_threshold_c = 0.0;  // For loss_type
 
+  bool print_summary = true;
   void print() const;
 };
 

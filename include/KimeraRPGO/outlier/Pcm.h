@@ -920,9 +920,9 @@ class Pcm : public OutlierRemoval {
       // find max clique incrementally
       size_t num_inliers =
           findMaxCliqueHeuIncremental(loop_closures_[robot_pair].adj_matrix,
-                                      new_lc_it->second,
-                                      prev_maxclique_size,
-                                      &inliers_idx);
+                                   new_lc_it->second,
+                                   prev_maxclique_size,
+                                   &inliers_idx);
       // update inliers, or consistent factors, according to max clique result
       // num_inliers will be zero if the previous inlier set should not be
       // changed

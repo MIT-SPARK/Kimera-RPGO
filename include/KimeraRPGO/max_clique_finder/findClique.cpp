@@ -150,4 +150,79 @@ void print_max_clique(const vector<int>& max_clique_data) {
     cout << max_clique_data[i] + 1 << " ";
   cout << endl;
 }
+
+/* Algorithm 1: MAXCLIQUE: Finds maximum clique of the given graph */
+int maxCliqueIncremental(CGraphIO* gio,
+                         size_t num_new_lc,
+                         size_t prev_maxclique_size,
+                         vector<int>* max_clique_data) {
+  vector<int>* ptrVertex = gio->GetVerticesPtr();
+  vector<int>* ptrEdge = gio->GetEdgesPtr();
+  vector<int> U;
+  U.reserve(num_new_lc);
+  vector<int> max_clique_data_inter;
+  max_clique_data_inter.reserve(num_new_lc);
+  max_clique_data->reserve(num_new_lc);
+  size_t maxClq = prev_maxclique_size;
+  int prev_maxClq;
+
+  pruned1 = 0;
+  pruned2 = 0;
+  pruned3 = 0;
+  pruned5 = 0;
+  
+  int vertex_count = gio->GetVertexCount();  // cache the value ONCE
+  int start = vertex_count - 1;
+  int end = vertex_count - num_new_lc;
+  
+  // Bit Vector to track if vertex has been considered previously.
+  int* bitVec = new int[vertex_count];
+  memset(bitVec, 0, vertex_count * sizeof(int));
+
+  for (int i = start; i >= end; i--) {
+    bitVec[i] = 1;
+    prev_maxClq = maxClq;
+
+    U.clear();
+    // Pruning 1
+    if (getDegree(ptrVertex, i) < maxClq) {
+      pruned1++;
+      continue;
+    }
+
+    for (int j = (*ptrVertex)[i]; j < (*ptrVertex)[i + 1]; j++) {
+      // Pruning 2
+      if (bitVec[(*ptrEdge)[j]] != 1) {
+        // Pruning 3
+        if (getDegree(ptrVertex, (*ptrEdge)[j]) >= maxClq)
+          U.push_back((*ptrEdge)[j]);
+        else
+          pruned3++;
+      } else {
+        pruned2++;
+      }
+    }
+
+    maxCliqueHelper(gio, &U, 1, &maxClq, &max_clique_data_inter);
+
+    if (maxClq > prev_maxClq) {
+      max_clique_data_inter.push_back(i);
+      *max_clique_data = max_clique_data_inter;
+    }
+    max_clique_data_inter.clear();
+  }
+
+  delete[] bitVec;
+  max_clique_data_inter.clear();
+
+#ifdef _DEBUG
+  cout << "Pruning 1 = " << pruned1 << endl;
+  cout << "Pruning 2 = " << pruned2 << endl;
+  cout << "Pruning 3 = " << pruned3 << endl;
+  cout << "Pruning 5 = " << pruned5 << endl;
+#endif
+
+  return maxClq;
+}
+
 }  // namespace FMC

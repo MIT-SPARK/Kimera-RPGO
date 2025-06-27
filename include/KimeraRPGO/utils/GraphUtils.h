@@ -17,6 +17,11 @@ int findMaxClique(const Eigen::MatrixXd adjMatrix,
 int findMaxCliqueHeu(const Eigen::MatrixXd adjMatrix,
                      std::vector<int>* max_clique);
 
+int findMaxCliqueIncremental(const Eigen::MatrixXd adjMatrix,
+                             size_t num_new_lc,
+                             size_t prev_maxclique_size,
+                             std::vector<int>* max_clique);
+
 int findMaxCliqueHeuIncremental(const Eigen::MatrixXd adjMatrix,
                                 size_t num_new_lc,
                                 size_t prev_maxclique_size,

@@ -9,16 +9,20 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_compile_options(-Wall -Wextra -fPIC)
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra)
+endif()
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  # from: https://www.kitware.com//cmake-and-the-default-build-type/
+  message(STATUS "Setting build type to 'Release' as none was specified.")
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
+endif()
 
 # Options
+option(BUILD_SHARED_LIBS "Build shared libs" ON)
 option(KIMERA_RPGO_BUILD_TESTS "Build tests" ON)
 option(KIMERA_RPGO_BUILD_PYTHON_BINDINGS "Build Python bindings" ON)
-
-# Cache Variables
-if (NOT KIMERA_RPGO_PYTHON_VERSION)
-    set(KIMERA_RPGO_PYTHON_VERSION "" CACHE STRING "Python version to use for kimera_rpgo bindings.")
-endif ()
 
 find_package(GTSAM REQUIRED)
 find_package(nlohmann_json REQUIRED)
@@ -38,6 +42,9 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC nlohmann_json::nlohmann_json gtsam
 )
+if(NOT BUILD_SHARED_LIBS)
+  set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE 1)
+endif()
 
 add_subdirectory(src)
 

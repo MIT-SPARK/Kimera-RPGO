@@ -10,6 +10,8 @@
   <buildtool_depend>cmake</buildtool_depend>
 
   <build_depend>gtsam</build_depend>
+  <depend>pybind11-dev</depend>
+  <depend>nlohmann-json-dev</depend>
 
   <export>
     <!-- Specify that this is not really a catkin package-->

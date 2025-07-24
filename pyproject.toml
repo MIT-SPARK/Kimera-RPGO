@@ -1,8 +1,31 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel",
-    "cmake>=3.10",
-    "ninja",
+requires = ["scikit-build-core", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "kimera_rpgo"
+version = "2.0.0"
+readme = "README.md"
+authors = [
+    {name = "Yun Chang", email = "yunchang@mit.edu"},
 ]
-build-backend = "setuptools.build_meta"
+requires-python = ">=3.8"
+dependencies = [
+    "numpy",
+    "scipy",
+]
+maintainers = [
+    {name = "Yun Chang", email = "yunchang@mit.edu"},
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: TODO",
+]
+
+[tool.scikit-build.cmake.define]
+KIMERA_RPGO_BUILD_TESTS = "ON"
+KIMERA_RPGO_BUILD_PYTHON = "ON"
+BUILD_SHARED_LIBS = "OFF"
+
+[tool.scikit-build.wheel.packages]
+"kimera_rpgo" = "python/src/kimera_rpgo"

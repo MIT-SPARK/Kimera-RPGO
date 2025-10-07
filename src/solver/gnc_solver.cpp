@@ -8,31 +8,31 @@
 namespace kimera_rpgo {
 
 using gtsam::GaussNewtonParams;
-using gtsam::GncOptimizer;
-using gtsam::GncParams;
 using gtsam::LevenbergMarquardtParams;
 using gtsam::NonlinearFactorGraph;
 using gtsam::Values;
 
 using IndexVector = gtsam::FastVector<size_t>;
 
-template <typename BaseParams>
-GncOptimizer<GncParams<BaseParams>> makeOptimizer(
-    const OptimizerParams* base,
-    const SolverConfig& config,
-    const NonlinearFactorGraph& factors,
-    const Values& initial,
-    const IndexVector& inliers) {
-  using Params = GncParams<BaseParams>;
-  const auto derived = dynamic_cast<const BaseParams*>(base);
+template <typename InnerParams>
+using GncOpt = gtsam::GncOptimizer<gtsam::GncParams<InnerParams>>;
+
+template <typename InnerParams>
+GncOpt<InnerParams> makeOptimizer(const OptimizerParams* base,
+                                  const ::kimera_rpgo::GncParams& config,
+                                  const NonlinearFactorGraph& factors,
+                                  const Values& initial,
+                                  const IndexVector& inliers) {
+  using Params = gtsam::GncParams<InnerParams>;
+  const auto derived = dynamic_cast<const InnerParams*>(base);
   if (!derived) {
     throw std::invalid_argument("Optimizer option and param mismatch");
   }
 
   Params params(*derived);
-  params.setMaxIterations(config.gnc_params->max_iterations);
-  params.setMuStep(config.gnc_params->mu_step);
-  switch (config.gnc_params->robust_cost) {
+  params.setMaxIterations(config.max_iterations);
+  params.setMuStep(config.mu_step);
+  switch (config.robust_cost) {
     case LossType::TLS:
       params.lossType = gtsam::TLS;
       break;
@@ -48,12 +48,11 @@ GncOptimizer<GncParams<BaseParams>> makeOptimizer(
     params.setKnownInliers(inliers);
   }
 
-  GncOptimizer<Params> optimizer(factors, initial, params);
-  if (config.gnc_params->barc_sq > 0) {
-    optimizer.setInlierCostThresholds(config.gnc_params->barc_sq);
+  GncOpt<InnerParams> optimizer(factors, initial, params);
+  if (config.barc_sq > 0) {
+    optimizer.setInlierCostThresholds(config.barc_sq);
   } else {
-    optimizer.setInlierCostThresholdsAtProbability(
-        config.gnc_params->inlier_probability);
+    optimizer.setInlierCostThresholdsAtProbability(config.inlier_probability);
   }
 
   return optimizer;
@@ -76,7 +75,7 @@ gtsam::Values GncSolver::optimize(const FactorGraph& factors,
   switch (config_.least_squares_option) {
     case SolverConfig::LeastSquaresOption::GN: {
       auto optimizer = makeOptimizer<GaussNewtonParams>(
-          base.get(), config_, factors, initial, inliers);
+          base.get(), *config_.gnc_params, factors, initial, inliers);
 
       auto result = optimizer.optimize();
       auto vec_weights = optimizer.getWeights();
@@ -87,7 +86,7 @@ gtsam::Values GncSolver::optimize(const FactorGraph& factors,
     }
     case SolverConfig::LeastSquaresOption::LM: {
       auto optimizer = makeOptimizer<LevenbergMarquardtParams>(
-          base.get(), config_, factors, initial, inliers);
+          base.get(), *config_.gnc_params, factors, initial, inliers);
       auto result = optimizer.optimize();
       auto vec_weights = optimizer.getWeights();
       weights = std::vector<double>(vec_weights.data(),

@@ -6,10 +6,60 @@
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 
 namespace kimera_rpgo {
+
 using gtsam::GaussNewtonParams;
+using gtsam::GncOptimizer;
+using gtsam::GncParams;
 using gtsam::LevenbergMarquardtParams;
 using gtsam::NonlinearFactorGraph;
 using gtsam::Values;
+
+using IndexVector = gtsam::FastVector<size_t>;
+
+template <typename BaseParams>
+GncOptimizer<GncParams<BaseParams>> makeOptimizer(
+    const SolverConfig& config,
+    const NonlinearFactorGraph& factors,
+    const Values& initial,
+    const IndexVector& inliers) {
+  using Params = GncParams<BaseParams>;
+
+  auto base = config.optimizer_params;
+  base->verbosity = static_cast<OptimizerParams::Verbosity>(config.verbosity);
+  auto derived = dynamic_cast<BaseParams*>(config.optimizer_params.get());
+  if (!derived) {
+    throw std::invalid_argument("Optimizer option and param mismatch");
+  }
+
+  Params params(*derived);
+  params.setMaxIterations(config.gnc_params->max_iterations);
+  params.setMuStep(config.gnc_params->mu_step);
+  switch (config.gnc_params->robust_cost) {
+    case LossType::TLS:
+      params.lossType = gtsam::TLS;
+      break;
+    case LossType::GM:
+      params.lossType = gtsam::GM;
+      break;
+    default:
+      std::invalid_argument("GNC only supports TLS and GM");
+      break;
+  }
+
+  if (!inliers.empty()) {
+    params.setKnownInliers(inliers);
+  }
+
+  GncOptimizer<Params> optimizer(factors, initial, params);
+  if (config.gnc_params->barc_sq > 0) {
+    optimizer.setInlierCostThresholds(config.gnc_params->barc_sq);
+  } else {
+    optimizer.setInlierCostThresholdsAtProbability(
+        config.gnc_params->inlier_probability);
+  }
+
+  return optimizer;
+}
 
 GncSolver::GncSolver(const SolverConfig& config)
     : Solver(config), config_(config) {
@@ -20,93 +70,27 @@ GncSolver::GncSolver(const SolverConfig& config)
 
 GncSolver::~GncSolver() {}
 
-gtsam::Values GncSolver::optimize(const NonlinearFactorGraph& factors,
+gtsam::Values GncSolver::optimize(const FactorGraph& factors,
                                   const Values& initial,
                                   std::vector<double>& weights) {
-  const auto& verbosity =
-      static_cast<OptimizerParams::Verbosity>(config_.verbosity);
+  const auto inliers = findInliers(factors);
   switch (config_.least_squares_option) {
     case SolverConfig::LeastSquaresOption::GN: {
-      auto gn_params = std::dynamic_pointer_cast<GaussNewtonParams>(
-          config_.optimizer_params);
-      // Potentially can also just detect param type instead of setting option.
-      // TODO(Yun)
-      if (!gn_params) {
-        throw std::invalid_argument("Optimizer option and param mismatch");
-      }
-      gn_params->verbosity = verbosity;
-      auto gnc_params = setupGncParams(*gn_params);
-      const auto& inliers = findInlierIndices(factors);
-      if (!inliers.empty()) {
-        gnc_params.setKnownInliers(inliers);
-      }
-      switch (config_.gnc_params->robust_cost) {
-        case LossType::TLS:
-          gnc_params.lossType = gtsam::TLS;
-          break;
-        case LossType::GM:
-          gnc_params.lossType = gtsam::GM;
-          break;
-        default:
-          std::invalid_argument("GNC only supports TLS and GM");
-          break;
-      }
-      gnc_params.verbosity =
-          static_cast<gtsam::GncParams<GaussNewtonParams>::Verbosity>(
-              config_.verbosity);
-      gtsam::GncOptimizer<gtsam::GncParams<GaussNewtonParams> > gnc_optimizer(
-          factors, initial, gnc_params);
-      if (config_.gnc_params->barc_sq > 0) {
-        gnc_optimizer.setInlierCostThresholds(config_.gnc_params->barc_sq);
-      } else {
-        gnc_optimizer.setInlierCostThresholdsAtProbability(
-            config_.gnc_params->inlier_probability);
-      }
-      auto result = gnc_optimizer.optimize();
-      auto vec_weights = gnc_optimizer.getWeights();
+      auto optimizer =
+          makeOptimizer<GaussNewtonParams>(config_, factors, initial, inliers);
+
+      auto result = optimizer.optimize();
+      auto vec_weights = optimizer.getWeights();
       weights = std::vector<double>(vec_weights.data(),
                                     vec_weights.data() + vec_weights.size());
 
       return result;
     }
     case SolverConfig::LeastSquaresOption::LM: {
-      auto lm_params = std::dynamic_pointer_cast<LevenbergMarquardtParams>(
-          config_.optimizer_params);
-      if (!lm_params) {
-        throw std::invalid_argument("Optimizer option and param mismatch");
-      }
-      lm_params->verbosity = verbosity;
-      lm_params->verbosityLM =
-          static_cast<LevenbergMarquardtParams::VerbosityLM>(config_.verbosity);
-      auto gnc_params = setupGncParams(*lm_params);
-      const auto& inliers = findInlierIndices(factors);
-      if (!inliers.empty()) {
-        gnc_params.setKnownInliers(inliers);
-      }
-      switch (config_.gnc_params->robust_cost) {
-        case LossType::TLS:
-          gnc_params.lossType = gtsam::TLS;
-          break;
-        case LossType::GM:
-          gnc_params.lossType = gtsam::GM;
-          break;
-        default:
-          std::invalid_argument("GNC only supports TLS and GM");
-          break;
-      }
-      gnc_params.verbosity =
-          static_cast<gtsam::GncParams<LevenbergMarquardtParams>::Verbosity>(
-              config_.verbosity);
-      gtsam::GncOptimizer<gtsam::GncParams<LevenbergMarquardtParams> >
-          gnc_optimizer(factors, initial, gnc_params);
-      if (config_.gnc_params->barc_sq > 0) {
-        gnc_optimizer.setInlierCostThresholds(config_.gnc_params->barc_sq);
-      } else {
-        gnc_optimizer.setInlierCostThresholdsAtProbability(
-            config_.gnc_params->inlier_probability);
-      }
-      auto result = gnc_optimizer.optimize();
-      auto vec_weights = gnc_optimizer.getWeights();
+      auto optimizer = makeOptimizer<LevenbergMarquardtParams>(
+          config_, factors, initial, inliers);
+      auto result = optimizer.optimize();
+      auto vec_weights = optimizer.getWeights();
       weights = std::vector<double>(vec_weights.data(),
                                     vec_weights.data() + vec_weights.size());
 
@@ -114,28 +98,10 @@ gtsam::Values GncSolver::optimize(const NonlinearFactorGraph& factors,
     }
     default:
       throw std::invalid_argument("Unexpected Least Squares option for GNC");
-      return gtsam::Values();
   }
 }
 
-gtsam::GncParams<GaussNewtonParams> GncSolver::setupGncParams(
-    const GaussNewtonParams& gn_param) const {
-  gtsam::GncParams<GaussNewtonParams> gnc_param(gn_param);
-  gnc_param.setMaxIterations(config_.gnc_params->max_iterations);
-  gnc_param.setMuStep(config_.gnc_params->mu_step);
-  return gnc_param;
-}
-
-gtsam::GncParams<LevenbergMarquardtParams> GncSolver::setupGncParams(
-    const LevenbergMarquardtParams& lm_param) const {
-  gtsam::GncParams<LevenbergMarquardtParams> gnc_param(lm_param);
-  gnc_param.setMaxIterations(config_.gnc_params->max_iterations);
-  gnc_param.setMuStep(config_.gnc_params->mu_step);
-  return gnc_param;
-}
-
-GncSolver::IndexVector GncSolver::findInlierIndices(
-    const NonlinearFactorGraph& factors) const {
+IndexVector GncSolver::findInliers(const FactorGraph& factors) const {
   IndexVector inlier_indices;
   for (size_t idx = 0; idx < factors.size(); idx++) {
     if (known_inliers_.count(idx)) {
@@ -157,6 +123,8 @@ GncSolver::IndexVector GncSolver::findInlierIndices(
       inlier_indices.push_back(idx);
     }
   }
+
   return inlier_indices;
 }
+
 }  // namespace kimera_rpgo

@@ -18,15 +18,13 @@ using IndexVector = gtsam::FastVector<size_t>;
 
 template <typename BaseParams>
 GncOptimizer<GncParams<BaseParams>> makeOptimizer(
+    const OptimizerParams* base,
     const SolverConfig& config,
     const NonlinearFactorGraph& factors,
     const Values& initial,
     const IndexVector& inliers) {
   using Params = GncParams<BaseParams>;
-
-  auto base = config.optimizer_params;
-  base->verbosity = static_cast<OptimizerParams::Verbosity>(config.verbosity);
-  auto derived = dynamic_cast<BaseParams*>(config.optimizer_params.get());
+  const auto derived = dynamic_cast<const BaseParams*>(base);
   if (!derived) {
     throw std::invalid_argument("Optimizer option and param mismatch");
   }
@@ -73,11 +71,12 @@ GncSolver::~GncSolver() {}
 gtsam::Values GncSolver::optimize(const FactorGraph& factors,
                                   const Values& initial,
                                   std::vector<double>& weights) {
+  const auto base = getBaseParams();
   const auto inliers = findInliers(factors);
   switch (config_.least_squares_option) {
     case SolverConfig::LeastSquaresOption::GN: {
-      auto optimizer =
-          makeOptimizer<GaussNewtonParams>(config_, factors, initial, inliers);
+      auto optimizer = makeOptimizer<GaussNewtonParams>(
+          base.get(), config_, factors, initial, inliers);
 
       auto result = optimizer.optimize();
       auto vec_weights = optimizer.getWeights();
@@ -88,7 +87,7 @@ gtsam::Values GncSolver::optimize(const FactorGraph& factors,
     }
     case SolverConfig::LeastSquaresOption::LM: {
       auto optimizer = makeOptimizer<LevenbergMarquardtParams>(
-          config_, factors, initial, inliers);
+          base.get(), config_, factors, initial, inliers);
       auto result = optimizer.optimize();
       auto vec_weights = optimizer.getWeights();
       weights = std::vector<double>(vec_weights.data(),

@@ -37,51 +37,45 @@ std::unique_ptr<Solver> makeOpt(const OptimizerParams* base,
 }  // namespace
 
 LeastSquaresSolver::LeastSquaresSolver(const SolverConfig& config)
-    : Solver(config), config_(config) {
-  auto base = config.optimizer_params;
-  base->verbosity = static_cast<OptimizerParams::Verbosity>(config.verbosity);
-  // TODO(nathan) setup logging callback
+    : Solver(config), config_(config) {}
 
-  switch (config.least_squares_option) {
+LeastSquaresSolver::~LeastSquaresSolver() {}
+
+gtsam::Values LeastSquaresSolver::optimize(const NonlinearFactorGraph& graph,
+                                           const Values& init,
+                                           std::vector<double>& weights) {
+  const auto base = getBaseParams();
+
+  std::cout << "Least squares optimize\n";
+  std::unique_ptr<NonlinearOptimizer> optimizer;
+  switch (config_.least_squares_option) {
     case SolverConfig::LeastSquaresOption::GN:
-      optimizer_factory_ = [base](const auto& graph, const auto& init) {
-        return makeOpt<GaussNewtonOptimizer, GaussNewtonParams>(
-            base.get(), graph, init);
-      };
+      optimizer = makeOpt<GaussNewtonOptimizer, GaussNewtonParams>(
+          base.get(), graph, init);
       break;
     case SolverConfig::LeastSquaresOption::LM:
-      optimizer_factory_ = [base](const auto& graph, const auto& init) {
-        return makeOpt<LevenbergMarquardtOptimizer, LevenbergMarquardtParams>(
-            base.get(), graph, init);
-      };
+      optimizer =
+          makeOpt<LevenbergMarquardtOptimizer, LevenbergMarquardtParams>(
+              base.get(), graph, init);
       break;
     case SolverConfig::LeastSquaresOption::DOGLEG:
-      optimizer_factory_ = [base](const auto& graph, const auto& init) {
-        return makeOpt<DoglegOptimizer, DoglegParams>(base.get(), graph, init);
-      };
+      optimizer =
+          makeOpt<DoglegOptimizer, DoglegParams>(base.get(), graph, init);
       break;
     default:
       throw std::invalid_argument("Unexpected Least Squares option");
   }
-}
 
-LeastSquaresSolver::~LeastSquaresSolver() {}
-
-gtsam::Values LeastSquaresSolver::optimize(const NonlinearFactorGraph& factors,
-                                           const Values& initial,
-                                           std::vector<double>& weights) {
-  std::cout << "Least squares optimize\n";
-  const auto optimizer = optimizer_factory_(factors, initial);
   if (!optimizer) {
     throw std::invalid_argument("Invalid optimizer config!");
   }
 
   const auto result = optimizer->optimize();
 
-  weights.resize(factors.size());
-  for (size_t i = 0; i < factors.size(); i++) {
+  weights.resize(graph.size());
+  for (size_t i = 0; i < graph.size(); i++) {
     // TODO(Yun) handle factors not derived from NoiseModelFactor
-    auto factor = factor_pointer_cast<NoiseModelFactor>(factors[i]);
+    auto factor = factor_pointer_cast<NoiseModelFactor>(graph[i]);
     if (!factor) {
       throw std::runtime_error("factor not derived from NoiseModelFactor!");
     }

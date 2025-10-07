@@ -18,6 +18,8 @@ struct SolverLog {
 
 class Solver {
  public:
+  using IterationCallback = std::function<void(size_t, double, double)>;
+
   Solver(const SolverConfig& config);
   virtual ~Solver();
 
@@ -27,17 +29,32 @@ class Solver {
 
   void clear();
 
-  inline const SolverLog& getLog() { return log_; }
+  const SolverLog& getLog() { return log_; }
 
-  inline void setKnownInliers(const std::set<size_t>& indices) {
+  void setKnownInliers(const std::set<size_t>& indices) {
     known_inliers_ = indices;
   }
 
-  inline void setCorruptedOdom(const std::set<size_t>& indices) {
+  void setCorruptedOdom(const std::set<size_t>& indices) {
     corrupted_odom_indices_ = indices;
   }
 
+  void setIterationCallback(const IterationCallback& callback) {
+    iter_callback_ = callback;
+  }
+
  protected:
+  std::shared_ptr<gtsam::NonlinearOptimizerParams> getBaseParams() const {
+    auto base = config_.optimizer_params;
+    base->verbosity =
+        static_cast<OptimizerParams::Verbosity>(config_.verbosity);
+    if (iter_callback_) {
+      base->iterationHook = iter_callback_;
+    }
+
+    return base;
+  }
+
   virtual gtsam::Values optimize(const gtsam::NonlinearFactorGraph& factors,
                                  const gtsam::Values& initial,
                                  std::vector<double>& weights) = 0;
@@ -47,6 +64,7 @@ class Solver {
   SolverConfig config_;
   std::set<size_t> known_inliers_;
   std::set<size_t> corrupted_odom_indices_;
+  std::function<void(size_t, double, double)> iter_callback_;
 };
 
 }  // namespace kimera_rpgo

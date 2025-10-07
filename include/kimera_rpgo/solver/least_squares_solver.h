@@ -6,7 +6,7 @@ namespace kimera_rpgo {
 
 class LeastSquaresSolver : public Solver {
  public:
-  LeastSquaresSolver(const SolverConfig& config);
+  explicit LeastSquaresSolver(const SolverConfig& config);
   ~LeastSquaresSolver();
 
  private:
@@ -15,6 +15,7 @@ class LeastSquaresSolver : public Solver {
                          std::vector<double>& weights) override;
 
  private:
-  SolverConfig config_;
+  const SolverConfig config_;
 };
+
 }  // namespace kimera_rpgo

@@ -65,19 +65,21 @@ class Rpgo {
 
   void writeLog(const std::string& output_json) const;
 
-  inline const gtsam::Values& getResult() const { return result_; }
+  const gtsam::Values& getResult() const { return result_; }
 
-  inline const gtsam::NonlinearFactorGraph& getFactors() const {
-    return factors_;
-  }
+  const gtsam::NonlinearFactorGraph& getFactors() const { return factors_; }
 
-  inline const std::vector<double>& getInlierWeights() const {
+  const std::vector<double>& getInlierWeights() const {
     return inlier_weights_;
   }
 
-  inline const SolverLog& getSolverLog() const { return solver_->getLog(); }
+  const SolverLog& getSolverLog() const { return solver_->getLog(); }
 
-  inline const RpgoLog& getLog() const { return log_; }
+  const RpgoLog& getLog() const { return log_; }
+
+  void setIterationCallback(const Solver::IterationCallback& callback) {
+    solver_->setIterationCallback(callback);
+  }
 
  private:
   std::unique_ptr<Solver> solver_;

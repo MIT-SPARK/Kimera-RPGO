@@ -65,10 +65,6 @@ class Rpgo {
 
   void writeLog(const std::string& output_json) const;
 
-  void setIterationCallback(const Solver::IterationCallback& callback) {
-    solver_->setIterationCallback(callback);
-  }
-
   const gtsam::Values& getResult() const { return result_; }
 
   const gtsam::NonlinearFactorGraph& getFactors() const { return factors_; }
@@ -80,6 +76,10 @@ class Rpgo {
   const SolverLog& getSolverLog() const { return solver_->getLog(); }
 
   const RpgoLog& getLog() const { return log_; }
+
+  void setIterationCallback(const Solver::IterationCallback& callback) {
+    solver_->setIterationCallback(callback);
+  }
 
  private:
   std::unique_ptr<Solver> solver_;

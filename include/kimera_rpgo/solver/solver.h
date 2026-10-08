@@ -1,5 +1,6 @@
 #pragma once
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
+#include <gtsam/nonlinear/NonlinearOptimizerParams.h>
 #include <gtsam/nonlinear/Values.h>
 
 #include <chrono>

@@ -1,5 +1,11 @@
 #include "kimera_rpgo/solver/solver_config.h"
 
+#include <gtsam/nonlinear/DoglegOptimizer.h>
+#include <gtsam/nonlinear/GaussNewtonOptimizer.h>
+#include <gtsam/nonlinear/LevenbergMarquardtParams.h>
+#include <gtsam/nonlinear/NonlinearOptimizerParams.h>
+#include <stdexcept>
+
 namespace kimera_rpgo {
 
 void SolverConfig::setLeastSquaresParams(

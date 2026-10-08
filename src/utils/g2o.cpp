@@ -34,10 +34,12 @@ std::map<size_t, T> parseToMap(const std::string& filename,
                                Parser<std::pair<size_t, T>> parse,
                                size_t maxIndex) {
   std::map<size_t, T> result;
-  Parser<std::pair<size_t, T>> emplace = [&](std::istream& is, const std::string& tag) {
+  Parser<std::pair<size_t, T>> emplace = [&](std::istream& is,
+                                             const std::string& tag) {
     if (auto t = parse(is, tag)) {
       if (!maxIndex || t->first <= maxIndex) result.emplace(*t);
     }
+
     return std::nullopt;
   };
   parseLines(filename, emplace);
@@ -47,7 +49,8 @@ std::map<size_t, T> parseToMap(const std::string& filename,
 /* ************************************************************************* */
 // Parse a file and push results on a vector
 template <typename T>
-static std::vector<T> parseToVector(const std::string& filename, Parser<T> parse) {
+static std::vector<T> parseToVector(const std::string& filename,
+                                    Parser<T> parse) {
   std::vector<T> result;
   Parser<T> add = [&result, parse](std::istream& is, const std::string& tag) {
     if (auto t = parse(is, tag)) result.push_back(*t);
@@ -58,13 +61,15 @@ static std::vector<T> parseToVector(const std::string& filename, Parser<T> parse
 }
 
 /* ************************************************************************* */
-std::optional<IndexedPose> parseVertexPose(std::istream& is, const std::string& tag) {
+std::optional<IndexedPose> parseVertexPose(std::istream& is,
+                                           const std::string& tag) {
   if ((tag == "VERTEX2") || (tag == "VERTEX_SE2") || (tag == "VERTEX")) {
     size_t id;
     double x, y, yaw;
     if (!(is >> id >> x >> y >> yaw)) {
       throw std::runtime_error("parseVertexPose encountered malformed line");
     }
+
     return IndexedPose(id, Pose2(x, y, yaw));
   } else {
     return std::nullopt;
@@ -84,8 +89,10 @@ std::optional<IndexedLandmark> parseVertexLandmark(std::istream& is,
     size_t id;
     double x, y;
     if (!(is >> id >> x >> y)) {
-      throw std::runtime_error("parseVertexLandmark encountered malformed line");
+      throw std::runtime_error(
+          "parseVertexLandmark encountered malformed line");
     }
+
     return IndexedLandmark(id, Point2(x, y));
   } else {
     return std::nullopt;
@@ -100,9 +107,10 @@ std::map<size_t, Point2> parseVariables<Point2>(const std::string& filename,
 
 /* ************************************************************************* */
 // Interpret noise parameters according to flags
-static SharedNoiseModel createNoiseModel(const Vector6& v,
-                                         bool smart,
-                                         KernelFunctionType kernelFunctionType) {
+static SharedNoiseModel createNoiseModel(
+    const Vector6& v,
+    bool smart,
+    KernelFunctionType kernelFunctionType) {
   // Read matrix and check that diagonal entries are non-zero
   // i.e., [v(0)  v(1)  v(2);
   //        v(1)' v(3)  v(4);
@@ -111,6 +119,7 @@ static SharedNoiseModel createNoiseModel(const Vector6& v,
     throw std::runtime_error(
         "load2D::readNoiseModel looks like this is not G2O matrix order");
   }
+
   Matrix3 M;
   M << v(0), v(1), v(2), v(1), v(3), v(4), v(2), v(4), v(5);
 
@@ -122,12 +131,12 @@ static SharedNoiseModel createNoiseModel(const Vector6& v,
       return model;
       break;
     case KernelFunctionTypeHUBER:
-      return noiseModel::Robust::Create(noiseModel::mEstimator::Huber::Create(1.345),
-                                        model);
+      return noiseModel::Robust::Create(
+          noiseModel::mEstimator::Huber::Create(1.345), model);
       break;
     case KernelFunctionTypeTUKEY:
-      return noiseModel::Robust::Create(noiseModel::mEstimator::Tukey::Create(4.6851),
-                                        model);
+      return noiseModel::Robust::Create(
+          noiseModel::mEstimator::Tukey::Create(4.6851), model);
       break;
     case KernelFunctionTypeGM:
       return noiseModel::Robust::Create(
@@ -151,6 +160,7 @@ std::optional<IndexedEdge> parseEdge(std::istream& is, const std::string& tag) {
     if (!(is >> id1 >> id2 >> x >> y >> yaw)) {
       throw std::runtime_error("parseEdge encountered malformed line");
     }
+
     return IndexedEdge({id1, id2}, Pose2(x, y, yaw));
   } else {
     return std::nullopt;
@@ -167,11 +177,13 @@ struct ParseMeasurement;
 // Converting from Measurement to BetweenFactor is generic
 template <typename T>
 struct ParseFactor : ParseMeasurement<T> {
-  ParseFactor(const ParseMeasurement<T>& parent) : ParseMeasurement<T>(parent) {}
+  ParseFactor(const ParseMeasurement<T>& parent)
+      : ParseMeasurement<T>(parent) {}
 
   // We parse a measurement then convert
   typename std::optional<typename BetweenFactor<T>::shared_ptr> operator()(
-      std::istream& is, const std::string& tag) {
+      std::istream& is,
+      const std::string& tag) {
     if (auto m = ParseMeasurement<T>::operator()(is, tag))
       return boost::make_shared<BetweenFactor<T>>(
           m->key1(), m->key2(), m->measured(), m->noiseModel());
@@ -216,7 +228,8 @@ struct ParseMeasurement<Pose2> {
 
     // emplace measurement
     auto modelFromFile = createNoiseModel(v, smart, kernelFunctionType);
-    return BinaryMeasurement<Pose2>(id1, id2, pose, model ? model : modelFromFile);
+    return BinaryMeasurement<Pose2>(
+        id1, id2, pose, model ? model : modelFromFile);
   }
 };
 
@@ -251,7 +264,8 @@ std::vector<BinaryMeasurement<Pose2>> parseMeasurements(
 
 // Extract Rot2 measurement from Pose2 measurement
 static BinaryMeasurement<Rot2> convert(const BinaryMeasurement<Pose2>& p) {
-  auto gaussian = boost::dynamic_pointer_cast<noiseModel::Gaussian>(p.noiseModel());
+  auto gaussian =
+      boost::dynamic_pointer_cast<noiseModel::Gaussian>(p.noiseModel());
   if (!gaussian)
     throw std::invalid_argument(
         "parseMeasurements<Rot2> can only convert Pose2 measurements "
@@ -284,8 +298,9 @@ struct ParseMeasurement<BearingRange2D> {
   size_t maxIndex;
 
   // The actual parser
-  std::optional<BinaryMeasurement<BearingRange2D>> operator()(std::istream& is,
-                                                              const std::string& tag) {
+  std::optional<BinaryMeasurement<BearingRange2D>> operator()(
+      std::istream& is,
+      const std::string& tag) {
     size_t id1, id2;
     is >> id1 >> id2;
     double bearing, range, bearing_std, range_std;
@@ -322,8 +337,8 @@ struct ParseMeasurement<BearingRange2D> {
     if (maxIndex && id1 > maxIndex) return std::nullopt;
 
     // Create noise model
-    auto measurementNoise =
-        noiseModel::Diagonal::Sigmas((Vector(2) << bearing_std, range_std).finished());
+    auto measurementNoise = noiseModel::Diagonal::Sigmas(
+        (Vector(2) << bearing_std, range_std).finished());
 
     return BinaryMeasurement<BearingRange2D>(
         id1, id2, BearingRange2D(bearing, range), measurementNoise);
@@ -339,7 +354,8 @@ GraphAndValues load2D(const std::string& filename,
                       KernelFunctionType kernelFunctionType) {
   // Single pass for poses and landmarks.
   auto initial = boost::make_shared<Values>();
-  Parser<int> insert = [maxIndex, &initial](std::istream& is, const std::string& tag) {
+  Parser<int> insert = [maxIndex, &initial](std::istream& is,
+                                            const std::string& tag) {
     if (auto indexedPose = parseVertexPose(is, tag)) {
       if (!maxIndex || indexedPose->first <= maxIndex)
         initial->insert(indexedPose->first, indexedPose->second);
@@ -347,6 +363,7 @@ GraphAndValues load2D(const std::string& filename,
       if (!maxIndex || indexedLandmark->first <= maxIndex)
         initial->insert(indexedLandmark->first, indexedLandmark->second);
     }
+
     return 0;
   };
   parseLines(filename, insert);
@@ -355,11 +372,12 @@ GraphAndValues load2D(const std::string& filename,
   auto graph = boost::make_shared<NonlinearFactorGraph>();
 
   // Instantiate factor parser
-  ParseFactor<Pose2> parseBetweenFactor({addNoise ? createSampler(model) : nullptr,
-                                         maxIndex,
-                                         smart,
-                                         kernelFunctionType,
-                                         model});
+  ParseFactor<Pose2> parseBetweenFactor(
+      {addNoise ? createSampler(model) : nullptr,
+       maxIndex,
+       smart,
+       kernelFunctionType,
+       model});
 
   // Instantiate bearing-range parser
   ParseMeasurement<BearingRange2D> parseBearingRange{maxIndex};
@@ -390,6 +408,7 @@ GraphAndValues load2D(const std::string& filename,
         initial->insert(key2, global);
       }
     }
+
     return 0;
   };
 
@@ -404,8 +423,12 @@ GraphAndValues load2D(std::pair<std::string, SharedNoiseModel> dataset,
                       bool addNoise,
                       bool smart,
                       KernelFunctionType kernelFunctionType) {
-  return load2D(
-      dataset.first, dataset.second, maxIndex, addNoise, smart, kernelFunctionType);
+  return load2D(dataset.first,
+                dataset.second,
+                maxIndex,
+                addNoise,
+                smart,
+                kernelFunctionType);
 }
 
 /* ************************************************************************* */
@@ -425,8 +448,8 @@ void save2D(const NonlinearFactorGraph& graph,
   // save poses
   for (const auto& key_pose : config.extract<Pose2>()) {
     const Pose2& pose = key_pose.second;
-    stream << "VERTEX2 " << key_pose.first << " " << pose.x() << " " << pose.y() << " "
-           << pose.theta() << std::endl;
+    stream << "VERTEX2 " << key_pose.first << " " << pose.x() << " " << pose.y()
+           << " " << pose.theta() << std::endl;
   }
 
   // save edges
@@ -438,10 +461,10 @@ void save2D(const NonlinearFactorGraph& graph,
     if (!factor) continue;
 
     const Pose2 pose = factor->measured().inverse();
-    stream << "EDGE2 " << factor->key<2>() << " " << factor->key<1>() << " " << pose.x()
-           << " " << pose.y() << " " << pose.theta() << " " << RR(0, 0) << " "
-           << RR(0, 1) << " " << RR(1, 1) << " " << RR(2, 2) << " " << RR(0, 2) << " "
-           << RR(1, 2) << std::endl;
+    stream << "EDGE2 " << factor->key<2>() << " " << factor->key<1>() << " "
+           << pose.x() << " " << pose.y() << " " << pose.theta() << " "
+           << RR(0, 0) << " " << RR(0, 1) << " " << RR(1, 1) << " " << RR(2, 2)
+           << " " << RR(0, 2) << " " << RR(1, 2) << std::endl;
   }
 
   stream.close();
@@ -458,8 +481,12 @@ GraphAndValues readG2o(const std::string& g2oFile,
     size_t maxIndex = 0;
     bool addNoise = false;
     bool smart = true;
-    return load2D(
-        g2oFile, SharedNoiseModel(), maxIndex, addNoise, smart, kernelFunctionType);
+    return load2D(g2oFile,
+                  SharedNoiseModel(),
+                  maxIndex,
+                  addNoise,
+                  smart,
+                  kernelFunctionType);
   }
 }
 
@@ -475,8 +502,8 @@ void writeG2o(const NonlinearFactorGraph& graph,
   // save 2D poses
   for (const auto& pair : estimate.extract<Pose2>()) {
     const Pose2& pose = pair.second;
-    stream << "VERTEX_SE2 " << index(pair.first) << " " << pose.x() << " " << pose.y()
-           << " " << pose.theta() << std::endl;
+    stream << "VERTEX_SE2 " << index(pair.first) << " " << pose.x() << " "
+           << pose.y() << " " << pose.theta() << std::endl;
   }
 
   // save 3D poses
@@ -484,16 +511,16 @@ void writeG2o(const NonlinearFactorGraph& graph,
     const Pose3& pose = pair.second;
     const Point3 t = pose.translation();
     const auto q = pose.rotation().toQuaternion();
-    stream << "VERTEX_SE3:QUAT " << index(pair.first) << " " << t.x() << " " << t.y()
-           << " " << t.z() << " " << q.x() << " " << q.y() << " " << q.z() << " "
-           << q.w() << std::endl;
+    stream << "VERTEX_SE3:QUAT " << index(pair.first) << " " << t.x() << " "
+           << t.y() << " " << t.z() << " " << q.x() << " " << q.y() << " "
+           << q.z() << " " << q.w() << std::endl;
   }
 
   // save 2D landmarks
   for (const auto& pair : estimate.extract<Point2>()) {
     const Point2& point = pair.second;
-    stream << "VERTEX_XY " << index(pair.first) << " " << point.x() << " " << point.y()
-           << std::endl;
+    stream << "VERTEX_XY " << index(pair.first) << " " << point.x() << " "
+           << point.y() << std::endl;
   }
 
   // save 3D landmarks
@@ -508,20 +535,24 @@ void writeG2o(const NonlinearFactorGraph& graph,
     auto factor = boost::dynamic_pointer_cast<BetweenFactor<Pose2>>(factor_);
     if (factor) {
       SharedNoiseModel model = factor->noiseModel();
-      auto gaussianModel = boost::dynamic_pointer_cast<noiseModel::Gaussian>(model);
+      auto gaussianModel =
+          boost::dynamic_pointer_cast<noiseModel::Gaussian>(model);
       if (!gaussianModel) {
         model->print("model\n");
         throw std::invalid_argument("writeG2o: invalid noise model!");
       }
+
       Matrix3 Info = gaussianModel->R().transpose() * gaussianModel->R();
       Pose2 pose = factor->measured();  //.inverse();
-      stream << "EDGE_SE2 " << index(factor->key<1>()) << " " << index(factor->key<2>())
-             << " " << pose.x() << " " << pose.y() << " " << pose.theta();
+      stream << "EDGE_SE2 " << index(factor->key<1>()) << " "
+             << index(factor->key<2>()) << " " << pose.x() << " " << pose.y()
+             << " " << pose.theta();
       for (size_t i = 0; i < 3; i++) {
         for (size_t j = i; j < 3; j++) {
           stream << " " << Info(i, j);
         }
       }
+
       stream << std::endl;
     }
 
@@ -536,30 +567,36 @@ void writeG2o(const NonlinearFactorGraph& graph,
         model->print("model\n");
         throw std::invalid_argument("writeG2o: invalid noise model!");
       }
+
       Matrix6 Info = gaussianModel->R().transpose() * gaussianModel->R();
       const Pose3 pose3D = factor3D->measured();
       const Point3 p = pose3D.translation();
       const auto q = pose3D.rotation().toQuaternion();
       stream << "EDGE_SE3:QUAT " << index(factor3D->key<1>()) << " "
              << index(factor3D->key<2>()) << " " << p.x() << " " << p.y() << " "
-             << p.z() << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w();
+             << p.z() << " " << q.x() << " " << q.y() << " " << q.z() << " "
+             << q.w();
 
-      // g2o's EDGE_SE3:QUAT stores information/precision of Pose3 in t,R order, unlike
-      // GTSAM:
+      // g2o's EDGE_SE3:QUAT stores information/precision of Pose3 in t,R order,
+      // unlike GTSAM:
       Matrix6 InfoG2o = I_6x6;
       InfoG2o.block<3, 3>(0, 0) = Info.block<3, 3>(3, 3);  // cov translation
       InfoG2o.block<3, 3>(3, 3) = Info.block<3, 3>(0, 0);  // cov rotation
-      InfoG2o.block<3, 3>(0, 3) = Info.block<3, 3>(3, 0);  // off diagonal R,t -> t,R
-      InfoG2o.block<3, 3>(3, 0) = Info.block<3, 3>(0, 3);  // off diagonal t,R -> R,t
+      InfoG2o.block<3, 3>(0, 3) =
+          Info.block<3, 3>(3, 0);  // off diagonal R,t -> t,R
+      InfoG2o.block<3, 3>(3, 0) =
+          Info.block<3, 3>(0, 3);  // off diagonal t,R -> R,t
 
       for (size_t i = 0; i < 6; i++) {
         for (size_t j = i; j < 6; j++) {
           stream << " " << InfoG2o(i, j);
         }
       }
+
       stream << std::endl;
     }
   }
+
   stream.close();
 }
 
@@ -583,8 +620,9 @@ std::istream& operator>>(std::istream& is, Rot3& R) {
 }
 
 /* ************************************************************************* */
-std::optional<std::pair<size_t, Pose3>> parseVertexPose3(std::istream& is,
-                                                         const std::string& tag) {
+std::optional<std::pair<size_t, Pose3>> parseVertexPose3(
+    std::istream& is,
+    const std::string& tag) {
   if (tag == "VERTEX3") {
     size_t id;
     double x, y, z;
@@ -608,8 +646,9 @@ std::map<size_t, Pose3> parseVariables<Pose3>(const std::string& filename,
 }
 
 /* ************************************************************************* */
-std::optional<std::pair<size_t, Point3>> parseVertexPoint3(std::istream& is,
-                                                           const std::string& tag) {
+std::optional<std::pair<size_t, Point3>> parseVertexPoint3(
+    std::istream& is,
+    const std::string& tag) {
   if (tag == "VERTEX_TRACKXYZ") {
     size_t id;
     double x, y, z;
@@ -633,6 +672,7 @@ std::istream& operator>>(std::istream& is, Matrix6& m) {
       is >> m(i, j);
       m(j, i) = m(i, j);
     }
+
   return is;
 }
 
@@ -643,12 +683,12 @@ SharedNoiseModel createRobustNoiseModel(SharedNoiseModel model,
       return model;
       break;
     case KernelFunctionTypeHUBER:
-      return noiseModel::Robust::Create(noiseModel::mEstimator::Huber::Create(1.345),
-                                        model);
+      return noiseModel::Robust::Create(
+          noiseModel::mEstimator::Huber::Create(1.345), model);
       break;
     case KernelFunctionTypeTUKEY:
-      return noiseModel::Robust::Create(noiseModel::mEstimator::Tukey::Create(4.6851),
-                                        model);
+      return noiseModel::Robust::Create(
+          noiseModel::mEstimator::Tukey::Create(4.6851), model);
       break;
     case KernelFunctionTypeGM:
       return noiseModel::Robust::Create(
@@ -704,8 +744,8 @@ struct ParseMeasurement<Pose3> {
       //  optionally add noise
       if (sampler) T12 = T12.retract(sampler->sample());
 
-      // g2o's EDGE_SE3:QUAT stores information/precision of Pose3 in t,R order, unlike
-      // GTSAM:
+      // g2o's EDGE_SE3:QUAT stores information/precision of Pose3 in t,R order,
+      // unlike GTSAM:
       Matrix6 mgtsam;
       mgtsam.block<3, 3>(0, 0) = m.block<3, 3>(3, 3);  // info rotation
       mgtsam.block<3, 3>(3, 3) = m.block<3, 3>(0, 0);  // info translation
@@ -740,7 +780,8 @@ std::vector<BinaryMeasurement<Pose3>> parseMeasurements(
 
 // Extract Rot3 measurement from Pose3 measurement
 static BinaryMeasurement<Rot3> convert(const BinaryMeasurement<Pose3>& p) {
-  auto gaussian = boost::dynamic_pointer_cast<noiseModel::Gaussian>(p.noiseModel());
+  auto gaussian =
+      boost::dynamic_pointer_cast<noiseModel::Gaussian>(p.noiseModel());
   if (!gaussian)
     throw std::invalid_argument(
         "parseMeasurements<Rot3> can only convert Pose3 measurements "
@@ -784,6 +825,7 @@ GraphAndValues load3D(const std::string& filename,
     } else if (auto factor = parseFactor(is, tag)) {
       graph->push_back(*factor);
     }
+
     return 0;
   };
   parseLines(filename, parse);
@@ -810,23 +852,23 @@ SharedNoiseModel createRobustNoiseModel(SharedNoiseModel model,
       break;
     case KernelFunctionTypeHUBER:
       // Gtsam default c = 1.345
-      return noiseModel::Robust::Create(noiseModel::mEstimator::Huber::Create(c),
-                                        model);
+      return noiseModel::Robust::Create(
+          noiseModel::mEstimator::Huber::Create(c), model);
       break;
     case KernelFunctionTypeTUKEY:
       // Gtsam default c = 4.6851
-      return noiseModel::Robust::Create(noiseModel::mEstimator::Tukey::Create(c),
-                                        model);
+      return noiseModel::Robust::Create(
+          noiseModel::mEstimator::Tukey::Create(c), model);
       break;
     case KernelFunctionTypeGM:
       // Gtsam default c = 1.0
-      return noiseModel::Robust::Create(noiseModel::mEstimator::GemanMcClure::Create(c),
-                                        model);
+      return noiseModel::Robust::Create(
+          noiseModel::mEstimator::GemanMcClure::Create(c), model);
       break;
     case KernelFunctionTypeTLS:
       // Gtsam default c = 1.0
-      return noiseModel::Robust::Create(noiseModel::mEstimator::TruncatedL2::Create(c),
-                                        model);
+      return noiseModel::Robust::Create(
+          noiseModel::mEstimator::TruncatedL2::Create(c), model);
       break;
     default:
       throw std::invalid_argument("load2D: invalid kernel function type");
@@ -877,7 +919,8 @@ GraphAndValues readG2owithLmks(const std::string& g2oFile,
       double lmx, lmy, lmz;
       double v11, v12, v13, v22, v23, v33;
 
-      is >> id1 >> id2 >> lmx >> lmy >> lmz >> v11 >> v12 >> v13 >> v22 >> v23 >> v33;
+      is >> id1 >> id2 >> lmx >> lmy >> lmz >> v11 >> v12 >> v13 >> v22 >>
+          v23 >> v33;
 
       // Create noise model
       Matrix3 info_mat;
@@ -893,6 +936,7 @@ GraphAndValues readG2owithLmks(const std::string& g2oFile,
           createRobustNoiseModel(noise_model, gtsam_loss, robust_threshold_c));
     }
   }
+
   is.clear();
   is.seekg(0, std::ios::beg);  // guess back to beginning
 

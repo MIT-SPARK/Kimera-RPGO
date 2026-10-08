@@ -69,7 +69,8 @@ PYBIND11_MODULE(_kimera_rpgo_bindings, m) {
       });
 
   // Python bound for LevenbergMarquardtParams
-  py::class_<LevenbergMarquardtParams, OptimizerParams>(m, "LevenbergMarquardtParams")
+  py::class_<LevenbergMarquardtParams, OptimizerParams>(
+      m, "LevenbergMarquardtParams")
       .def_readwrite("maxIterations", &OptimizerParams::maxIterations)
       .def_readwrite("relativeErrorTol", &OptimizerParams::relativeErrorTol)
       .def_readwrite("absoluteErrorTol", &OptimizerParams::absoluteErrorTol)
@@ -111,12 +112,14 @@ PYBIND11_MODULE(_kimera_rpgo_bindings, m) {
   py::class_<SolverConfig>(m, "SolverConfig")
       .def(py::init<>())
       .def_readwrite("verbosity", &SolverConfig::verbosity)
-      .def_readwrite("least_squares_option", &SolverConfig::least_squares_option)
+      .def_readwrite("least_squares_option",
+                     &SolverConfig::least_squares_option)
       .def_readwrite("gradient_option", &SolverConfig::gradient_option)
       .def_readwrite("optimizer_params", &SolverConfig::optimizer_params)
       .def_readwrite("gnc_params", &SolverConfig::gnc_params)
       .def("setLeastSquaresParams", &SolverConfig::setLeastSquaresParams)
-      .def("setLeastSquaresParamsDefault", &SolverConfig::setLeastSquaresParamsDefault)
+      .def("setLeastSquaresParamsDefault",
+           &SolverConfig::setLeastSquaresParamsDefault)
       .def("setGradientParams", &SolverConfig::setGradientParams)
       .def("setGradientParamsDefault", &SolverConfig::setGradientParamsDefault)
       .def("setGncParamsDefault", &SolverConfig::setGncParamsDefault)

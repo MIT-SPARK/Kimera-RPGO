@@ -6,7 +6,7 @@ set(TEST_DATA_PATH "${CMAKE_CURRENT_SOURCE_DIR}/data")
 configure_file(test_config.h.in test_config.h)
 
 add_executable(test_${PROJECT_NAME} test_gnc.cpp test_gradient_descent.cpp
-                                    test_least_squares.cpp test_pcm.cpp)
+                                    test_least_squares.cpp test_pcm.cpp test_pose_4dof.cpp)
 target_include_directories(
   test_${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
                                ${CMAKE_CURRENT_BINARY_DIR})

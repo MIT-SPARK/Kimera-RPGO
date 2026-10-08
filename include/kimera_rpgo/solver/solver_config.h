@@ -56,7 +56,8 @@ struct SolverConfig {
 std::ostream& operator<<(std::ostream& os,
                          const SolverConfig::LeastSquaresOption& option);
 
-std::ostream& operator<<(std::ostream& os, const SolverConfig::GradientOption& option);
+std::ostream& operator<<(std::ostream& os,
+                         const SolverConfig::GradientOption& option);
 
 std::ostream& operator<<(std::ostream& os, const OptimizerParams& params);
 

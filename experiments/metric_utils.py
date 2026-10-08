@@ -1,4 +1,3 @@
-import yaml
 import kimera_rpgo
 import numpy as np
 

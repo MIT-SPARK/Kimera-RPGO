@@ -34,7 +34,8 @@ gtsam::Values GradientSolver::optimize(const NonlinearFactorGraph& factors,
       break;
   }
 
-  NonlinearConjugateGradientOptimizer gradient_optimizer(factors, initial, params);
+  NonlinearConjugateGradientOptimizer gradient_optimizer(
+      factors, initial, params);
   auto result = gradient_optimizer.optimize();
   weights.resize(factors.size());
   for (size_t i = 0; i < factors.size(); i++) {
@@ -42,6 +43,7 @@ gtsam::Values GradientSolver::optimize(const NonlinearFactorGraph& factors,
     auto factor = factor_pointer_cast<NoiseModelFactor>(factors[i]);
     weights[i] = factor->weight(result);
   }
+
   return result;
 }
 }  // namespace kimera_rpgo

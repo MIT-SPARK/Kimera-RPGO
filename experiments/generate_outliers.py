@@ -1,8 +1,8 @@
+import argparse
+import random
+
 import kimera_rpgo.utils as utils
 import numpy as np
-import argparse
-import copy
-import random
 
 
 def generate_outlier_loop_closure(

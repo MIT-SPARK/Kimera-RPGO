@@ -1,0 +1,26 @@
+---
+# Keep imported maximum-clique sources and graph fixtures unchanged.
+exclude: ^(include/kimera_rpgo/pcm/max_clique_finder/|src/pcm/max_clique_finder/|tests/data/|\.clang-format$)
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-json
+      - id: check-xml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+        # Preserve the existing README while keeping documentation out of this change.
+        exclude: ^README\.md$
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v21.1.8
+    hooks:
+      - id: clang-format
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.14
+    hooks:
+      - {id: ruff, args: [--select, I, --fix]}
+      - {id: ruff, args: [--fix]}
+      - id: ruff-format

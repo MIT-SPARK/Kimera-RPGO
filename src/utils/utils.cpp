@@ -27,8 +27,8 @@ using gtsam::NonlinearFactorGraph;
 using gtsam::Point2;
 using gtsam::Point3;
 using gtsam::Pose2;
-using gtsam::PoseToPointFactor;
 using gtsam::Pose3;
+using gtsam::PoseToPointFactor;
 using gtsam::SharedNoiseModel;
 using gtsam::Values;
 
@@ -47,8 +47,8 @@ void saveG2o(const NonlinearFactorGraph& graph,
     auto p = dynamic_cast<const GenericValue<Pose2>*>(&key_value.value);
     if (!p) continue;
     const Pose2& pose = p->value();
-    stream << "VERTEX_SE2 " << key_value.key << " " << pose.x() << " " << pose.y()
-           << " " << pose.theta() << endl;
+    stream << "VERTEX_SE2 " << key_value.key << " " << pose.x() << " "
+           << pose.y() << " " << pose.theta() << endl;
   }
 
   // save 3D poses
@@ -58,9 +58,9 @@ void saveG2o(const NonlinearFactorGraph& graph,
     const Pose3& pose = p->value();
     const Point3 t = pose.translation();
     const auto q = pose.rotation().toQuaternion();
-    stream << "VERTEX_SE3:QUAT " << key_value.key << " " << t.x() << " " << t.y() << " "
-           << t.z() << " " << q.x() << " " << q.y() << " " << q.z() << " " << q.w()
-           << endl;
+    stream << "VERTEX_SE3:QUAT " << key_value.key << " " << t.x() << " "
+           << t.y() << " " << t.z() << " " << q.x() << " " << q.y() << " "
+           << q.z() << " " << q.w() << endl;
   }
 
   // save 2D landmarks
@@ -68,8 +68,8 @@ void saveG2o(const NonlinearFactorGraph& graph,
     auto p = dynamic_cast<const GenericValue<Point2>*>(&key_value.value);
     if (!p) continue;
     const Point2& point = p->value();
-    stream << "VERTEX_XY " << key_value.key << " " << point.x() << " " << point.y()
-           << endl;
+    stream << "VERTEX_XY " << key_value.key << " " << point.x() << " "
+           << point.y() << endl;
   }
 
   // save 3D landmarks
@@ -86,48 +86,56 @@ void saveG2o(const NonlinearFactorGraph& graph,
     auto between2D = factor_pointer_cast<BetweenFactor<Pose2>>(factor_);
     if (between2D) {
       SharedNoiseModel model = between2D->noiseModel();
-      auto gaussianModel = factor_pointer_cast<gtsam::noiseModel::Gaussian>(model);
+      auto gaussianModel =
+          factor_pointer_cast<gtsam::noiseModel::Gaussian>(model);
       auto robustModel = factor_pointer_cast<gtsam::noiseModel::Robust>(model);
       if (robustModel) {
-        gaussianModel =
-            factor_pointer_cast<gtsam::noiseModel::Gaussian>(robustModel->noise());
+        gaussianModel = factor_pointer_cast<gtsam::noiseModel::Gaussian>(
+            robustModel->noise());
       }
+
       if (!gaussianModel) {
         model->print("model\n");
         throw invalid_argument("writeG2o: invalid noise model!");
       }
+
       Matrix3 Info = gaussianModel->R().transpose() * gaussianModel->R();
       Pose2 pose = between2D->measured();  //.inverse();
-      stream << "EDGE_SE2 " << between2D->key1() << " " << between2D->key2() << " "
-             << pose.x() << " " << pose.y() << " " << pose.theta();
+      stream << "EDGE_SE2 " << between2D->key1() << " " << between2D->key2()
+             << " " << pose.x() << " " << pose.y() << " " << pose.theta();
       for (size_t i = 0; i < 3; i++) {
         for (size_t j = i; j < 3; j++) {
           stream << " " << Info(i, j);
         }
       }
+
       stream << endl;
     }
 
     auto between3D = factor_pointer_cast<BetweenFactor<Pose3>>(factor_);
     if (between3D) {
       SharedNoiseModel model = between3D->noiseModel();
-      auto gaussianModel = factor_pointer_cast<gtsam::noiseModel::Gaussian>(model);
+      auto gaussianModel =
+          factor_pointer_cast<gtsam::noiseModel::Gaussian>(model);
       auto robustModel = factor_pointer_cast<gtsam::noiseModel::Robust>(model);
       if (robustModel) {
-        gaussianModel =
-            factor_pointer_cast<gtsam::noiseModel::Gaussian>(robustModel->noise());
+        gaussianModel = factor_pointer_cast<gtsam::noiseModel::Gaussian>(
+            robustModel->noise());
       }
+
       if (!gaussianModel) {
         model->print("model\n");
         throw invalid_argument("writeG2o: invalid noise model!");
       }
+
       Matrix6 Info = gaussianModel->R().transpose() * gaussianModel->R();
       const Pose3 pose3D = between3D->measured();
       const Point3 p = pose3D.translation();
       const auto q = pose3D.rotation().toQuaternion();
-      stream << "EDGE_SE3:QUAT " << between3D->key1() << " " << between3D->key2() << " "
-             << p.x() << " " << p.y() << " " << p.z() << " " << q.x() << " " << q.y()
-             << " " << q.z() << " " << q.w();
+      stream << "EDGE_SE3:QUAT " << between3D->key1() << " "
+             << between3D->key2() << " " << p.x() << " " << p.y() << " "
+             << p.z() << " " << q.x() << " " << q.y() << " " << q.z() << " "
+             << q.w();
 
       Matrix6 InfoG2o = Eigen::MatrixXd::Identity(6, 6);
       InfoG2o.block<3, 3>(0, 0) = Info.block<3, 3>(3, 3);  // cov translation
@@ -140,36 +148,43 @@ void saveG2o(const NonlinearFactorGraph& graph,
           stream << " " << InfoG2o(i, j);
         }
       }
+
       stream << endl;
     }
 
-    auto landmark2D = factor_pointer_cast<PoseToPointFactor<Pose2, Point2>>(factor_);
+    auto landmark2D =
+        factor_pointer_cast<PoseToPointFactor<Pose2, Point2>>(factor_);
     if (landmark2D) {
       SharedNoiseModel model = landmark2D->noiseModel();
-      auto gaussianModel = factor_pointer_cast<gtsam::noiseModel::Gaussian>(model);
+      auto gaussianModel =
+          factor_pointer_cast<gtsam::noiseModel::Gaussian>(model);
       auto robustModel = factor_pointer_cast<gtsam::noiseModel::Robust>(model);
       if (robustModel) {
-        gaussianModel =
-            factor_pointer_cast<gtsam::noiseModel::Gaussian>(robustModel->noise());
+        gaussianModel = factor_pointer_cast<gtsam::noiseModel::Gaussian>(
+            robustModel->noise());
       }
+
       if (!gaussianModel) {
         model->print("model\n");
         throw invalid_argument("writeG2o: invalid noise model!");
       }
+
       Matrix2 Info = gaussianModel->R().transpose() * gaussianModel->R();
       Point2 pos = landmark2D->measured();  //.inverse();
-      stream << "EDGE_SE2_XY " << landmark2D->key1() << " " << landmark2D->key2() << " "
-             << pos.x() << " " << pos.y();
+      stream << "EDGE_SE2_XY " << landmark2D->key1() << " "
+             << landmark2D->key2() << " " << pos.x() << " " << pos.y();
       for (size_t i = 0; i < 2; i++) {
         for (size_t j = i; j < 2; j++) {
           stream << " " << Info(i, j);
         }
       }
+
       stream << endl;
     }
 
     // TODO(Yun) add landmark 3D and others
   }
+
   stream.close();
 }
 

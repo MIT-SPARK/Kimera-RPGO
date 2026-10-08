@@ -16,6 +16,6 @@ bool factor_is_underlying_type(Ptr& ptr) {
 }
 
 void saveG2o(const gtsam::NonlinearFactorGraph& graph,
-              const gtsam::Values& estimate,
-              const std::string& filename);
+             const gtsam::Values& estimate,
+             const std::string& filename);
 }  // namespace kimera_rpgo

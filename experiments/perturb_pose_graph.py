@@ -1,8 +1,7 @@
+import argparse
+
 import kimera_rpgo.utils as utils
 import numpy as np
-import argparse
-import copy
-import random
 
 
 def perturb_graph(

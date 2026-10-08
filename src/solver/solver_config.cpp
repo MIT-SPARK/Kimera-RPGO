@@ -2,7 +2,8 @@
 
 namespace kimera_rpgo {
 
-void SolverConfig::setLeastSquaresParams(std::shared_ptr<OptimizerParams> params) {
+void SolverConfig::setLeastSquaresParams(
+    std::shared_ptr<OptimizerParams> params) {
   // Try cast to GN, LM, or Dogleg
   auto gn_params = std::dynamic_pointer_cast<GaussNewtonParams>(params);
   if (gn_params) {
@@ -10,18 +11,21 @@ void SolverConfig::setLeastSquaresParams(std::shared_ptr<OptimizerParams> params
     optimizer_params = params;
     return;
   }
+
   auto lm_params = std::dynamic_pointer_cast<LevenbergMarquardtParams>(params);
   if (lm_params) {
     least_squares_option = SolverConfig::LeastSquaresOption::LM;
     optimizer_params = params;
     return;
   }
+
   auto dogleg_params = std::dynamic_pointer_cast<DoglegParams>(params);
   if (dogleg_params) {
     least_squares_option = SolverConfig::LeastSquaresOption::DOGLEG;
     optimizer_params = params;
     return;
   }
+
   throw std::invalid_argument("Unexpected optimizer params");
 }
 
@@ -62,11 +66,14 @@ void SolverConfig::setGradientParamsDefault() {
       throw std::invalid_argument("Unexpected gradient solver type");
       break;
   }
+
   // Increase max iterations
   optimizer_params->maxIterations = 1000;
 }
 
-void SolverConfig::setGncParamsDefault() { gnc_params = std::make_shared<GncParams>(); }
+void SolverConfig::setGncParamsDefault() {
+  gnc_params = std::make_shared<GncParams>();
+}
 
 void SolverConfig::setGncParams(const GncParams& params) {
   gnc_params = std::make_shared<GncParams>(params);
@@ -85,10 +92,12 @@ std::ostream& operator<<(std::ostream& os,
       os << "Dogleg";
       break;
   }
+
   return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const SolverConfig::GradientOption& option) {
+std::ostream& operator<<(std::ostream& os,
+                         const SolverConfig::GradientOption& option) {
   switch (option) {
     case SolverConfig::GradientOption::GRADIENT:
       os << "Gradient-Descent";
@@ -97,6 +106,7 @@ std::ostream& operator<<(std::ostream& os, const SolverConfig::GradientOption& o
       os << "Conjugate-Gradient-Descent";
       break;
   }
+
   return os;
 }
 
@@ -116,6 +126,7 @@ std::ostream& operator<<(std::ostream& os, const GncParams& params) {
   } else {
     os << "  inlier_probability: " << params.inlier_probability << "\n";
   }
+
   os << "  max_iterations: " << params.max_iterations << "\n";
   os << "  mu_step: " << params.mu_step << "\n";
   os << "  robust_cost: " << params.robust_cost << "\n";

@@ -1,7 +1,9 @@
 """The kimera_rpgo package."""
 
-from kimera_rpgo._kimera_rpgo_bindings import *
-from kimera_rpgo._kimera_rpgo_bindings import RpgoConfig
+# Load bindings before helpers, which import the package themselves.
+# ruff: noqa: I001
+from kimera_rpgo._kimera_rpgo_bindings import *  # noqa: F403
+from kimera_rpgo._kimera_rpgo_bindings import RpgoConfig as RpgoConfig
 
-import kimera_rpgo.utils
-import kimera_rpgo.config_utils
+from kimera_rpgo import config_utils as config_utils
+from kimera_rpgo import utils as utils

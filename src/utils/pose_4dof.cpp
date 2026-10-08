@@ -79,7 +79,8 @@ void Pose4DoF::print(const std::string& s) const {
 
 /* ************************************************************************* */
 bool Pose4DoF::equals(const Pose4DoF& x, double tol) const {
-  return T_.equals(x.T_, tol) && std::abs(z_ - x.z_) < tol;
+  return T_.equals(x.T_, tol) && std::abs(z_ - x.z_) < tol &&
+         std::abs(pitch_ - x.pitch_) < tol && std::abs(roll_ - x.roll_) < tol;
 }
 
 /* ************************************************************************* */
@@ -172,7 +173,8 @@ Point3 Pose4DoF::transformTo(const Point3& point,
   double a33 = -q.y() * RrRpT13 + q.x() * RrRpT23;
 
   if (Hpose) {
-    *Hpose << -1.0, 0.0, 0.0, a13, 0.0, -1.0, 0.0, a23, 0.0, 0.0, -1.0, a33;
+    Hpose->leftCols<3>() = -R.matrix().transpose() * Rot3::Yaw(yaw()).matrix();
+    Hpose->col(3) << a13, a23, a33;
   }
 
   if (Hpoint) {

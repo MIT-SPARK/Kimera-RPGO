@@ -15,7 +15,8 @@ using gtsam::Pose2;
 using gtsam::Pose3;
 using gtsam::PoseToPointFactor;
 
-std::ostream& operator<<(std::ostream& os, const PcmConfig::MaxCliqueMode& mode) {
+std::ostream& operator<<(std::ostream& os,
+                         const PcmConfig::MaxCliqueMode& mode) {
   switch (mode) {
     case PcmConfig::MaxCliqueMode::EXACT:
       os << "EXACT\n";
@@ -27,8 +28,10 @@ std::ostream& operator<<(std::ostream& os, const PcmConfig::MaxCliqueMode& mode)
       os << "INCREMENTAL\n";
       break;
   }
+
   return os;
 }
+
 std::ostream& operator<<(std::ostream& os, const PcmConfig& type) {
   os << "PCM Config\n";
   os << "  odom_check: " << type.odom_check;
@@ -46,9 +49,11 @@ std::ostream& operator<<(std::ostream& os, const PcmConfig& type) {
     os << "\n  metric_type: COVARIANCE";
     os << "\n    mahalanobis_threshold: " << type.mahalanobis_threshold;
     if (type.odom_check) {
-      os << "\n    odom_mahalanobis_threshold: " << type.odom_mahalanobis_threshold;
+      os << "\n    odom_mahalanobis_threshold: "
+         << type.odom_mahalanobis_threshold;
     }
   }
+
   os << "\nmax_clique_mode: " << type.max_clique_mode << "\n";
   return os;
 }
@@ -61,12 +66,15 @@ MeasurementType getMeasurementType(const NonlinearFactor::shared_ptr& factor) {
     if (factor->front() + 1 == factor->back()) {
       return MeasurementType::ODOM;
     }
+
     return MeasurementType::LOOPCLOSURE;
   }
+
   if (factor_is_underlying_type<PoseToPointFactor<Pose3, Point3>>(factor) ||
       factor_is_underlying_type<PoseToPointFactor<Pose2, Point2>>(factor)) {
     return MeasurementType::LANDMARK;
   }
+
   return MeasurementType::OTHER;
 }
 
@@ -86,6 +94,7 @@ void Pcm::processBatch(const NonlinearFactorGraph& factors,
       type = MeasurementType::LOOPCLOSURE;
       startNewOdomBackbone();
     }
+
     switch (type) {
       case MeasurementType::ODOM:
         odom_indices_.push_back(i);
@@ -102,6 +111,7 @@ void Pcm::processBatch(const NonlinearFactorGraph& factors,
         break;
     }
   }
+
   findInliers();
   buildInlierGraph();
 }
@@ -110,12 +120,14 @@ void Pcm::processIncremental(const NonlinearFactorGraph& /*new_factors*/) {
   std::invalid_argument("Pcm::processIncremental not implemented");
 }
 
-void Pcm::addLoopClosure(const NonlinearFactor::shared_ptr& factor, size_t index) {
+void Pcm::addLoopClosure(const NonlinearFactor::shared_ptr& factor,
+                         size_t index) {
   if (config_.odom_check) {
     if (!checkOdomConsistent(factor)) {
       return;
     }
   }
+
   const size_t idx = loop_closures_.factors.size();
   loop_closures_.factors.add(factor);
   loop_closures_.indices.push_back(index);
@@ -123,12 +135,14 @@ void Pcm::addLoopClosure(const NonlinearFactor::shared_ptr& factor, size_t index
   if (idx > 0) {
     new_adj_matrix.topLeftCorner(idx, idx) = loop_closures_.adj_matrix;
   }
+
   for (size_t other_idx = 0; other_idx < idx; ++other_idx) {
     if (checkPairwiseConsistent(factor, loop_closures_.factors[other_idx])) {
       new_adj_matrix(idx, other_idx) = 1;
       new_adj_matrix(other_idx, idx) = 1;
     }
   }
+
   loop_closures_.adj_matrix = new_adj_matrix;
 }
 
@@ -138,6 +152,7 @@ void Pcm::addLandmarkMeasurement(const NonlinearFactor::shared_ptr& factor,
   if (!landmarks_.count(ldmk_key)) {
     landmarks_[ldmk_key] = PcmMeasurements();
   }
+
   const size_t idx = landmarks_[ldmk_key].factors.size();
   landmarks_[ldmk_key].factors.add(factor);
   landmarks_[ldmk_key].indices.push_back(index);
@@ -145,13 +160,15 @@ void Pcm::addLandmarkMeasurement(const NonlinearFactor::shared_ptr& factor,
   if (idx > 0) {
     new_adj_matrix.topLeftCorner(idx, idx) = landmarks_[ldmk_key].adj_matrix;
   }
+
   for (size_t other_idx = 0; other_idx < idx; ++other_idx) {
-    if (checkLandmarkPairwiseConsistent(factor,
-                                        landmarks_[ldmk_key].factors[other_idx])) {
+    if (checkLandmarkPairwiseConsistent(
+            factor, landmarks_[ldmk_key].factors[other_idx])) {
       new_adj_matrix(idx, other_idx) = 1;
       new_adj_matrix(other_idx, idx) = 1;
     }
   }
+
   landmarks_[ldmk_key].adj_matrix = new_adj_matrix;
 }
 
@@ -193,11 +210,14 @@ void Pcm::addOdometry(const NonlinearFactor::shared_ptr& factor) {
       initOdometryPose2(prev);
     }
   }
+
   auto odom_delta = getBetweenFactorPose(factor);
-  current_backbone.poses[curr] = current_backbone.poses.at(prev)->compose(odom_delta);
+  current_backbone.poses[curr] =
+      current_backbone.poses.at(prev)->compose(odom_delta);
 }
 
-Pose::Ptr Pcm::getBetweenFactorPose(const NonlinearFactor::shared_ptr& factor) const {
+Pose::Ptr Pcm::getBetweenFactorPose(
+    const NonlinearFactor::shared_ptr& factor) const {
   if (factor_is_underlying_type<BetweenFactor<Pose3>>(factor)) {
     const auto& between_3d = *factor_pointer_cast<BetweenFactor<Pose3>>(factor);
     if (config_.metric_type == PcmConfig::MetricType::NODE) {
@@ -221,9 +241,11 @@ Pose::Ptr Pcm::getBetweenFactorPose(const NonlinearFactor::shared_ptr& factor) c
   }
 }
 
-Pose::Ptr Pcm::getLandmarkFactorPose(const NonlinearFactor::shared_ptr& factor) const {
+Pose::Ptr Pcm::getLandmarkFactorPose(
+    const NonlinearFactor::shared_ptr& factor) const {
   if (factor_is_underlying_type<PoseToPointFactor<Pose3, Point3>>(factor)) {
-    const auto& ldmk_meas_3d = *factor_pointer_cast<PoseToPointFactor<Pose3>>(factor);
+    const auto& ldmk_meas_3d =
+        *factor_pointer_cast<PoseToPointFactor<Pose3>>(factor);
     if (config_.metric_type == PcmConfig::MetricType::NODE) {
       return std::make_unique<PoseWithNode<Pose3>>(ldmk_meas_3d);
     } else if (config_.metric_type == PcmConfig::MetricType::COVARIANCE) {
@@ -253,16 +275,20 @@ bool Pcm::checkOdomThreshold(const Pose::Ptr& error) const {
       return (pose_with_node->avg_trans_norm() < config_.odom_trans_threshold &&
               pose_with_node->avg_rot_norm() < config_.odom_rot_threshold);
     }
+
     auto pose_with_node = pose_pointer_cast<PoseWithNode<Pose3>>(error);
     return (pose_with_node->avg_trans_norm() < config_.odom_trans_threshold &&
             pose_with_node->avg_rot_norm() < config_.odom_rot_threshold);
   } else if (config_.metric_type == PcmConfig::MetricType::COVARIANCE) {
     if (pose_is_underlying_type<PoseWithCovariance<Pose2>>(error)) {
       auto pose_with_cov = pose_pointer_cast<PoseWithCovariance<Pose2>>(error);
-      return pose_with_cov->mahalanobis_norm() < config_.odom_mahalanobis_threshold;
+      return pose_with_cov->mahalanobis_norm() <
+             config_.odom_mahalanobis_threshold;
     }
+
     auto pose_with_cov = pose_pointer_cast<PoseWithCovariance<Pose3>>(error);
-    return pose_with_cov->mahalanobis_norm() < config_.odom_mahalanobis_threshold;
+    return pose_with_cov->mahalanobis_norm() <
+           config_.odom_mahalanobis_threshold;
   } else {
     std::invalid_argument("Unknown PCM metric type");
     return false;
@@ -276,6 +302,7 @@ bool Pcm::checkThreshold(const Pose::Ptr& error) const {
       return (pose_with_node->avg_trans_norm() < config_.trans_threshold &&
               pose_with_node->avg_rot_norm() < config_.rot_threshold);
     }
+
     auto pose_with_node = pose_pointer_cast<PoseWithNode<Pose3>>(error);
     return (pose_with_node->avg_trans_norm() < config_.trans_threshold &&
             pose_with_node->avg_rot_norm() < config_.rot_threshold);
@@ -284,6 +311,7 @@ bool Pcm::checkThreshold(const Pose::Ptr& error) const {
       auto pose_with_cov = pose_pointer_cast<PoseWithCovariance<Pose2>>(error);
       return pose_with_cov->mahalanobis_norm() < config_.mahalanobis_threshold;
     }
+
     auto pose_with_cov = pose_pointer_cast<PoseWithCovariance<Pose3>>(error);
     return pose_with_cov->mahalanobis_norm() < config_.mahalanobis_threshold;
   } else {
@@ -292,7 +320,8 @@ bool Pcm::checkThreshold(const Pose::Ptr& error) const {
   }
 }
 
-Pose::Ptr Pcm::getOdomBackbone(const gtsam::Key& key_i, const gtsam::Key& key_j) const {
+Pose::Ptr Pcm::getOdomBackbone(const gtsam::Key& key_i,
+                               const gtsam::Key& key_j) const {
   // Try get odom backbone measurement between i and j
   // Return false if no backbone exists between the two
   auto i_upper = odometry_backbone_.upper_bound(key_i);
@@ -312,13 +341,15 @@ bool Pcm::checkOdomConsistent(const NonlinearFactor::shared_ptr& factor) const {
     // No odometry backbone, so ignore check. TODO(Yun) print message?
     return true;
   }
+
   Pose::Ptr pij_lc = getBetweenFactorPose(factor);
   Pose::Ptr loop = pij_odom->compose(pij_lc->inverse());
   return checkThreshold(loop);
 }
 
-bool Pcm::checkPairwiseConsistent(const NonlinearFactor::shared_ptr& factor_ij,
-                                  const NonlinearFactor::shared_ptr& factor_kl) const {
+bool Pcm::checkPairwiseConsistent(
+    const NonlinearFactor::shared_ptr& factor_ij,
+    const NonlinearFactor::shared_ptr& factor_kl) const {
   auto key_i = factor_ij->front();
   auto key_j = factor_ij->back();
   auto key_k = factor_kl->front();
@@ -344,12 +375,15 @@ bool Pcm::checkPairwiseConsistent(const NonlinearFactor::shared_ptr& factor_ij,
     // TODO(Yun) print message
     return true;
   }
+
   Pose::Ptr pij_lc = getBetweenFactorPose(factor_ij);
   Pose::Ptr pkl_lc = getBetweenFactorPose(factor_kl);
   if (invert_kl) {
     pkl_lc = pkl_lc->inverse();
   }
-  Pose::Ptr loop = pij_lc->compose(pjk_odom)->compose(pkl_lc)->compose(pli_odom);
+
+  Pose::Ptr loop =
+      pij_lc->compose(pjk_odom)->compose(pkl_lc)->compose(pli_odom);
   return checkThreshold(loop);
 }
 
@@ -393,8 +427,8 @@ void Pcm::findInliers() {
   std::vector<int> inlier_indices;
   callMaxClique(loop_closures_.adj_matrix, inlier_indices);
   for (const auto& idx : inlier_indices) {
-    // TODO(Yun) might be able to get rid of consistent_factors and factors and just
-    // keep indices
+    // TODO(Yun) might be able to get rid of consistent_factors and factors and
+    // just keep indices
     loop_closures_.consistent_factors.add(loop_closures_.factors[idx]);
     loop_closures_.consistent_indices.push_back(loop_closures_.indices[idx]);
   }
@@ -405,7 +439,8 @@ void Pcm::findInliers() {
     callMaxClique(ldmk_meas.second.adj_matrix, inlier_indices);
     for (const auto& idx : inlier_indices) {
       ldmk_meas.second.consistent_factors.add(ldmk_meas.second.factors[idx]);
-      ldmk_meas.second.consistent_indices.push_back(ldmk_meas.second.indices[idx]);
+      ldmk_meas.second.consistent_indices.push_back(
+          ldmk_meas.second.indices[idx]);
     }
   }
 }

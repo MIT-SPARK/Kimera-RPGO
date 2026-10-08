@@ -10,4 +10,3 @@ endif()
 
 set(kimera_rpgo_LIBRARIES kimera_rpgo::kimera_rpgo)
 set(kimera_rpgo_FOUND_CATKIN_PROJECT TRUE)
-

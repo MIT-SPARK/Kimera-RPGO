@@ -1,11 +1,13 @@
-from utils import DataConfig, ExpConfig, label_factors
-import kimera_rpgo
-import os
 import argparse
-import yaml
 import json
+import os
+
+import kimera_rpgo
 import metric_utils
+import yaml
 from tabulate import tabulate
+
+from utils import DataConfig, ExpConfig
 
 
 class TableGenerator:
@@ -36,9 +38,6 @@ class TableGenerator:
         return c
 
     def generate_table(self) -> None:
-        num_datasets = len(self.datasets)
-        num_configs = len(self.configurations)
-
         # Entries
         table_data = {}  # {data: {config: {metrics: }}}
         for j, dataset in enumerate(self.datasets):
@@ -47,7 +46,9 @@ class TableGenerator:
                 config_results = {}
                 label_dir = os.path.join(self.result_dirs[conf], dataset.name)
                 gt_g2o = os.path.join(label_dir, "result_gt.g2o")
-                gt_pg = kimera_rpgo.utils.read_pose_graph_from_g2o(gt_g2o, dataset.is_3d)
+                gt_pg = kimera_rpgo.utils.read_pose_graph_from_g2o(
+                    gt_g2o, dataset.is_3d
+                )
                 res_g2o = os.path.join(label_dir, f"result_{conf.name}.g2o")
                 res_pg = kimera_rpgo.utils.read_pose_graph_from_g2o(
                     res_g2o, dataset.is_3d

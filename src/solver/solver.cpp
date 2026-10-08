@@ -19,8 +19,8 @@ Solver::Solver(const SolverConfig& config) : config_(config) {}
 Solver::~Solver() {}
 
 void Solver::clear() {
- corrupted_odom_indices_.clear();
- known_inliers_.clear();
+  corrupted_odom_indices_.clear();
+  known_inliers_.clear();
 }
 
 gtsam::Values Solver::solve(const NonlinearFactorGraph& factors,
@@ -33,7 +33,8 @@ gtsam::Values Solver::solve(const NonlinearFactorGraph& factors,
   // Figure out better way to handle logging iteration errors
   const auto results = optimize(factors, initial, weights);
   auto end = std::chrono::system_clock::now();
-  log_.elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+  log_.elapsed =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   return results;
 }
 

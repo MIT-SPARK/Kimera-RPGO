@@ -1,9 +1,10 @@
-import kimera_rpgo.utils as utils
-import scan_utils
-import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import argparse
+
+import kimera_rpgo.utils as utils
+import matplotlib.pyplot as plt
+import numpy as np
+import scan_utils
+from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 -- registers the 3D projection
 
 
 def visualize_graph_2d(ax, graph, color_mapping):

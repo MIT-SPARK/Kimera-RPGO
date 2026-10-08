@@ -43,4 +43,3 @@ configs:
       max_iterations: 1000
       relative_error_tol: 1.0e-7
       absolute_error_tol: 1.0e-7
-

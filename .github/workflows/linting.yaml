@@ -1,0 +1,23 @@
+---
+name: Kimera-RPGO Linting
+on:
+  push:
+    branches: [develop, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Install pre-commit
+        run: pipx install pre-commit
+      - name: Lint all files
+        run: pre-commit run --all-files --show-diff-on-failure

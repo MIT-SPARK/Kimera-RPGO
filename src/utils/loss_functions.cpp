@@ -44,7 +44,8 @@ bool TruncatedL2::equals(const Base& expected, double tol) const {
   return std::abs(k_ - p->k_) < tol;
 }
 
-TruncatedL2::shared_ptr TruncatedL2::Create(double c, const ReweightScheme reweight) {
+TruncatedL2::shared_ptr TruncatedL2::Create(double c,
+                                            const ReweightScheme reweight) {
   return shared_ptr(new TruncatedL2(c, reweight));
 }
 
@@ -64,6 +65,7 @@ double MaxConsensus::weight(double distance) const {
   if (distance == k_) {
     return 1;
   }
+
   return 0;
 }
 
@@ -82,7 +84,8 @@ bool MaxConsensus::equals(const Base& expected, double tol) const {
   return std::abs(k_ - p->k_) < tol;
 }
 
-MaxConsensus::shared_ptr MaxConsensus::Create(double k, const ReweightScheme reweight) {
+MaxConsensus::shared_ptr MaxConsensus::Create(double k,
+                                              const ReweightScheme reweight) {
   return shared_ptr(new MaxConsensus(k, reweight));
 }
 

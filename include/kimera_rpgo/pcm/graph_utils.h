@@ -9,9 +9,11 @@
 
 namespace kimera_rpgo {
 
-int findMaxClique(const Eigen::MatrixXd adjMatrix, std::vector<int>& max_clique);
+int findMaxClique(const Eigen::MatrixXd adjMatrix,
+                  std::vector<int>& max_clique);
 
-int findMaxCliqueHeu(const Eigen::MatrixXd adjMatrix, std::vector<int>& max_clique);
+int findMaxCliqueHeu(const Eigen::MatrixXd adjMatrix,
+                     std::vector<int>& max_clique);
 
 int findMaxCliqueHeuIncremental(const Eigen::MatrixXd adjMatrix,
                                 size_t num_new_lc,

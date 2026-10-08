@@ -1,8 +1,9 @@
+import argparse
+import os
+
 import kimera_rpgo
 import matplotlib.pyplot as plt
 import numpy as np
-import os
-import argparse
 
 
 def plot_loss(ax, loss_func, resolution=0.1, min_limit=-5, max_limit=5):
@@ -15,9 +16,7 @@ def plot_loss(ax, loss_func, resolution=0.1, min_limit=-5, max_limit=5):
 
 def plot_influence(ax, loss_func, resolution=0.1, min_limit=-5, max_limit=5):
     distance = np.arange(min_limit, max_limit, resolution)
-    get_loss = np.vectorize(loss_func.loss)
     get_weight = np.vectorize(loss_func.weight)
-    loss = get_loss(distance)
     weight = get_weight(distance)
     influence = np.multiply(weight, distance)
 

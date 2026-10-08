@@ -1,8 +1,7 @@
+import argparse
+
 import kimera_rpgo.utils as utils
 import numpy as np
-import argparse
-import copy
-import random
 
 
 def add_corrupt_odom(pose_graph: utils.Graph, corrupt_odom_idx: int) -> utils.Graph:
@@ -17,7 +16,7 @@ def add_corrupt_odom(pose_graph: utils.Graph, corrupt_odom_idx: int) -> utils.Gr
     )
     for i, edge in enumerate(corrupted_pose_graph.edges):
         if i == corrupt_odom_idx:
-            if type(edge.pose) == utils.Pose2D:
+            if type(edge.pose) is utils.Pose2D:
                 edge.pose = utils.Pose2D.from_matrix(
                     edge.pose.to_matrix() @ delta_2d.to_matrix()
                 )
@@ -39,7 +38,7 @@ def add_corrupt_odom(pose_graph: utils.Graph, corrupt_odom_idx: int) -> utils.Gr
             continue
 
         corrupt_T_node = np.linalg.inv(corrupt_meas_pose) @ node.pose.to_matrix()
-        if type(node.pose) == utils.Pose2D:
+        if type(node.pose) is utils.Pose2D:
             node.pose = utils.Pose2D.from_matrix(
                 corrupt_meas_pose @ delta_2d.to_matrix() @ corrupt_T_node
             )

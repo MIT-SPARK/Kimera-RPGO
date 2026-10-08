@@ -1,5 +1,8 @@
 #include <CppUnitLite/TestHarness.h>
 #include <gtsam/inference/Symbol.h>
+#include <gtsam/nonlinear/DoglegOptimizer.h>
+#include <gtsam/nonlinear/GaussNewtonOptimizer.h>
+#include <gtsam/nonlinear/LevenbergMarquardtParams.h>
 
 #include <memory>
 #include <random>

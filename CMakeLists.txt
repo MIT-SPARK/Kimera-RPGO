@@ -15,10 +15,9 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
 endif()
 
-option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization" ON)
-
 # Options
 option(BUILD_SHARED_LIBS "Build shared libs" ON)
+option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization" ON)
 option(KIMERA_RPGO_BUILD_PYTHON_BINDINGS "Build Python bindings" ON)
 
 find_package(GTSAM REQUIRED)

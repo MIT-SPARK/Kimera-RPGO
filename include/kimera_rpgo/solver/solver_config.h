@@ -1,14 +1,17 @@
 #pragma once
 
-#include <gtsam/nonlinear/DoglegOptimizer.h>
-#include <gtsam/nonlinear/GaussNewtonOptimizer.h>
-#include <gtsam/nonlinear/LevenbergMarquardtParams.h>
-#include <gtsam/nonlinear/NonlinearOptimizerParams.h>
-
+#include <cstddef>
+#include <iosfwd>
 #include <memory>
-#include <ostream>
 
 #include "kimera_rpgo/utils/types.h"
+
+namespace gtsam {
+class NonlinearOptimizerParams;
+class GaussNewtonParams;
+class LevenbergMarquardtParams;
+class DoglegParams;
+}  // namespace gtsam
 
 namespace kimera_rpgo {
 using OptimizerParams = gtsam::NonlinearOptimizerParams;

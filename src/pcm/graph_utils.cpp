@@ -8,7 +8,8 @@
 
 namespace kimera_rpgo {
 
-int findMaxClique(const Eigen::MatrixXd adjMatrix, std::vector<int>& max_clique) {
+int findMaxClique(const Eigen::MatrixXd adjMatrix,
+                  std::vector<int>& max_clique) {
   // Compute maximum clique
   FMC::CGraphIO gio;
   gio.ReadEigenAdjacencyMatrix(adjMatrix);
@@ -17,7 +18,8 @@ int findMaxClique(const Eigen::MatrixXd adjMatrix, std::vector<int>& max_clique)
   return max_clique_size;
 }
 
-int findMaxCliqueHeu(const Eigen::MatrixXd adjMatrix, std::vector<int>& max_clique) {
+int findMaxCliqueHeu(const Eigen::MatrixXd adjMatrix,
+                     std::vector<int>& max_clique) {
   // Compute maximum clique (heuristic inexact version)
   FMC::CGraphIO gio;
   gio.ReadEigenAdjacencyMatrix(adjMatrix);
@@ -34,11 +36,12 @@ int findMaxCliqueHeuIncremental(const Eigen::MatrixXd adjMatrix,
   FMC::CGraphIO gio;
   gio.ReadEigenAdjacencyMatrix(adjMatrix);
   int max_clique_size_new_lc = 0;
-  max_clique_size_new_lc =
-      FMC::maxCliqueHeuIncremental(&gio, num_new_lc, prev_maxclique_size, &max_clique);
+  max_clique_size_new_lc = FMC::maxCliqueHeuIncremental(
+      &gio, num_new_lc, prev_maxclique_size, &max_clique);
   if (static_cast<size_t>(max_clique_size_new_lc) > prev_maxclique_size) {
     return max_clique_size_new_lc;
   }
+
   return 0;
 }
 

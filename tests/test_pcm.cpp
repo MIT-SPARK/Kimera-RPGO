@@ -32,10 +32,10 @@ TEST(RpgoPcm2D, NodeMetric) {
 
   EXPECT_EQ(result.size(), size_t(10));
   EXPECT_TRUE(gtsam::assert_equal(gtsam::Pose2(), result.at<gtsam::Pose2>(0)));
-  EXPECT_TRUE(
-      gtsam::assert_equal(gtsam::Pose2(gtsam::Rot2(0.1), gtsam::Point2(9, 0.09)),
-                          result.at<gtsam::Pose2>(9),
-                          1.0e-05));
+  EXPECT_TRUE(gtsam::assert_equal(
+      gtsam::Pose2(gtsam::Rot2(0.1), gtsam::Point2(9, 0.09)),
+      result.at<gtsam::Pose2>(9),
+      1.0e-05));
 }
 
 /* ************************************************************************* */
@@ -58,10 +58,10 @@ TEST(RpgoPcm2D, CovarMetric) {
 
   EXPECT_EQ(result.size(), size_t(10));
   EXPECT_TRUE(gtsam::assert_equal(gtsam::Pose2(), result.at<gtsam::Pose2>(0)));
-  EXPECT_TRUE(
-      gtsam::assert_equal(gtsam::Pose2(gtsam::Rot2(0.1), gtsam::Point2(9, 0.09)),
-                          result.at<gtsam::Pose2>(9),
-                          1.0e-05));
+  EXPECT_TRUE(gtsam::assert_equal(
+      gtsam::Pose2(gtsam::Rot2(0.1), gtsam::Point2(9, 0.09)),
+      result.at<gtsam::Pose2>(9),
+      1.0e-05));
 }
 
 /* ************************************************************************* */
@@ -85,7 +85,8 @@ TEST(RpgoPcm3D, NodeMetric) {
   gtsam::Key key0 = gtsam::Symbol('d', 0);
   gtsam::Key key9 = gtsam::Symbol('d', 9);
   EXPECT_EQ(result.size(), size_t(10));
-  EXPECT_TRUE(gtsam::assert_equal(gtsam::Pose3(), result.at<gtsam::Pose3>(key0)));
+  EXPECT_TRUE(
+      gtsam::assert_equal(gtsam::Pose3(), result.at<gtsam::Pose3>(key0)));
   EXPECT_TRUE(gtsam::assert_equal(
       gtsam::Pose3(gtsam::Rot3(0, 1, 0, 0), gtsam::Point3(9, 0.09, -0.09)),
       result.at<gtsam::Pose3>(key9),
@@ -113,7 +114,8 @@ TEST(RpgoPcm3D, CovarMetric) {
   gtsam::Key key0 = gtsam::Symbol('d', 0);
   gtsam::Key key9 = gtsam::Symbol('d', 9);
   EXPECT_EQ(result.size(), size_t(10));
-  EXPECT_TRUE(gtsam::assert_equal(gtsam::Pose3(), result.at<gtsam::Pose3>(key0)));
+  EXPECT_TRUE(
+      gtsam::assert_equal(gtsam::Pose3(), result.at<gtsam::Pose3>(key0)));
   EXPECT_TRUE(gtsam::assert_equal(
       gtsam::Pose3(gtsam::Rot3(0, 1, 0, 0), gtsam::Point3(9, 0.09, -0.09)),
       result.at<gtsam::Pose3>(key9),

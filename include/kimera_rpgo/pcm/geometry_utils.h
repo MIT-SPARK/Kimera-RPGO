@@ -68,7 +68,8 @@ struct PoseWithCovariance : Pose {
   PoseWithCovariance() {
     pose = T();
     const size_t dim = getDim<T>();
-    gtsam::Matrix covar = Eigen::MatrixXd::Zero(dim, dim);  // initialize as zero
+    gtsam::Matrix covar =
+        Eigen::MatrixXd::Zero(dim, dim);  // initialize as zero
     covariance_matrix = covar;
   }
 
@@ -82,7 +83,8 @@ struct PoseWithCovariance : Pose {
   explicit PoseWithCovariance(const gtsam::PriorFactor<T>& prior_factor) {
     T value = prior_factor.prior();
     const size_t dim = getDim<T>();
-    gtsam::Matrix covar = Eigen::MatrixXd::Zero(dim, dim);  // initialize as zero
+    gtsam::Matrix covar =
+        Eigen::MatrixXd::Zero(dim, dim);  // initialize as zero
 
     pose = value;
     covariance_matrix = covar;
@@ -91,9 +93,9 @@ struct PoseWithCovariance : Pose {
   /* construct from gtsam between factor  --------------------- */
   explicit PoseWithCovariance(const gtsam::BetweenFactor<T>& between_factor) {
     pose = between_factor.measured();
-    gtsam::Matrix covar =
-        factor_pointer_cast<gtsam::noiseModel::Gaussian>(between_factor.noiseModel())
-            ->covariance();
+    gtsam::Matrix covar = factor_pointer_cast<gtsam::noiseModel::Gaussian>(
+                              between_factor.noiseModel())
+                              ->covariance();
 
     // prevent propagation of nan values in the edge case
     const int dim = getDim<T>();
@@ -107,14 +109,17 @@ struct PoseWithCovariance : Pose {
           dim, dim);  // TODO(Yun): I wonder if this can cause issues: ...
       // ... later you invert this matrix, which now contains a bunch of zero
       // (it is not full rank)
-      temp.block(r_dim, r_dim, t_dim, t_dim) = covar.block(r_dim, r_dim, t_dim, t_dim);
+      temp.block(r_dim, r_dim, t_dim, t_dim) =
+          covar.block(r_dim, r_dim, t_dim, t_dim);
       covar = temp;
     }
+
     covariance_matrix = covar;
   }
 
   template <typename pointT>
-  explicit PoseWithCovariance(const gtsam::PoseToPointFactor<T, pointT>& factor) {
+  explicit PoseWithCovariance(
+      const gtsam::PoseToPointFactor<T, pointT>& factor) {
     const int dim = getDim<T>();
     const int r_dim = getRotationDim<T>();
     const int t_dim = getTranslationDim<T>();
@@ -140,10 +145,12 @@ struct PoseWithCovariance : Pose {
     gtsam::Matrix Ha, Hb;
 
     out.pose = pose.compose(other_casted->pose, Ha, Hb);
-    out.covariance_matrix = Ha * covariance_matrix * Ha.transpose() +
-                            Hb * other_casted->covariance_matrix * Hb.transpose();
+    out.covariance_matrix =
+        Ha * covariance_matrix * Ha.transpose() +
+        Hb * other_casted->covariance_matrix * Hb.transpose();
 
-    if (!rotation_info || !other_casted->rotation_info) out.rotation_info = false;
+    if (!rotation_info || !other_casted->rotation_info)
+      out.rotation_info = false;
     return std::make_unique<PoseWithCovariance>(out);
   }
 
@@ -163,9 +170,10 @@ struct PoseWithCovariance : Pose {
     auto other_casted = dynamic_cast<PoseWithCovariance<T>*>(other.get());
     PoseWithCovariance<T> out;
     gtsam::Matrix Ha, Hb;
-    out.pose = pose.between(other_casted->pose, Ha, Hb);  // returns between in a frame
-    out.covariance_matrix =
-        other_casted->covariance_matrix - Ha * covariance_matrix * Ha.transpose();
+    out.pose =
+        pose.between(other_casted->pose, Ha, Hb);  // returns between in a frame
+    out.covariance_matrix = other_casted->covariance_matrix -
+                            Ha * covariance_matrix * Ha.transpose();
     bool pos_semi_def = true;
     // compute the Cholesky decomp
     Eigen::LLT<Eigen::MatrixXd> lltCovar1(out.covariance_matrix);
@@ -176,7 +184,8 @@ struct PoseWithCovariance : Pose {
     if (!pos_semi_def) {
       other_casted->pose.between(pose, Ha, Hb);  // returns between in a frame
       out.covariance_matrix =
-          covariance_matrix - Ha * other_casted->covariance_matrix * Ha.transpose();
+          covariance_matrix -
+          Ha * other_casted->covariance_matrix * Ha.transpose();
 
       //// Check if positive semidef
       // Eigen::LLT<Eigen::MatrixXd> lltCovar2(out.covariance_matrix);
@@ -184,7 +193,9 @@ struct PoseWithCovariance : Pose {
       //  std::cout << "Warning: Covariance matrix between two poses not PSD\n";
       //}
     }
-    if (!rotation_info || !other_casted->rotation_info) out.rotation_info = false;
+
+    if (!rotation_info || !other_casted->rotation_info)
+      out.rotation_info = false;
     return std::make_unique<PoseWithCovariance>(out);
   }
 
@@ -195,7 +206,8 @@ struct PoseWithCovariance : Pose {
       // only use translation part
       int t_dim = getTranslationDim<T>();
       int r_dim = getRotationDim<T>();
-      Eigen::MatrixXd cov_block = covariance_matrix.block(r_dim, r_dim, t_dim, t_dim);
+      Eigen::MatrixXd cov_block =
+          covariance_matrix.block(r_dim, r_dim, t_dim, t_dim);
       return std::sqrt(log.tail(t_dim).transpose() * cov_block.inverse() *
                        log.tail(t_dim));
     }
@@ -263,7 +275,8 @@ struct PoseWithNode : Pose {
     out.pose = pose.compose(other_casted->pose);
     out.node = node + other_casted->node;
 
-    if (!rotation_info || !other_casted->rotation_info) out.rotation_info = false;
+    if (!rotation_info || !other_casted->rotation_info)
+      out.rotation_info = false;
     return std::make_unique<PoseWithNode>(out);
   }
 
@@ -288,7 +301,8 @@ struct PoseWithNode : Pose {
 
     out.node = abs(other_casted->node - node);
 
-    if (!rotation_info || !other_casted->rotation_info) out.rotation_info = false;
+    if (!rotation_info || !other_casted->rotation_info)
+      out.rotation_info = false;
     return std::make_unique<PoseWithNode>(out);
   }
 

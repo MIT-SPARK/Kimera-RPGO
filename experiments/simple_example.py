@@ -1,5 +1,6 @@
-import kimera_rpgo
 import argparse
+
+import kimera_rpgo
 
 
 def main():

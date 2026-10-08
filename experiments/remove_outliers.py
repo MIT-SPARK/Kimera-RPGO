@@ -1,9 +1,7 @@
-import kimera_rpgo.utils as utils
-import numpy as np
 import argparse
-import copy
-import random
 import json
+
+import kimera_rpgo.utils as utils
 
 
 def rearrange_edges(orig_graph, log_json, add_at_end):

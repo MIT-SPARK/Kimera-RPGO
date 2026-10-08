@@ -48,7 +48,8 @@ enum KernelFunctionType {
  * different below where landmarks will use L(index) symbols.
  */
 template <typename T>
-std::map<size_t, T> parseVariables(const std::string& filename, size_t maxIndex = 0);
+std::map<size_t, T> parseVariables(const std::string& filename,
+                                   size_t maxIndex = 0);
 
 /**
  * Parse binary measurements in a line-based text format (like g2o) into a
@@ -72,7 +73,8 @@ typedef std::pair<std::pair<size_t, size_t>, Pose2> IndexedEdge;
  * @param is input stream
  * @param tag string parsed from input stream, will only parse if vertex type
  */
-std::optional<IndexedPose> parseVertexPose(std::istream& is, const std::string& tag);
+std::optional<IndexedPose> parseVertexPose(std::istream& is,
+                                           const std::string& tag);
 
 /**
  * Parse G2O landmark vertex "id x y"
@@ -92,7 +94,8 @@ std::optional<IndexedEdge> parseEdge(std::istream& is, const std::string& tag);
 /// Return type for load functions, which return a graph and initial values. For
 /// landmarks, the gtsam::Symbol L(index) is used to insert into the Values.
 /// Bearing-range measurements also refer to landmarks with L(index).
-using GraphAndValues = std::pair<NonlinearFactorGraph::shared_ptr, Values::shared_ptr>;
+using GraphAndValues =
+    std::pair<NonlinearFactorGraph::shared_ptr, Values::shared_ptr>;
 
 /**
  * Load TORO 2D Graph
@@ -101,11 +104,12 @@ using GraphAndValues = std::pair<NonlinearFactorGraph::shared_ptr, Values::share
  * @param addNoise add noise to the edges
  * @param smart try to reduce complexity of covariance to cheapest model
  */
-GraphAndValues load2D(std::pair<std::string, SharedNoiseModel> dataset,
-                      size_t maxIndex = 0,
-                      bool addNoise = false,
-                      bool smart = true,  //
-                      KernelFunctionType kernelFunctionType = KernelFunctionTypeNONE);
+GraphAndValues load2D(
+    std::pair<std::string, SharedNoiseModel> dataset,
+    size_t maxIndex = 0,
+    bool addNoise = false,
+    bool smart = true,  //
+    KernelFunctionType kernelFunctionType = KernelFunctionTypeNONE);
 
 /**
  * Load TORO/G2O style graph files
@@ -118,12 +122,13 @@ GraphAndValues load2D(std::pair<std::string, SharedNoiseModel> dataset,
  * @param kernelFunctionType whether to wrap the noise model in a robust kernel
  * @return graph and initial values
  */
-GraphAndValues load2D(const std::string& filename,
-                      SharedNoiseModel model = SharedNoiseModel(),
-                      size_t maxIndex = 0,
-                      bool addNoise = false,
-                      bool smart = true,
-                      KernelFunctionType kernelFunctionType = KernelFunctionTypeNONE);
+GraphAndValues load2D(
+    const std::string& filename,
+    SharedNoiseModel model = SharedNoiseModel(),
+    size_t maxIndex = 0,
+    bool addNoise = false,
+    bool smart = true,
+    KernelFunctionType kernelFunctionType = KernelFunctionTypeNONE);
 
 /** save 2d graph */
 void save2D(const NonlinearFactorGraph& graph,
@@ -139,9 +144,10 @@ void save2D(const NonlinearFactorGraph& graph,
  * @param kernelFunctionType whether to wrap the noise model in a robust kernel
  * @return graph and initial values
  */
-GraphAndValues readG2o(const std::string& g2oFile,
-                       const bool is3D = false,
-                       KernelFunctionType kernelFunctionType = KernelFunctionTypeNONE);
+GraphAndValues readG2o(
+    const std::string& g2oFile,
+    const bool is3D = false,
+    KernelFunctionType kernelFunctionType = KernelFunctionTypeNONE);
 
 /**
  * @brief This function writes a g2o file from
@@ -160,8 +166,9 @@ void writeG2o(const NonlinearFactorGraph& graph,
               const std::string& filename);
 
 /// Load TORO 3D Graph
-GraphAndValues load3D(const std::string& filename,
-                      KernelFunctionType kernelFunctionType = KernelFunctionTypeNONE);
+GraphAndValues load3D(
+    const std::string& filename,
+    KernelFunctionType kernelFunctionType = KernelFunctionTypeNONE);
 
 using BinaryMeasurementsUnit3 = std::vector<BinaryMeasurement<Unit3>>;
 using BinaryMeasurementsPoint3 = std::vector<BinaryMeasurement<Point3>>;

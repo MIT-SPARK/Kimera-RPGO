@@ -1,11 +1,36 @@
 /build/
 
-% Ignore VS code settings
+# Python bytecode and extension modules
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+
+# Python packaging output
+dist/
+*.egg-info/
+*.egg
+.eggs/
+_skbuild/
+
+# Python virtual environments and tool caches
+.venv/
+venv/
+.tox/
+.nox/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Ignore VS code settings
 .vscode
 
-% Ignore Mac stuff
+# Ignore Mac stuff
 .DS_Store
 
-% Ignore media files
+# Ignore media files
 *.png
 *.mp4

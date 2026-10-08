@@ -1,13 +1,14 @@
-from utils import DataConfig, ExpConfig, label_factors
-import viz_g2o
-import kimera_rpgo
-import os
 import argparse
-import shutil
-import yaml
-import matplotlib.pyplot as plt
-import csv
 import json
+import os
+import shutil
+
+import kimera_rpgo
+import matplotlib.pyplot as plt
+import viz_g2o
+import yaml
+
+from utils import DataConfig, ExpConfig, label_factors
 
 plt.rcParams.update({"font.size": 12})
 
@@ -201,7 +202,9 @@ class ComparisonExperiment:
             for i, conf in enumerate(self.config.configurations):
                 label_dir = os.path.join(self.config.output_dir, dataset.name)
                 gt_g2o = os.path.join(label_dir, "result_gt.g2o")
-                gt_pg = kimera_rpgo.utils.read_pose_graph_from_g2o(gt_g2o, dataset.is_3d)
+                gt_pg = kimera_rpgo.utils.read_pose_graph_from_g2o(
+                    gt_g2o, dataset.is_3d
+                )
                 res_g2o = os.path.join(label_dir, f"result_{conf.name}.g2o")
                 res_pg = kimera_rpgo.utils.read_pose_graph_from_g2o(
                     res_g2o, dataset.is_3d
@@ -255,9 +258,6 @@ class ComparisonExperiment:
             plt.show()
 
     def plot_log(self) -> None:
-        num_datasets = len(self.config.datasets)
-        num_configs = len(self.config.configurations)
-
         fig = plt.figure()
 
         # Plot results
@@ -265,7 +265,9 @@ class ComparisonExperiment:
             for i, conf in enumerate(self.config.configurations):
                 label_dir = os.path.join(self.config.output_dir, dataset.name)
                 gt_g2o = os.path.join(label_dir, "result_gt.g2o")
-                gt_pg = kimera_rpgo.utils.read_pose_graph_from_g2o(gt_g2o, dataset.is_3d)
+                gt_pg = kimera_rpgo.utils.read_pose_graph_from_g2o(
+                    gt_g2o, dataset.is_3d
+                )
                 res_g2o = os.path.join(label_dir, f"result_{conf.name}.g2o")
                 res_pg = kimera_rpgo.utils.read_pose_graph_from_g2o(
                     res_g2o, dataset.is_3d

@@ -22,7 +22,8 @@ struct PcmConfig {
   enum class MetricType { NODE, COVARIANCE } metric_type = MetricType::NODE;
 };
 
-std::ostream& operator<<(std::ostream& os, const PcmConfig::MaxCliqueMode& mode);
+std::ostream& operator<<(std::ostream& os,
+                         const PcmConfig::MaxCliqueMode& mode);
 
 std::ostream& operator<<(std::ostream& os, const PcmConfig& type);
 
@@ -45,12 +46,17 @@ class Pcm {
 
   void processIncremental(const gtsam::NonlinearFactorGraph& new_factors);
 
-  inline const gtsam::NonlinearFactorGraph& getInlierGraph() const { return result_; }
+  inline const gtsam::NonlinearFactorGraph& getInlierGraph() const {
+    return result_;
+  }
 
-  inline const std::vector<size_t>& getInlierIndices() const { return inlier_indices_; }
+  inline const std::vector<size_t>& getInlierIndices() const {
+    return inlier_indices_;
+  }
 
  private:
-  void addLoopClosure(const gtsam::NonlinearFactor::shared_ptr& factor, size_t index);
+  void addLoopClosure(const gtsam::NonlinearFactor::shared_ptr& factor,
+                      size_t index);
 
   void addLandmarkMeasurement(const gtsam::NonlinearFactor::shared_ptr& factor,
                               size_t index);
@@ -69,13 +75,15 @@ class Pcm {
 
   void addOdometry(const gtsam::NonlinearFactor::shared_ptr& factor);
 
-  Pose::Ptr getOdomBackbone(const gtsam::Key& key_i, const gtsam::Key& key_j) const;
+  Pose::Ptr getOdomBackbone(const gtsam::Key& key_i,
+                            const gtsam::Key& key_j) const;
 
   bool checkOdomThreshold(const Pose::Ptr& error) const;
 
   bool checkThreshold(const Pose::Ptr& error) const;
 
-  bool checkOdomConsistent(const gtsam::NonlinearFactor::shared_ptr& factor) const;
+  bool checkOdomConsistent(
+      const gtsam::NonlinearFactor::shared_ptr& factor) const;
 
   bool checkPairwiseConsistent(
       const gtsam::NonlinearFactor::shared_ptr& factor_ij,

@@ -1,11 +1,11 @@
-import csv
-import numpy as np
+import ctypes
 import math
 import os
-import ctypes
-from enum import Enum
-from scipy.spatial.transform import Rotation as Rot
 import random
+from enum import Enum
+
+import numpy as np
+from scipy.spatial.transform import Rotation as Rot
 
 keyBits = ctypes.sizeof(ctypes.c_uint64) * 8
 chrBits = ctypes.sizeof(ctypes.c_ubyte) * 8

@@ -241,7 +241,8 @@ struct traits<Pose4DoF> : public internal::LieGroup<Pose4DoF> {
   //   return g.inverse(H);
   // }
 
-  static Pose4DoF Expmap(const Vector& xi, OptionalJacobian<4, 4> /* H */ = {}) {
+  static Pose4DoF Expmap(const Vector& xi,
+                         OptionalJacobian<4, 4> /* H */ = {}) {
     return Pose4DoF::Expmap(xi);
   }
 

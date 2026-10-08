@@ -1,4 +1,4 @@
-name: Kimera-RPGO Build and Test
+name: Kimera-RPGO Python Tests
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  build-and-test:
+  python-tests:
     runs-on: ubuntu-24.04
     container: ros:jazzy-ros-base
     timeout-minutes: 20
@@ -30,10 +30,11 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends \
-            build-essential cmake ccache libgtest-dev nlohmann-json3-dev \
-            pybind11-dev python3-dev python3-colcon-common-extensions ros-jazzy-gtsam
+            build-essential cmake ccache nlohmann-json3-dev \
+            pybind11-dev python3-dev python3-pytest \
+            python3-colcon-common-extensions ros-jazzy-gtsam
 
-      - name: Build library and C++ tests
+      - name: Build library and Python bindings
         run: |
           source /opt/ros/jazzy/setup.bash
           mkdir -p "$ROS_LOG_DIR"
@@ -44,17 +45,12 @@ jobs:
               -DCMAKE_C_COMPILER_LAUNCHER=ccache \
               -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
               -DBUILD_SHARED_LIBS=ON \
-              -DBUILD_TESTING=ON \
-              -DKIMERA_RPGO_BUILD_PYTHON_BINDINGS=OFF
+              -DBUILD_TESTING=OFF \
+              -DKIMERA_RPGO_BUILD_PYTHON_BINDINGS=ON
 
-      - name: Run C++ tests
+      - name: Run pytest
         run: |
           source install/setup.bash
           mkdir -p "$ROS_LOG_DIR"
-          colcon test --packages-select kimera_rpgo \
-            --return-code-on-test-failure --event-handlers console_direct+ \
-            --ctest-args --output-on-failure --no-tests=error
-
-      - name: Report test results
-        if: ${{ always() }}
-        run: colcon test-result --test-result-base build/kimera_rpgo --verbose
+          export PYTHONPATH="$PWD/build/kimera_rpgo/python${PYTHONPATH:+:$PYTHONPATH}"
+          python3 -m pytest -v src/kimera_rpgo/python/tests

@@ -10,15 +10,6 @@ target_include_directories(
                               ${CMAKE_CURRENT_BINARY_DIR}/bindings
 )
 
-if(BUILD_TESTING)
-  add_test(
-    NAME python_solver_config_ownership
-    COMMAND ${Python_EXECUTABLE}
-            ${CMAKE_CURRENT_SOURCE_DIR}/tests/test_solver_config.py
-            $<TARGET_FILE_DIR:_kimera_rpgo_bindings>
-  )
-endif()
-
 if(DEFINED SKBUILD AND "${SKBUILD}")
   install(TARGETS _kimera_rpgo_bindings DESTINATION ${PROJECT_NAME})
 endif()

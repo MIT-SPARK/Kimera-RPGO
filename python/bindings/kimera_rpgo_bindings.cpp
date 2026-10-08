@@ -2,6 +2,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include <memory>
 #include <sstream>
 #include <string>
 
@@ -45,7 +46,8 @@ PYBIND11_MODULE(_kimera_rpgo_bindings, m) {
       .value("CONJUGATE", SolverConfig::GradientOption::CONJUGATE);
 
   // Python bound for OptimizerParams
-  py::class_<OptimizerParams>(m, "OptimizerParams")
+  py::class_<OptimizerParams, std::shared_ptr<OptimizerParams>>(
+      m, "OptimizerParams")
       .def_readwrite("maxIterations", &OptimizerParams::maxIterations)
       .def_readwrite("relativeErrorTol", &OptimizerParams::relativeErrorTol)
       .def_readwrite("absoluteErrorTol", &OptimizerParams::absoluteErrorTol)
@@ -57,7 +59,9 @@ PYBIND11_MODULE(_kimera_rpgo_bindings, m) {
       });
 
   // Python bound for GaussNewtonParams
-  py::class_<GaussNewtonParams, OptimizerParams>(m, "GaussNewtonParams")
+  py::class_<GaussNewtonParams,
+             OptimizerParams,
+             std::shared_ptr<GaussNewtonParams>>(m, "GaussNewtonParams")
       .def_readwrite("maxIterations", &OptimizerParams::maxIterations)
       .def_readwrite("relativeErrorTol", &OptimizerParams::relativeErrorTol)
       .def_readwrite("absoluteErrorTol", &OptimizerParams::absoluteErrorTol)
@@ -69,7 +73,9 @@ PYBIND11_MODULE(_kimera_rpgo_bindings, m) {
       });
 
   // Python bound for LevenbergMarquardtParams
-  py::class_<LevenbergMarquardtParams, OptimizerParams>(
+  py::class_<LevenbergMarquardtParams,
+             OptimizerParams,
+             std::shared_ptr<LevenbergMarquardtParams>>(
       m, "LevenbergMarquardtParams")
       .def_readwrite("maxIterations", &OptimizerParams::maxIterations)
       .def_readwrite("relativeErrorTol", &OptimizerParams::relativeErrorTol)
@@ -82,7 +88,8 @@ PYBIND11_MODULE(_kimera_rpgo_bindings, m) {
       });
 
   // Python bound for DoglegParams
-  py::class_<DoglegParams, OptimizerParams>(m, "DoglegParams")
+  py::class_<DoglegParams, OptimizerParams, std::shared_ptr<DoglegParams>>(
+      m, "DoglegParams")
       .def_readwrite("maxIterations", &OptimizerParams::maxIterations)
       .def_readwrite("relativeErrorTol", &OptimizerParams::relativeErrorTol)
       .def_readwrite("absoluteErrorTol", &OptimizerParams::absoluteErrorTol)
@@ -94,7 +101,7 @@ PYBIND11_MODULE(_kimera_rpgo_bindings, m) {
       });
 
   // Python bound for GncParams
-  py::class_<GncParams>(m, "GncParams")
+  py::class_<GncParams, GncParams::Ptr>(m, "GncParams")
       .def(py::init<>())
       .def_readwrite("barc_sq", &GncParams::barc_sq)
       .def_readwrite("inlier_probability", &GncParams::inlier_probability)

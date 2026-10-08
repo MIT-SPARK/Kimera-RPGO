@@ -4,6 +4,7 @@
 #include <gtsam/nonlinear/GaussNewtonOptimizer.h>
 #include <gtsam/nonlinear/LevenbergMarquardtParams.h>
 #include <gtsam/nonlinear/NonlinearOptimizerParams.h>
+
 #include <stdexcept>
 
 namespace kimera_rpgo {

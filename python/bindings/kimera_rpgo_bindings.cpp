@@ -1,8 +1,7 @@
-#include <pybind11/eigen.h>
-
 #include <gtsam/nonlinear/DoglegOptimizer.h>
 #include <gtsam/nonlinear/GaussNewtonOptimizer.h>
 #include <gtsam/nonlinear/LevenbergMarquardtParams.h>
+#include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 

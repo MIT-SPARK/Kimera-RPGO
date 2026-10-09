@@ -6,6 +6,7 @@
 #include "kimera_rpgo/solver/gradient_solver.h"
 #include "kimera_rpgo/solver/least_squares_solver.h"
 #include "kimera_rpgo/utils/g2o.h"
+#include "kimera_rpgo/utils/pose_4dof.h"
 #include "kimera_rpgo/utils/utils.h"
 using json = nlohmann::json;
 
@@ -142,6 +143,17 @@ void Rpgo::setCorruptedOdom(size_t index) {
 }
 
 void Rpgo::run() {
+  if (config_.use_pcm) {
+    for (const auto& entry : initial_) {
+      if (dynamic_cast<const gtsam::GenericValue<gtsam::Pose4DoF>*>(
+              &entry.value)) {
+        throw std::invalid_argument(
+            "PCM does not support Pose4DoF factors; disable use_pcm or use "
+            "Pose3");
+      }
+    }
+  }
+
   // Call solver to optimize and update result
   log_.num_variables = initial_.size();
   log_.num_factors = factors_.size();
